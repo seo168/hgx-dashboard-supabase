@@ -2017,6 +2017,20 @@
       window.location.replace('https://seo168.github.io/hgx-dashboard-supabase/index.html');
     }
 
+    // Dashboard baru hanya boleh membaca data aplikasi dari Supabase.
+    // Respons kosong menjaga modul lama tetap stabil tanpa menghubungi Google Sheets.
+    const originalFetch = window.fetch.bind(window);
+    window.fetch = (input, init) => {
+      const url = typeof input === 'string' ? input : String(input?.url || '');
+      if (url.includes('docs.google.com/spreadsheets')) {
+        return Promise.resolve(new Response('', {
+          status: 200,
+          headers: { 'Content-Type': 'text/csv; charset=utf-8' }
+        }));
+      }
+      return originalFetch(input, init);
+    };
+
     const SUPABASE_URL = 'https://qsqnxmotgocesnmodmfz.supabase.co';
     const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_XgFdnvsRCHLIjva4TSmJ5Q_PiBTq_kw';
     const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
@@ -4063,15 +4077,8 @@
     }
 
     function restoreFinanceCache() {
-      try {
-        const payload = JSON.parse(localStorage.getItem(FINANCE_CACHE_KEY) || 'null');
-        if (!payload || !Array.isArray(payload.finance) || !Array.isArray(payload.trend)) return false;
-        dbFinance = payload.finance;
-        dbTrend = payload.trend;
-        return dbFinance.length > 0 || dbTrend.length > 0;
-      } catch (error) {
-        return false;
-      }
+      localStorage.removeItem(FINANCE_CACHE_KEY);
+      return false;
     }
 
     async function fetchCsvFromCandidates(urls) {

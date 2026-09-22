@@ -99,7 +99,6 @@
 </div>
 
 <script>
-  const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRTWdis5deT7Foc0n9WvjY45n-Yl5oujgHKUKo8yncqAiMfxi42VZEh3OezV3BSozJsY_b9jexKArco/pub?output=csv";
   let db = [], charts = {};
   const palette = ["#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6", "#06b6d4"];
 
@@ -109,20 +108,10 @@
   }, 1000);
 
   async function load() {
-    try {
-      // Coba ambil dari Cache dulu agar instan
-      let dataText = sessionStorage.getItem('nexus_data');
-      if (!dataText) {
-        const r = await fetch(`${CSV_URL}&t=${Date.now()}`);
-        dataText = await r.text();
-        sessionStorage.setItem('nexus_data', dataText);
-      }
-      
-      db = dataText.split(/\r?\n/).slice(1).map(l => l.split(',').map(c => c.trim())).filter(d => d[3]);
-      
-      renderPerformance();
-      syncCharts();
-    } catch (e) { console.error(e); }
+    sessionStorage.removeItem('nexus_data');
+    db = [];
+    renderPerformance();
+    syncCharts();
   }
 
   function renderPerformance() {

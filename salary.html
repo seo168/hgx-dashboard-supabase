@@ -80,28 +80,21 @@
       <thead>
         <tr><th>ID</th><th>NAME</th><th>BASIC</th><th>KPI BONUS</th><th>DEDUCTION</th><th>NET PAY</th><th>STATUS</th></tr>
       </thead>
-      <tbody>
-        <tr><td>#WD283</td><td>Angelica G. Milaran</td><td>$1,500</td><td>$200</td><td>-$10</td><td>$1,690</td><td style="color:#10b981">PAID</td></tr>
-      </tbody>
+      <tbody><tr><td colspan="7">暂无数据</td></tr></tbody>
     </table>
   </div>
 </div>
 
 <script>
-  const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRTWdis5deT7Foc0n9WvjY45n-Yl5oujgHKUKo8yncqAiMfxi42VZEh3OezV3BSozJsY_b9jexKArco/pub?output=csv";
   let db = [], charts = {};
   const palette = ["#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6", "#06b6d4"];
 
   async function load() {
-    try {
-      const r = await fetch(`${CSV_URL}&t=${Date.now()}`);
-      const t = await r.text();
-      db = t.split(/\r?\n/).slice(1).map(l => l.split(',').map(c => c.trim())).filter(d => d[3]);
-      syncCharts();
-      setInterval(() => {
-        document.getElementById('clock').innerText = new Date(new Date().toLocaleString("en-US", {timeZone: "Asia/Yerevan"})).toLocaleTimeString('en-GB') + " AMT";
-      }, 1000);
-    } catch (e) { console.error(e); }
+    db = [];
+    syncCharts();
+    setInterval(() => {
+      document.getElementById('clock').innerText = new Date(new Date().toLocaleString("en-US", {timeZone: "Asia/Yerevan"})).toLocaleTimeString('en-GB') + " AMT";
+    }, 1000);
   }
 
   function syncCharts() {
