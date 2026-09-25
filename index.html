@@ -2364,7 +2364,7 @@
       if (label) label.innerText = formatGlobalDate(activeGlobalDate);
 
       const financeDate = document.getElementById('financeDateFilter');
-      if (financeDate) financeDate.value = getRelativeISODate(activeGlobalDate, -1).replaceAll('-', '/');
+      if (financeDate) financeDate.value = getRelativeISODate(activeGlobalDate, 0).replaceAll('-', '/');
       if (document.getElementById('finance')?.classList.contains('active')) renderFinanceReport();
       updateExtraPages();
       if (activeMistakeModule === 'noDeduction') renderMistakeData();
@@ -4230,7 +4230,7 @@
     function syncFinanceDateToLatestComplete() {
       const input = document.getElementById('financeDateFilter');
       if (!input) return;
-      const reportDate = financeDateToObj(getRelativeISODate(activeGlobalDate, -1));
+      const reportDate = financeDateToObj(getRelativeISODate(activeGlobalDate, 0));
       const validDates = [...new Set(dbFinance
         .filter(row => isFinanceRowReliable(row) && (getFinanceOrders(row) > 0 || getFinanceAmount(row) > 0))
         .map(getFinanceDate)
@@ -4247,7 +4247,7 @@
       const d = document.getElementById('financeDateFilter');
       const p = document.getElementById('financePlatformFilter');
       const c = document.getElementById('financeChannelFilter');
-      if (d) d.value = getRelativeISODate(activeGlobalDate, -1).replaceAll('-', '/');
+      if (d) d.value = getRelativeISODate(activeGlobalDate, 0).replaceAll('-', '/');
       if (p) p.value = '';
       if (c) c.value = '';
       renderFinanceReport();
@@ -4306,7 +4306,7 @@
     }
 
     function getFinanceAutoDateSet(days = 3) {
-      const reportDate = financeDateToObj(getRelativeISODate(activeGlobalDate, -1)) || getIndiaTodayObj();
+      const reportDate = financeDateToObj(getRelativeISODate(activeGlobalDate, 0)) || getIndiaTodayObj();
       const validDates = [...new Set(dbFinance.filter(r => isFinanceRowReliable(r) && (getFinanceOrders(r)>0 || getFinanceAmount(r)>0 || getFinanceRechargeSuccessAmount(r)>0)).map(r => getFinanceDate(r)).filter(Boolean))]
         .map(dateText => ({ dateText, obj: financeDateToObj(dateText) }))
         .filter(x => x.obj && x.obj.getTime() <= reportDate.getTime())
@@ -4431,7 +4431,7 @@
       const title=document.getElementById('recordTrendTitle');
       if (title) title.innerHTML=`<i class="fas fa-chart-area"></i> ${titleMap[activeFinanceChartView]||'财务统计'}`;
       const activeRows=dbFinance.filter(row=>isFinanceRowReliable(row)&&(getFinanceOrders(row)>0||getFinanceAmount(row)>0||getFinanceRechargeSuccessAmount(row)>0));
-      const reportDate=financeDateToObj(getRelativeISODate(activeGlobalDate,-1));
+      const reportDate=financeDateToObj(getRelativeISODate(activeGlobalDate,0));
       const allDates=[...new Set(activeRows.map(getFinanceDate).filter(date=>{
         const value=financeDateToObj(date);
         return value&&reportDate&&value.getTime()<=reportDate.getTime();
@@ -4643,7 +4643,7 @@
       )];
 
       const inputDate = normalizeDateText(document.getElementById('financeDateFilter')?.value || '');
-      const reportDate = normalizeDateText(getRelativeISODate(activeGlobalDate, -1));
+      const reportDate = normalizeDateText(getRelativeISODate(activeGlobalDate, 0));
       const reportDateObj = dateToObj(reportDate);
 
       const latestDate = allDates
@@ -4685,16 +4685,25 @@
         'BDSPIN':'#22c55e'
       };
 
-      const expectedTrendPlatforms = ['66GAME','YYGAME','XX7','XX6','XX5','YY9','PE7','W5W','ZONO'];
+      const expectedTrendPlatforms = ['66GAME','YYGAME','XX7','XX6','XX5','YY9','PE7','W5W'];
       const rowsByPlatform = new Map(rows.map(row => [getTrendPlatform(row).toUpperCase(), row]));
-      const chartRows = expectedTrendPlatforms.map(platform => ({
+      const chartRows = expectedTrendPlatforms.filter(platform => rowsByPlatform.has(platform)).map(platform => ({
         platform,
         row: rowsByPlatform.get(platform) || null
       }));
 
+      const indiaHour = Number(new Intl.DateTimeFormat('en-GB', {
+        timeZone: 'Asia/Kolkata',
+        hour: '2-digit',
+        hourCycle: 'h23'
+      }).format(new Date()));
+      const isTodayTrend = targetDate === normalizeDateText(getIndiaDate(0));
+
       const datasets = chartRows.map(({ platform, row }) => {
         const color = colorMap[platform.toUpperCase()] || colorMap[platform] || '#ffffff';
-        const displayValues = row ? hourValues(row) : Array.from({ length:24 }, () => null);
+        const displayValues = row
+          ? hourValues(row).map((value, hour) => isTodayTrend && hour > indiaHour ? null : value)
+          : Array.from({ length:24 }, () => null);
 
         return {
           label: platform,
@@ -4755,7 +4764,7 @@
       if (rows.length) {
       setStatus(`${targetDate} 24小时｜前一日 ${yesterdayDate}｜前两日 ${twoDaysDate}`);
       } else {
-        setStatus(`没有找到 ${targetDate}｜报告日期固定为所选日期的前一天`);
+        setStatus(`没有找到 ${targetDate}｜正在等待今天的每小时数据`);
       }
     }
 
@@ -5134,13 +5143,15 @@
       financeLoading = true;
       const notice = document.getElementById('financeSheetNotice');
       try {
-        const reportDate = getRelativeISODate(activeGlobalDate,-1);
+        const reportDate = getRelativeISODate(activeGlobalDate,0);
+        const hourlyStartDate = getRelativeISODate(reportDate,-2);
         const [{ data, error }, { data:hourlyData, error:hourlyError }] = await Promise.all([
           supabaseClient.from('finance_daily').select('*')
             .lte('report_date',reportDate)
             .order('report_date',{ascending:false})
             .limit(1000),
           supabaseClient.from('finance_hourly').select('*')
+            .gte('report_date',hourlyStartDate)
             .lte('report_date',reportDate)
             .order('report_date',{ascending:false})
             .limit(1000)
