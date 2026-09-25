@@ -5135,11 +5135,18 @@
       const notice = document.getElementById('financeSheetNotice');
       try {
         const reportDate = getRelativeISODate(activeGlobalDate,-1);
-        const { data, error } = await supabaseClient.from('finance_daily').select('*')
-          .lte('report_date',reportDate)
-          .order('report_date',{ascending:false})
-          .limit(1000);
+        const [{ data, error }, { data:hourlyData, error:hourlyError }] = await Promise.all([
+          supabaseClient.from('finance_daily').select('*')
+            .lte('report_date',reportDate)
+            .order('report_date',{ascending:false})
+            .limit(1000),
+          supabaseClient.from('finance_hourly').select('*')
+            .lte('report_date',reportDate)
+            .order('report_date',{ascending:false})
+            .limit(1000)
+        ]);
         if (error) throw error;
+        if (hourlyError) console.warn('Supabase 每小时财务读取失败',hourlyError.message);
         dbFinance = (data || []).map(row => ({
           '日期':String(row.report_date || '').replace(/-/g,'/'),
           '平台':row.platform || '-',
@@ -5150,7 +5157,14 @@
           '失败':Number(row.failed_orders || 0),
           '金额':Number(row.amount || 0)
         }));
-        dbTrend = [];
+        const hourlyGroups = new Map();
+        (hourlyData || []).forEach(item => {
+          const key = `${item.report_date}|${item.platform}`;
+          if (!hourlyGroups.has(key)) hourlyGroups.set(key, {'日期':String(item.report_date || '').replace(/-/g,'/'),'平台':item.platform || '-'});
+          const row = hourlyGroups.get(key);
+          row[`${String(Number(item.hour || 0)).padStart(2,'0')}:00`] = Number(item.success_rate || 0);
+        });
+        dbTrend = [...hourlyGroups.values()];
         if (notice) {
           notice.style.display = dbFinance.length ? 'none' : '';
           notice.innerHTML = '<i class="fas fa-database"></i><span>Supabase 暂无财务数据。</span>';
