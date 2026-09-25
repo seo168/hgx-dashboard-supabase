@@ -3355,14 +3355,14 @@
         const item=financeMap.get(date)||{orders:0,success:0,deposit:0};
         item.orders+=orders;item.success+=success;item.deposit+=getFinanceRechargeSuccessAmount(row);financeMap.set(date,item);
       });
-      const financeDates=lastSeven(financeMap), financeLatest=financeMap.get(reportDate)||financeMap.get(financeDates.at(-1));
+      const financeDates=lastSeven(financeMap), financeLatest=financeMap.get(reportDate);
       const financeRate=item=>item&&item.orders?item.success/item.orders*100:0;
       setText('homeKpiFinance',financeLatest?`${financeRate(financeLatest).toFixed(2)}%`:'-');
 
       const payoutMap=new Map();
       (dbPayoutDaily||[]).forEach(row=>{const date=dateKey(row[0]),value=Number(row[5]||0);if(date&&value>0)payoutMap.set(date,(payoutMap.get(date)||0)+value)});
       if(!payoutMap.size)(dbPayoutPlatformTiming||[]).forEach(row=>{const date=dateKey(row[0]),value=Number(row[2]||0);if(date&&value>0)payoutMap.set(date,(payoutMap.get(date)||0)+value)});
-      const payoutDates=lastSeven(payoutMap), payoutLatest=payoutMap.get(reportDate)??payoutMap.get(payoutDates.at(-1));
+      const payoutDates=lastSeven(payoutMap), payoutLatest=payoutMap.get(reportDate);
       setText('homeKpiPayout',payoutLatest==null?'-':fmtNumber(payoutLatest));
 
       const serviceMap=new Map(),serviceReplyMap=new Map();
@@ -3373,10 +3373,10 @@
         const reply=serviceReplyMap.get(date)||{weighted:0,volume:0};
         if(volume>0&&replySeconds>=0){reply.weighted+=replySeconds*volume;reply.volume+=volume;serviceReplyMap.set(date,reply)}
       });
-      const serviceDates=lastSeven(serviceMap), serviceLatest=serviceMap.get(reportDate)??serviceMap.get(serviceDates.at(-1));
+      const serviceDates=lastSeven(serviceMap), serviceLatest=serviceMap.get(reportDate);
       const serviceReplySeconds=date=>{const item=serviceReplyMap.get(date);return item&&item.volume?item.weighted/item.volume:0};
       setText('homeKpiService',serviceLatest==null?'-':fmtNumber(serviceLatest));
-      const serviceLatestDate=serviceDates.at(-1);
+      const serviceLatestDate=serviceMap.has(reportDate)?reportDate:'';
       setText('homeKpiServiceReply',serviceLatestDate?`${serviceReplySeconds(serviceLatestDate).toFixed(2)} 秒`:'-');
       const financeScope=activeHomeFinancePlatform||'全部平台';
       const financeTitle=document.getElementById('homeFinanceChartTitle');
@@ -3397,18 +3397,26 @@
       };
       const financeStats=document.getElementById('homeFinanceStats');
       if(financeStats){
-        const latestDate=financeDates.at(-1),latestItem=latestDate?financeMap.get(latestDate):null;
+        if(!financeLatest){
+          financeStats.innerHTML=`<div class="home-work-stat"><span>${reportDate}</span><strong>-</strong><small>Supabase 当日暂无数据</small></div>`;
+        } else {
+        const latestDate=reportDate,latestItem=financeLatest;
         const previous=Number(financeValues.at(-2)||0),latest=Number(financeValues.at(-1)||0),change=previous?(latest-previous)/previous*100:0;
         const average=financeValues.length?financeValues.reduce((sum,value)=>sum+value,0)/financeValues.length:0;
         const highest=financeValues.length?Math.max(...financeValues):0;
         financeStats.innerHTML=`<div class="home-work-stat"><span>最新成功率 · ${latestDate||'-'}</span><strong>${latest.toFixed(2)}%</strong></div><div class="home-work-stat"><span>成功 / 总订单</span><strong>${fmtNumber(latestItem?.success||0)} / ${fmtNumber(latestItem?.orders||0)}</strong></div><div class="home-work-stat"><span>近7日平均</span><strong>${average.toFixed(2)}%</strong></div><div class="home-work-stat"><span>近7日最高</span><strong>${highest.toFixed(2)}%</strong></div><div class="home-work-stat"><span>较前一日</span><strong class="${change>0?'up':change<0?'down':''}">${change>=0?'+':''}${change.toFixed(2)}%</strong></div>`;
+        }
       }
-      const payoutStats=document.getElementById('homePayoutStats');if(payoutStats)payoutStats.innerHTML=statHtml(payoutDates,payoutDates.map(date=>payoutMap.get(date)));
+      const payoutStats=document.getElementById('homePayoutStats');if(payoutStats)payoutStats.innerHTML=payoutLatest==null?`<div class="home-work-stat"><span>${reportDate}</span><strong>-</strong><small>Supabase 当日暂无数据</small></div>`:statHtml(payoutDates,payoutDates.map(date=>payoutMap.get(date)));
       const serviceStats=document.getElementById('homeServiceStats');
       if(serviceStats){
-        const volumeStats=statHtml(serviceDates,serviceDates.map(date=>serviceMap.get(date)));
-        const replyValues=serviceDates.map(serviceReplySeconds),replyAverage=replyValues.length?replyValues.reduce((sum,value)=>sum+value,0)/replyValues.length:0;
-        serviceStats.innerHTML=volumeStats+`<div class="home-work-stat"><span>最新平均回复</span><strong>${serviceReplySeconds(serviceLatestDate).toFixed(2)} 秒</strong></div><div class="home-work-stat"><span>近7日回复平均</span><strong>${replyAverage.toFixed(2)} 秒</strong></div>`;
+        if(serviceLatest==null){
+          serviceStats.innerHTML=`<div class="home-work-stat"><span>${reportDate}</span><strong>-</strong><small>Supabase 当日暂无数据</small></div>`;
+        } else {
+          const volumeStats=statHtml(serviceDates,serviceDates.map(date=>serviceMap.get(date)));
+          const replyValues=serviceDates.map(serviceReplySeconds),replyAverage=replyValues.length?replyValues.reduce((sum,value)=>sum+value,0)/replyValues.length:0;
+          serviceStats.innerHTML=volumeStats+`<div class="home-work-stat"><span>最新平均回复</span><strong>${serviceReplySeconds(serviceLatestDate).toFixed(2)} 秒</strong></div><div class="home-work-stat"><span>近7日回复平均</span><strong>${replyAverage.toFixed(2)} 秒</strong></div>`;
+        }
       }
     }
 
