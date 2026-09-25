@@ -1856,7 +1856,7 @@
 
         <div class="finance-empty-note" id="financeSheetNotice">
           <i class="fas fa-circle-info"></i>
-          <span>这里已经预留 Google Sheet 数据接口。你只需要把 URL_FINANCE / URL_TREND 换成对应 sheet 的 CSV 链接即可。</span>
+          <span>正在从 Supabase 读取财务数据。</span>
         </div>
 
         <div class="finance-kpi-grid">
@@ -1896,8 +1896,8 @@
           <div class="finance-platform-grid" id="financePlatformCards">
             <div class="finance-platform-card">
               <div class="finance-platform-name">暂无数据</div>
-              <div class="finance-platform-row"><span>状态</span><b>等待 Google Sheet</b></div>
-              <div class="finance-platform-row"><span>提示</span><b>填入 URL_FINANCE</b></div>
+              <div class="finance-platform-row"><span>状态</span><b>等待 Supabase</b></div>
+              <div class="finance-platform-row"><span>提示</span><b>检查 Supabase 数据</b></div>
             </div>
           </div>
         </div>
@@ -1912,7 +1912,7 @@
           </div>
           <div class="finance-scroll-hint"><i class="fas fa-arrow-right-arrow-left"></i> 如果内容太宽，可以左右滑动查看完整数据</div>
           <div id="financeReportBody" class="finance-card-board">
-            <div class="finance-card-empty">暂无数据，请先连接 Google Sheet</div>
+            <div class="finance-card-empty">Supabase 暂无数据</div>
           </div>
         </div>
 
@@ -2017,16 +2017,14 @@
       window.location.replace('https://seo168.github.io/hgx-dashboard-supabase/index.html');
     }
 
-    // Dashboard baru hanya boleh membaca data aplikasi dari Supabase.
-    // Respons kosong menjaga modul lama tetap stabil tanpa menghubungi Google Sheets.
+    // Dashboard ini hanya boleh membaca data aplikasi dari Supabase.
     const originalFetch = window.fetch.bind(window);
     window.fetch = (input, init) => {
       const url = typeof input === 'string' ? input : String(input?.url || '');
-      if (url.includes('docs.google.com/spreadsheets')) {
-        return Promise.resolve(new Response('', {
-          status: 200,
-          headers: { 'Content-Type': 'text/csv; charset=utf-8' }
-        }));
+      if (/^https?:/i.test(url)) {
+        const target = new URL(url, window.location.href);
+        const allowed = target.origin === window.location.origin || target.hostname === 'qsqnxmotgocesnmodmfz.supabase.co';
+        if (!allowed) return Promise.reject(new Error(`数据源已禁用：${target.hostname}`));
       }
       return originalFetch(input, init);
     };
@@ -2054,6 +2052,8 @@
       document.body.classList.remove('auth-pending');
       if (dashboardStarted) return;
       dashboardStarted = true;
+      localStorage.removeItem('hgx_finance_cache_v3');
+      sessionStorage.removeItem('nexus_data');
       applyGlobalDate();
       loadData();
     }
@@ -2584,7 +2584,7 @@
         const restingPayoutStaffCount = Math.max(staffRows.length - currentRows.length, 0);
         if (summary) summary.innerHTML = [['当日订单总量',fmtNumber(totalOrders)],['员工状态',`在线 ${currentRows.length} 人 · 休息 ${restingPayoutStaffCount} 人`],['员工平均订单',fmtNumber(Math.round(average))],['数据截至',reportDate]].map(item => `<div class="order-summary-card"><span>${item[0]}</span><strong>${item[1]}</strong></div>`).join('');
         if (head) head.innerHTML = `<tr><th>员工编号</th><th>员工姓名</th><th>平台</th>${dateColumns.map(item=>{const [month,day]=item.header.split('/');return `<th>${Number(month)}月${Number(day)}日<br><small>订单量</small></th>`}).join('')}<th>本月累计</th><th>日均订单</th></tr>`;
-        if (body) body.innerHTML = staffRows.length ? staffRows.map(staff=>`<tr><td><b>${esc(staff.id)}</b></td><td title="班次：${esc(staff.shift)} · 系统账号：${esc(staff.account)}">${esc(staff.name)}</td><td>${esc(staff.platform)}</td>${staff.days.map(day=>day.value===null?'<td class="csr-day-cell empty">-</td>':`<td class="csr-day-cell"><b>${fmtNumber(day.value)}</b></td>`).join('')}<td><b>${fmtNumber(staff.total)}</b></td><td>${dateColumns.length?fmtNumber(Math.round(staff.total/dateColumns.length)):'0'}</td></tr>`).join('') : dbPayoutStaffError ? `<tr class="attendance-empty"><td colspan="${Math.max(4,dateColumns.length+5)}"><i class="fas fa-lock"></i>&nbsp; Google 表格员工订单需要开放读取权限或连接安全接口（${esc(dbPayoutStaffError)}）</td></tr>` : `<tr class="attendance-empty"><td colspan="${Math.max(4,dateColumns.length+5)}"><i class="fas fa-circle-info"></i>&nbsp; ${reportDate} 出款员工订单暂无数据</td></tr>`;
+        if (body) body.innerHTML = staffRows.length ? staffRows.map(staff=>`<tr><td><b>${esc(staff.id)}</b></td><td title="班次：${esc(staff.shift)} · 系统账号：${esc(staff.account)}">${esc(staff.name)}</td><td>${esc(staff.platform)}</td>${staff.days.map(day=>day.value===null?'<td class="csr-day-cell empty">-</td>':`<td class="csr-day-cell"><b>${fmtNumber(day.value)}</b></td>`).join('')}<td><b>${fmtNumber(staff.total)}</b></td><td>${dateColumns.length?fmtNumber(Math.round(staff.total/dateColumns.length)):'0'}</td></tr>`).join('') : dbPayoutStaffError ? `<tr class="attendance-empty"><td colspan="${Math.max(4,dateColumns.length+5)}"><i class="fas fa-database"></i>&nbsp; ${esc(dbPayoutStaffError)}</td></tr>` : `<tr class="attendance-empty"><td colspan="${Math.max(4,dateColumns.length+5)}"><i class="fas fa-circle-info"></i>&nbsp; ${reportDate} 出款员工订单暂无数据</td></tr>`;
         const count = document.querySelector('#orderRecordTable')?.closest('.table-container')?.querySelector('.attendance-count');
         if (count) count.innerText = `${staffRows.length} 名员工 · ${dateColumns.length} 天`;
       }
@@ -4386,8 +4386,8 @@
       }).join('') : `
         <div class="finance-platform-card">
           <div class="finance-platform-name">暂无数据</div>
-          <div class="finance-platform-row"><span>状态</span><b>等待 Google Sheet</b></div>
-          <div class="finance-platform-row"><span>提示</span><b>检查财务表头/发布权限</b></div>
+          <div class="finance-platform-row"><span>状态</span><b>等待 Supabase</b></div>
+          <div class="finance-platform-row"><span>提示</span><b>检查 Supabase 数据与权限</b></div>
         </div>
       `;
     }
@@ -4935,7 +4935,7 @@
             </div>
           </div>
         `;
-      }).join('') : `<div class="finance-card-empty">暂无数据：请检查日期筛选或 Google 表格数据日期。</div>`;
+      }).join('') : `<div class="finance-card-empty">暂无数据：请检查日期筛选或 Supabase 数据日期。</div>`;
     }
 
     function openDetail(masterIdx) {
@@ -5076,6 +5076,158 @@
       arr.filter(Boolean).forEach(v => map[v] = (map[v] || 0) + 1);
       const sorted = Object.entries(map).sort((a,b) => b[1] - a[1]);
       return sorted.length ? sorted[0][0] : '';
+    }
+
+    // Supabase-only data layer. These final declarations intentionally replace
+    // the legacy spreadsheet loaders above while the old UI is migrated.
+    function staffObjectToRow(row) {
+      const value = (...keys) => {
+        for (const key of keys) if (row?.[key] !== undefined && row?.[key] !== null) return String(row[key]);
+        return '';
+      };
+      return [
+        value('platform'),
+        value('group_name','group','role','position'),
+        value('staff_id','employee_id','id'),
+        value('name','staff_name','employee_name'),
+        value('role','position'),
+        value('shift'),
+        value('join_date','start_date'),
+        value('status'),
+        value('country','nationality'),
+        value('department','team')
+      ];
+    }
+
+    async function loadData() {
+      updateClock();
+      if (!window.__hgxClockTimer) window.__hgxClockTimer = setInterval(updateClock, 1000);
+      const { data, error } = await supabaseClient.from('staff_master').select('*');
+      if (error) {
+        console.error('Supabase 员工数据读取失败', error.message);
+        dbMaster = [];
+      } else {
+        dbMaster = (data || []).map(staffObjectToRow);
+      }
+      dbPerf = [];
+      initFilters();
+      updateWorkModeCounts();
+      updateOnsiteRoleCounts();
+      updateWorkModeButtons();
+      updateOnsiteRoleButtons();
+      toggleOnsiteRoleWrap();
+      runFilters();
+      await Promise.all([loadFinanceData(false), loadPayoutData(false), loadServiceData(false)]);
+      renderHomeDashboard();
+    }
+
+    async function loadFinanceData(force = false) {
+      if (financeLoading) return;
+      financeLoading = true;
+      const notice = document.getElementById('financeSheetNotice');
+      try {
+        const { data, error } = await supabaseClient.from('finance_daily').select('*').order('report_date',{ascending:true});
+        if (error) throw error;
+        dbFinance = (data || []).map(row => ({
+          '日期':String(row.report_date || '').replace(/-/g,'/'),
+          '平台':row.platform || '-',
+          '渠道':row.channel || '-',
+          '总订单':Number(row.total_orders || 0),
+          '成功':Number(row.successful_orders || 0),
+          '处理中':Number(row.processing_orders || 0),
+          '失败':Number(row.failed_orders || 0),
+          '金额':Number(row.amount || 0)
+        }));
+        dbTrend = [];
+        if (notice) {
+          notice.style.display = dbFinance.length ? 'none' : '';
+          notice.innerHTML = '<i class="fas fa-database"></i><span>Supabase 暂无财务数据。</span>';
+        }
+      } catch (error) {
+        console.error('Supabase 财务读取失败', error.message || error);
+        dbFinance = [];
+        dbTrend = [];
+        if (notice) notice.innerHTML = `<i class="fas fa-triangle-exclamation"></i><span>Supabase 财务读取失败：${esc(error.message || error)}</span>`;
+      } finally {
+        financeLoaded = true;
+        financeLoading = false;
+      }
+      initFinanceFilters();
+      if (activeRecordModule === 'finance') renderFinanceReport();
+      renderHomeDashboard();
+    }
+
+    async function loadPayoutData(force = false) {
+      if (payoutLoading) return;
+      payoutLoading = true;
+      try {
+        const { data, error } = await supabaseClient.from('payout_daily').select('*').order('report_date',{ascending:true});
+        if (error) throw error;
+        const days = new Map();
+        (data || []).forEach(row => {
+          const date = String(row.report_date || '');
+          const item = days.get(date) || { success:0, rejected:0, failed:0, total:0 };
+          item.success += Number(row.successful_orders || 0);
+          item.rejected += Number(row.rejected_orders || 0);
+          item.failed += Number(row.failed_orders || 0);
+          item.total += Number(row.total_orders || 0);
+          days.set(date,item);
+        });
+        dbPayoutDaily = [...days.entries()].sort((a,b)=>a[0].localeCompare(b[0])).map(([date,item]) => {
+          const finalized = item.success + item.rejected + item.failed;
+          return [date,'ALL','出款',item.success,item.rejected,item.total,`${finalized ? item.success/finalized*100 : 0}%`];
+        });
+        dbPayoutPlatformTiming = [];
+      } catch (error) {
+        console.error('Supabase 出款读取失败', error.message || error);
+        dbPayoutDaily = [];
+        dbPayoutPlatformTiming = [];
+      } finally {
+        payoutLoaded = true;
+        payoutLoading = false;
+      }
+      if (activeRecordModule === 'payout') clearRecordDashboard('出款');
+      renderHomeDashboard();
+    }
+
+    async function loadServiceData(force = false) {
+      if (serviceLoading) return;
+      serviceLoading = true;
+      try {
+        const { data, error } = await supabaseClient.from('service_daily').select('*').order('report_date',{ascending:true});
+        if (error) throw error;
+        dbServiceDaily = (data || []).map(row => [
+          row.report_date,
+          row.platform || 'ALL',
+          '客服',
+          Number(row.reply_count || 0),
+          Number(row.avg_reply_seconds || 0)
+        ]);
+      } catch (error) {
+        console.error('Supabase 客服读取失败', error.message || error);
+        dbServiceDaily = [];
+      } finally {
+        dbServiceStaff = [];
+        dbServiceStatusByDate = new Map();
+        serviceLoaded = true;
+        serviceLoading = false;
+      }
+      if (activeRecordModule === 'service') clearRecordDashboard('客服');
+      renderHomeDashboard();
+    }
+
+    async function loadPayoutStaffData(reportDate) {
+      dbPayoutStaffHeaders = [];
+      dbPayoutStaff = [];
+      dbPayoutStaffMonth = String(reportDate || '').slice(0,7);
+      dbPayoutStaffError = 'Supabase 尚未建立员工出款明细表';
+    }
+
+    async function loadNoDeductionMistakes(force = false) {
+      dbNoDeductionMistakes = [];
+      noDeductionMistakesLoaded = true;
+      noDeductionMistakesLoading = false;
+      renderMistakeData();
     }
 
     document.addEventListener('keydown', e => {
