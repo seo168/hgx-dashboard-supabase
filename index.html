@@ -5134,7 +5134,11 @@
       financeLoading = true;
       const notice = document.getElementById('financeSheetNotice');
       try {
-        const { data, error } = await supabaseClient.from('finance_daily').select('*').order('report_date',{ascending:true});
+        const reportDate = getRelativeISODate(activeGlobalDate,-1);
+        const { data, error } = await supabaseClient.from('finance_daily').select('*')
+          .lte('report_date',reportDate)
+          .order('report_date',{ascending:false})
+          .limit(1000);
         if (error) throw error;
         dbFinance = (data || []).map(row => ({
           '日期':String(row.report_date || '').replace(/-/g,'/'),
@@ -5169,16 +5173,20 @@
       if (payoutLoading) return;
       payoutLoading = true;
       try {
-        const { data, error } = await supabaseClient.from('payout_daily').select('*').order('report_date',{ascending:true});
+        const reportDate = getRelativeISODate(activeGlobalDate,-1);
+        const { data, error } = await supabaseClient.from('payout_daily').select('*')
+          .lte('report_date',reportDate)
+          .order('report_date',{ascending:false})
+          .limit(1000);
         if (error) throw error;
         const days = new Map();
         (data || []).forEach(row => {
           const date = String(row.report_date || '');
           const item = days.get(date) || { success:0, rejected:0, failed:0, total:0 };
-          item.success += Number(row.successful_orders || 0);
-          item.rejected += Number(row.rejected_orders || 0);
+          item.success += Number(row.successful_orders || row.approved || 0);
+          item.rejected += Number(row.rejected_orders || row.rejected || 0);
           item.failed += Number(row.failed_orders || 0);
-          item.total += Number(row.total_orders || 0);
+          item.total += Number(row.total_orders || row.total_processed || 0);
           days.set(date,item);
         });
         dbPayoutDaily = [...days.entries()].sort((a,b)=>a[0].localeCompare(b[0])).map(([date,item]) => {
