@@ -1125,23 +1125,30 @@
       white-space:nowrap;
     }
     .channel-search-panel{margin-bottom:1rem}
+    .channel-view-switcher{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 12px;padding:6px;border:1px solid rgba(148,163,184,.14);border-radius:14px;background:#111827}
+    .channel-view-btn{padding:9px 14px;border:1px solid rgba(148,163,184,.18);border-radius:10px;background:#1f2937;color:#cbd5e1;font-size:.72rem;font-weight:900;cursor:pointer}
+    .channel-view-btn.active{background:#e5e7eb;color:#111827;border-color:#e5e7eb}
     .channel-search-grid{display:grid;grid-template-columns:1.05fr 1fr 1fr 1.35fr 1.15fr auto;gap:10px;align-items:end}
     .channel-search-grid .filter-group input,.channel-search-grid .filter-group select{height:43px}
     .channel-summary-strip{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;padding:16px 16px 0}
-    .channel-summary-card{padding:13px 15px;border:1px solid rgba(148,163,184,.16);border-radius:16px;background:rgba(8,17,31,.42)}
+    .channel-summary-card{padding:13px 15px;border:1px solid rgba(148,163,184,.18);border-radius:16px;background:#151e2d}
     .channel-summary-card span{display:block;color:#94a3b8;font-size:.65rem;font-weight:900;margin-bottom:5px}
     .channel-summary-card strong{display:block;color:#f8fbff;font-size:1.12rem;font-weight:950;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .channel-data-wrap{overflow:auto;max-height:720px;margin:16px;border:1px solid rgba(148,163,184,.14);border-radius:18px}
+    .channel-data-wrap{overflow:auto;max-height:720px;margin:16px;border:1px solid rgba(148,163,184,.14);border-radius:18px;scrollbar-width:thin;scrollbar-color:rgba(148,163,184,.14) transparent}
+    .channel-data-wrap::-webkit-scrollbar{width:5px;height:5px}
+    .channel-data-wrap::-webkit-scrollbar-track{background:transparent}
+    .channel-data-wrap::-webkit-scrollbar-thumb{background:rgba(148,163,184,.14);border-radius:999px}
+    .channel-data-wrap:hover::-webkit-scrollbar-thumb{background:rgba(148,163,184,.28)}
     .channel-data-table{width:100%;min-width:1380px;border-collapse:separate;border-spacing:0}
-    .channel-data-table th{position:sticky;top:0;z-index:3;padding:12px 10px;background:#14233b;color:#bfdbfe;font-size:.67rem;text-align:center;border-bottom:1px solid rgba(96,165,250,.30)}
-    .channel-data-table td{padding:11px 10px;color:#dce8f8;font-size:.7rem;text-align:center;border-bottom:1px solid rgba(148,163,184,.09)}
-    .channel-data-table tbody tr:nth-child(even) td{background:rgba(30,41,59,.22)}
-    .channel-data-table tbody tr:hover td{background:rgba(37,99,235,.10)}
+    .channel-data-table th{position:sticky;top:0;z-index:3;padding:12px 10px;background:#202938;color:#e5e7eb;font-size:.67rem;text-align:center;border-bottom:1px solid rgba(148,163,184,.24)}
+    .channel-data-table td{padding:11px 10px;color:#d1d5db;font-size:.7rem;text-align:center;border-bottom:1px solid rgba(148,163,184,.09)}
+    .channel-data-table tbody tr:nth-child(even) td{background:rgba(31,41,55,.34)}
+    .channel-data-table tbody tr:hover td{background:rgba(75,85,99,.28)}
     .channel-data-table td:nth-child(3){text-align:left;font-weight:900;color:#fff}
+    .channel-data-table.aggregate-view th:nth-child(2),.channel-data-table.aggregate-view td:nth-child(2){display:none}
     .channel-platform-pill,.channel-type-pill{display:inline-flex;align-items:center;justify-content:center;padding:4px 9px;border-radius:999px;font-size:.62rem;font-weight:900;white-space:nowrap}
-    .channel-platform-pill{color:#dbeafe;background:rgba(37,99,235,.18);border:1px solid rgba(96,165,250,.25)}
-    .channel-type-pill{color:#d1fae5;background:rgba(16,185,129,.12);border:1px solid rgba(52,211,153,.20)}
-    .channel-rate-good{color:#34d399!important;font-weight:950}.channel-rate-mid{color:#fbbf24!important;font-weight:950}.channel-rate-low{color:#fb7185!important;font-weight:950}
+    .channel-platform-pill,.channel-type-pill{color:#e5e7eb;background:#293241;border:1px solid rgba(148,163,184,.22)}
+    .channel-rate-good{color:#86b7a7!important;font-weight:950}.channel-rate-mid{color:#d7bc82!important;font-weight:950}.channel-rate-low{color:#d39a9a!important;font-weight:950}
     .channel-table-note{padding:0 16px 16px;color:#91a3bd;font-size:.68rem;font-weight:800}
     @media(max-width:1180px){.channel-search-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
     @media(max-width:700px){.channel-search-grid,.channel-summary-strip{grid-template-columns:1fr 1fr}}
@@ -2014,6 +2021,10 @@
         </div>
 
         <div class="filter-wrapper channel-search-panel">
+          <div class="channel-view-switcher">
+            <button class="channel-view-btn active" id="channelView-platform" onclick="setChannelAggregateView('platform')"><i class="fas fa-layer-group"></i> 按平台查看</button>
+            <button class="channel-view-btn" id="channelView-merchant" onclick="setChannelAggregateView('merchant')"><i class="fas fa-object-group"></i> 全部通道汇总</button>
+          </div>
           <div class="channel-search-grid">
             <div class="filter-group"><label>日期</label><input type="date" id="financeDateFilter" oninput="renderFinanceReport()"></div>
             <div class="filter-group"><label>平台</label><select id="financePlatformFilter" onchange="renderFinanceReport()"><option value="">全部平台</option></select></div>
@@ -2047,8 +2058,8 @@
           <div class="channel-summary-strip" id="channelSummaryStrip"></div>
           <div class="channel-data-wrap" id="channelWorkbookWrap">
             <table class="channel-data-table">
-              <thead><tr><th>排名</th><th>平台</th><th>商户名称</th><th>通道类型</th><th>代收金额</th><th>代收订单</th><th>代收成功订单</th><th>代收成功率</th><th>代付金额</th><th>代付订单</th><th>代付成功订单</th><th>代付成功率</th><th>预估通道费</th></tr></thead>
-              <tbody id="channelWorkbookBody"><tr><td colspan="13">正在读取通道数据</td></tr></tbody>
+              <thead><tr><th>排名</th><th>平台</th><th>商户名称</th><th>通道类型</th><th>代收比例</th><th>代付比例</th><th>代收金额</th><th>代收订单</th><th>代收成功订单</th><th>代收成功率</th><th>代付金额</th><th>代付订单</th><th>代付成功订单</th><th>代付成功率</th><th>预估通道费</th></tr></thead>
+              <tbody id="channelWorkbookBody"><tr><td colspan="15">正在读取通道数据</td></tr></tbody>
             </table>
           </div>
           <div class="channel-table-note" id="channelTableNote"></div>
@@ -5827,19 +5838,41 @@
     };
     function channelFeeRule(merchant){return CHANNEL_FEE_RULES[String(merchant||'').toLowerCase().replace(/\s+/g,'')]||null}
 
+    let channelAggregateView='platform';
+    const CHANNEL_NAME_ALIASES={
+      haoxpay:'LovePay',haopay:'LovePay',lovepay:'LovePay',
+      ic2pay:'ICPay2',icpay2:'ICPay2',
+      bibipay:'BibiPay',cbibipay:'BibiPay',
+      lkgopay:'LkgoPay',freepapay:'FreePay',umpay:'UmPay'
+    };
+    function canonicalChannelName(value){
+      const raw=String(value||'').trim();
+      if(!raw||raw==='未分配'||raw==='通道未填写')return '通道未填写';
+      const key=raw.toLowerCase().replace(/[^a-z0-9]/g,'');
+      return CHANNEL_NAME_ALIASES[key]||raw.replace(/\s+/g,'');
+    }
+    function setChannelAggregateView(view){
+      channelAggregateView=view==='merchant'?'merchant':'platform';
+      document.querySelectorAll('.channel-view-btn').forEach(button=>button.classList.toggle('active',button.id===`channelView-${channelAggregateView}`));
+      const platformFilter=document.getElementById('financePlatformFilter');
+      if(platformFilter){platformFilter.disabled=channelAggregateView==='merchant';if(channelAggregateView==='merchant')platformFilter.value=''}
+      renderFinanceReport();
+    }
+
     function channelExportRows(){
       const grouped=new Map();
       (dbFinance||[]).forEach(row=>{
         const parts=String(row['渠道']||'').split('|');
         if(parts.length<3||!['RECHARGE','WITHDRAW'].includes(parts[0]))return;
-        const date=String(row['日期']||'').replace(/\//g,'-'),platform=String(row['平台']||'-'),merchant=parts[1]||'通道未填写',type=parts[2]||'其他';
-        const key=`${date}|${platform}|${merchant}|${type}`;
-        if(!grouped.has(key))grouped.set(key,[date,platform,merchant,type,0,0,0,0,0,0,0,0,0]);
+        const date=String(row['日期']||'').replace(/\//g,'-'),platform=String(row['平台']||'-'),merchant=canonicalChannelName(parts[1]),type=parts[2]||'其他';
+        const key=channelAggregateView==='merchant'?`${date}|${merchant}`:`${date}|${platform}|${merchant}|${type}`;
+        if(!grouped.has(key))grouped.set(key,{date,platform:channelAggregateView==='merchant'?'全部平台':platform,merchant,types:new Set(),depositAmount:0,withdrawAmount:0,depositOrders:0,depositSuccess:0,withdrawOrders:0,withdrawSuccess:0});
         const item=grouped.get(key),orders=Number(row['总订单']||0),success=Number(row['成功']||0),amount=Number(row['金额']||0);
-        if(parts[0]==='RECHARGE'){item[4]+=amount;item[6]+=orders;item[7]+=success}
-        else {item[5]+=amount;item[9]+=orders;item[10]+=success}
+        item.types.add(type);
+        if(parts[0]==='RECHARGE'){item.depositAmount+=amount;item.depositOrders+=orders;item.depositSuccess+=success}
+        else {item.withdrawAmount+=amount;item.withdrawOrders+=orders;item.withdrawSuccess+=success}
       });
-      return [...grouped.values()].map(item=>{item[2]=item[2]==='未分配'?'通道未填写':item[2];item[8]=item[6]?item[7]/item[6]:0;item[11]=item[9]?item[10]/item[9]:0;return item});
+      return [...grouped.values()].map(item=>[item.date,item.platform,item.merchant,[...item.types].sort().join(' / '),item.depositAmount,item.withdrawAmount,item.depositOrders,item.depositSuccess,item.depositOrders?item.depositSuccess/item.depositOrders:0,item.withdrawOrders,item.withdrawSuccess,item.withdrawOrders?item.withdrawSuccess/item.withdrawOrders:0,0]);
     }
 
     function channelRateClass(rate) {
@@ -5852,6 +5885,7 @@
       const body=document.getElementById('channelWorkbookBody'); if(!body)return;
       const legacyBoard=document.getElementById('financeReportBody');if(legacyBoard)legacyBoard.style.display='none';
       const workbookWrap=document.getElementById('channelWorkbookWrap');if(workbookWrap)workbookWrap.style.display='block';
+      const workbookTable=workbookWrap?.querySelector('.channel-data-table');if(workbookTable)workbookTable.classList.toggle('aggregate-view',channelAggregateView==='merchant');
       const summaryWrap=document.getElementById('channelSummaryStrip');if(summaryWrap)summaryWrap.style.display='grid';
       const noteWrap=document.getElementById('channelTableNote');if(noteWrap)noteWrap.style.display='block';
       const date=document.getElementById('financeDateFilter')?.value||'';
@@ -5859,7 +5893,7 @@
       const type=document.getElementById('financeChannelFilter')?.value||'';
       const query=(document.getElementById('channelMerchantSearch')?.value||'').trim().toLowerCase();
       const sort=document.getElementById('channelSortFilter')?.value||'depositAmount';
-      let rows=channelExportRows().filter(row=>(!date||row[0]===date)&&(!platform||row[1]===platform)&&(!type||row[3]===type)&&(!query||String(row[2]).toLowerCase().includes(query)));
+      let rows=channelExportRows().filter(row=>(!date||row[0]===date)&&(channelAggregateView==='merchant'||!platform||row[1]===platform)&&(!type||String(row[3]).split(' / ').includes(type))&&(!query||String(row[2]).toLowerCase().includes(query)));
       const sorters={depositAmount:(a,b)=>b[4]-a[4],depositRate:(a,b)=>b[8]-a[8],withdrawAmount:(a,b)=>b[5]-a[5],withdrawRate:(a,b)=>b[11]-a[11],merchant:(a,b)=>String(a[2]).localeCompare(String(b[2]))};
       rows=rows.slice().sort(sorters[sort]||sorters.depositAmount);
       const totalDeposit=rows.reduce((sum,row)=>sum+Number(row[4]||0),0);
@@ -5868,9 +5902,11 @@
       const summary=document.getElementById('channelSummaryStrip');
       if(summary)summary.innerHTML=[['商户记录',fmtNumber(rows.length)],['代收总金额',fmtMoney(totalDeposit)],['代收成功率',fmtRate(depositOrders?depositSuccess/depositOrders*100:0)],['代付成功率',fmtRate(withdrawOrders?withdrawSuccess/withdrawOrders*100:0)]].map(([label,value])=>`<div class="channel-summary-card"><span>${label}</span><strong>${value}</strong></div>`).join('');
       const visible=rows.slice(0,250);
-      body.innerHTML=visible.length?visible.map((row,index)=>{const fee=channelFeeRule(row[2]);const feeTotal=fee?Number(row[4]||0)*fee[0]/100+Number(row[5]||0)*fee[1]/100+Number(row[9]||0)*fee[2]:null;return `<tr><td>${index+1}</td><td><span class="channel-platform-pill">${esc(row[1])}</span></td><td>${esc(row[2])}</td><td><span class="channel-type-pill">${esc(row[3])}</span></td><td>${fmtMoney(row[4])}</td><td>${fmtNumber(row[6])}</td><td>${fmtNumber(row[7])}</td><td class="${channelRateClass(row[8])}">${fmtRate(Number(row[8]||0)*100)}</td><td>${fmtMoney(row[5])}</td><td>${fmtNumber(row[9])}</td><td>${fmtNumber(row[10])}</td><td class="${channelRateClass(row[11])}">${fmtRate(Number(row[11]||0)*100)}</td><td>${fee?`${fmtMoney(feeTotal)}<br><small>代收 ${fee[0]}% · 代付 ${fee[1]}% + ₹${fee[2]}/单</small>`:'费率未配置'}</td></tr>`}).join(''):`<tr><td colspan="13">当前筛选条件没有数据</td></tr>`;
+      body.innerHTML=visible.length?visible.map((row,index)=>{const fee=channelFeeRule(row[2]);const feeTotal=fee?Number(row[4]||0)*fee[0]/100+Number(row[5]||0)*fee[1]/100+Number(row[9]||0)*fee[2]:null;return `<tr><td>${index+1}</td><td><span class="channel-platform-pill">${esc(row[1])}</span></td><td>${esc(row[2])}</td><td><span class="channel-type-pill">${esc(row[3])}</span></td><td>${fee?`${fee[0]}%`:'未配置'}</td><td>${fee?`${fee[1]}% + ₹${fee[2]}/单`:'未配置'}</td><td>${fmtMoney(row[4])}</td><td>${fmtNumber(row[6])}</td><td>${fmtNumber(row[7])}</td><td class="${channelRateClass(row[8])}">${fmtRate(Number(row[8]||0)*100)}</td><td>${fmtMoney(row[5])}</td><td>${fmtNumber(row[9])}</td><td>${fmtNumber(row[10])}</td><td class="${channelRateClass(row[11])}">${fmtRate(Number(row[11]||0)*100)}</td><td>${fee?`${fmtMoney(feeTotal)}<br><small>代收 ${fee[0]}% · 代付 ${fee[1]}% + ₹${fee[2]}/单</small>`:'费率未配置'}</td></tr>`}).join(''):`<tr><td colspan="15">当前筛选条件没有数据</td></tr>`;
       const info=document.getElementById('financeTableInfo');if(info)info.innerText=`${fmtNumber(rows.length)} 条记录`;
       const note=document.getElementById('channelTableNote');if(note)note.innerText=rows.length>250?`当前显示前 250 条，共 ${fmtNumber(rows.length)} 条。可使用上方搜索工具缩小范围。`:`共 ${fmtNumber(rows.length)} 条记录。数据来源：HGX 印度三方通道。`;
+      const title=document.getElementById('recordDetailTitle');if(title)title.innerText=channelAggregateView==='merchant'?'全部平台三方通道汇总':'印度三方通道明细';
+      const desc=document.getElementById('recordDetailDesc');if(desc)desc.innerText=channelAggregateView==='merchant'?'已合并全部平台，并按标准化后的三方名称汇总。':'按日期、平台、通道类型和商户名称筛选代收及代付表现。';
     }
 
     const originalRenderFinanceTable=renderFinanceTable;
