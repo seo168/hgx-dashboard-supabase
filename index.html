@@ -1635,6 +1635,52 @@
       .record-view-switcher{grid-template-columns:1fr}
       .order-record-summary{grid-template-columns:repeat(2,minmax(0,1fr))}
     }
+    /* Soft daylight theme: neutral surfaces keep dense numeric reports readable. */
+    :root{
+      --bg:#eef1f4;--panel:rgba(255,255,255,.92);--panel2:#f5f6f8;--border:#d9dee5;
+      --text-main:#26313d;--text-muted:#6d7784;--blue:#607d9b;--purple:#887f9e;
+      --yellow:#b18a49;--red:#b36f70;--cyan:#668c95;--green:#668b79;
+      --shadow:0 18px 48px rgba(66,76,88,.10);
+    }
+    body{color:var(--text-main);background:#eef1f4}
+    body::before{background:radial-gradient(circle at 12% 10%,rgba(153,173,192,.18),transparent 28%),radial-gradient(circle at 88% 12%,rgba(190,181,166,.16),transparent 30%),linear-gradient(135deg,#f2f4f6,#e9edf1)}
+    body::after{opacity:.12;background-image:linear-gradient(rgba(100,116,139,.10) 1px,transparent 1px),linear-gradient(90deg,rgba(100,116,139,.08) 1px,transparent 1px)}
+    .ambient-bg,.float-word-layer{opacity:.12}
+    nav{background:rgba(248,249,250,.94);border-bottom-color:#d7dde4;box-shadow:0 8px 24px rgba(71,85,105,.08)}
+    .brand-title,.brand-title span{color:#334155;background:none;-webkit-background-clip:initial}
+    .brand-title i{color:#6d879f}.amt-clock{background:#dde4ea;color:#334155;border-color:#cbd4dd;box-shadow:none}
+    .logout-btn{background:#f4e8e8;color:#965d60;border-color:#dfc4c5}
+    .glass-shell,.finance-readable-board,.finance-panel,.top-highlight-panel,.home-chart-card,.home-kpi,.home-hero,.filter-wrapper,.table-container,.modal-content,.stat-modal-content,.kpi-detail-modal,.order-summary-card,.finance-platform-card,.finance-report-card,.finance-kpi-card,.sub-page-title,.module-context{
+      background:#f8f9fa!important;color:#26313d!important;border-color:#d9dee5!important;box-shadow:0 12px 34px rgba(71,85,105,.08)!important;
+    }
+    .sidebar,.nav-menu{background:#f4f6f8!important;border-color:#d9dee5!important}
+    .menu-btn,.sub-menu-btn,.work-mode-btn,.onsite-role-btn,.record-view-btn,.payout-stat-btn,.home-chart-btn,.channel-view-btn,.kpi-date-btn{
+      background:#eef1f4!important;color:#55616e!important;border-color:#d5dbe2!important;box-shadow:none!important;
+    }
+    .menu-btn.active,.sub-menu-btn.active,.work-mode-btn.active,.onsite-role-btn.active,.record-view-btn.active,.payout-stat-btn.active,.home-chart-btn.active,.channel-view-btn.active,.kpi-date-btn.active{
+      background:#d6dee6!important;color:#273443!important;border-color:#bcc8d3!important;
+    }
+    .finance-action-btn,.login-submit,.kpi-range-apply,.kpi-time-confirm{background:#71879b!important;color:#fff!important;border-color:#667d91!important;box-shadow:none!important}
+    input,select,.kpi-datetime-trigger,.kpi-datetime-panel,.kpi-datetime-panel input[type="date"],.kpi-time-part select{
+      background:#fff!important;color:#34404c!important;border-color:#d2d8df!important;color-scheme:light!important;box-shadow:none!important;
+    }
+    .table-head-bar,.finance-readable-head,.stat-modal-top,.shift-column-head{background:#e8edf1!important;color:#34404c!important;border-color:#d4dae1!important}
+    table th,.channel-data-table th,.kpi-popup-table th,.shift-list-table th{background:#e1e6eb!important;color:#3c4855!important;border-color:#cfd6dd!important}
+    table td,.channel-data-table td,.kpi-popup-table td{color:#3e4955!important;border-color:#e0e4e8!important}
+    tbody tr:nth-child(even) td,.channel-data-table tbody tr:nth-child(even) td{background:#f2f4f6!important}
+    tbody tr:hover td,.channel-data-table tbody tr:hover td{background:#e8edf1!important}
+    .channel-summary-card,.stat-summary-card,.kpi-support-card,.kpi-platform-card,.finance-summary-box,.finance-compare-box,.home-staff-unit,.home-work-stat,.shift-member-card,.stat-member-card,.stat-member-item{
+      background:#f1f3f5!important;border-color:#d9dee4!important;box-shadow:none!important;
+    }
+    .channel-summary-card strong,.finance-platform-name,.home-kpi strong,.finance-kpi-value,.kpi-support-card strong,.kpi-platform-card b,.order-summary-card strong{color:#273443!important}
+    .channel-summary-card span,.finance-readable-desc,.channel-table-note,.finance-kpi-note,.home-kpi span,.kpi-support-card span,.kpi-platform-card span{color:#6f7a86!important}
+    .channel-data-wrap,.finance-card-board,.finance-channel-table-wrap,.payout-platform-table-wrap{background:#fafbfc;border-color:#d9dee5;scrollbar-color:rgba(100,116,139,.18) transparent}
+    .channel-platform-pill,.channel-type-pill,.tag-wd,.tag-cs,.tag-fn,.date-badge{background:#e3e7eb!important;color:#4b5865!important;border-color:#d0d6dc!important}
+    .finance-chart-box,.kpi-popup-chart{background:#f4f6f8!important;border-color:#d9dee5!important}
+    .modal-overlay,.stat-modal-overlay,.kpi-detail-overlay{background:rgba(71,85,105,.28)}
+    .login-gate{background:linear-gradient(135deg,#eef1f4,#e5eaee)}
+    .login-card{background:#f8f9fa;color:#273443;border-color:#d5dbe2;box-shadow:0 24px 70px rgba(71,85,105,.18)}
+    .login-brand,.login-field span{color:#34404c}.login-subtitle{color:#6f7a86}.login-field input{background:#fff;color:#34404c;border-color:#d1d8df}
   </style>
 </head>
 
@@ -5894,7 +5940,14 @@
       const type=document.getElementById('financeChannelFilter')?.value||'';
       const query=(document.getElementById('channelMerchantSearch')?.value||'').trim().toLowerCase();
       const sort=document.getElementById('channelSortFilter')?.value||'depositAmount';
-      let rows=channelExportRows().filter(row=>(!date||row[0]===date)&&(channelAggregateView==='merchant'||!platform||row[1]===platform)&&(!type||String(row[3]).split(' / ').includes(type))&&(!query||String(row[2]).toLowerCase().includes(query)));
+      const sourceRows=channelExportRows();
+      const shareTotals=new Map();
+      sourceRows.forEach(row=>{
+        const key=channelAggregateView==='merchant'?row[0]:`${row[0]}|${row[1]}`;
+        if(!shareTotals.has(key))shareTotals.set(key,{deposit:0,withdraw:0});
+        const total=shareTotals.get(key);total.deposit+=Number(row[4]||0);total.withdraw+=Number(row[5]||0);
+      });
+      let rows=sourceRows.filter(row=>(!date||row[0]===date)&&(channelAggregateView==='merchant'||!platform||row[1]===platform)&&(!type||String(row[3]).split(' / ').includes(type))&&(!query||String(row[2]).toLowerCase().includes(query)));
       const sorters={depositAmount:(a,b)=>b[4]-a[4],depositRate:(a,b)=>b[8]-a[8],withdrawAmount:(a,b)=>b[5]-a[5],withdrawRate:(a,b)=>b[11]-a[11],merchant:(a,b)=>String(a[2]).localeCompare(String(b[2]))};
       rows=rows.slice().sort(sorters[sort]||sorters.depositAmount);
       const totalDeposit=rows.reduce((sum,row)=>sum+Number(row[4]||0),0);
@@ -5903,7 +5956,7 @@
       const summary=document.getElementById('channelSummaryStrip');
       if(summary)summary.innerHTML=[['商户记录',fmtNumber(rows.length)],['代收总金额',fmtMoney(totalDeposit)],['代收成功率',fmtRate(depositOrders?depositSuccess/depositOrders*100:0)],['代付成功率',fmtRate(withdrawOrders?withdrawSuccess/withdrawOrders*100:0)]].map(([label,value])=>`<div class="channel-summary-card"><span>${label}</span><strong>${value}</strong></div>`).join('');
       const visible=rows.slice(0,250);
-      body.innerHTML=visible.length?visible.map((row,index)=>{const fee=channelFeeRule(row[2]);const feeTotal=fee?Number(row[4]||0)*fee[0]/100+Number(row[5]||0)*fee[1]/100+Number(row[9]||0)*fee[2]:null;return `<tr><td>${index+1}</td><td><span class="channel-platform-pill">${esc(row[1])}</span></td><td>${esc(row[2])}</td><td><span class="channel-type-pill">${esc(row[3])}</span></td><td>${fee?`${fee[0]}%`:'未配置'}</td><td>${fee?`${fee[1]}% + ₹${fee[2]}/单`:'未配置'}</td><td>${fmtMoney(row[4])}</td><td>${fmtNumber(row[6])}</td><td>${fmtNumber(row[7])}</td><td class="${channelRateClass(row[8])}">${fmtRate(Number(row[8]||0)*100)}</td><td>${fmtMoney(row[5])}</td><td>${fmtNumber(row[9])}</td><td>${fmtNumber(row[10])}</td><td class="${channelRateClass(row[11])}">${fmtRate(Number(row[11]||0)*100)}</td><td>${fee?`${fmtMoney(feeTotal)}<br><small>代收 ${fee[0]}% · 代付 ${fee[1]}% + ₹${fee[2]}/单</small>`:'费率未配置'}</td></tr>`}).join(''):`<tr><td colspan="15">当前筛选条件没有数据</td></tr>`;
+      body.innerHTML=visible.length?visible.map((row,index)=>{const fee=channelFeeRule(row[2]);const feeTotal=fee?Number(row[4]||0)*fee[0]/100+Number(row[5]||0)*fee[1]/100+Number(row[9]||0)*fee[2]:null;const shareKey=channelAggregateView==='merchant'?row[0]:`${row[0]}|${row[1]}`;const shareBase=shareTotals.get(shareKey)||{deposit:0,withdraw:0};const depositShare=shareBase.deposit?Number(row[4]||0)/shareBase.deposit*100:0;const withdrawShare=shareBase.withdraw?Number(row[5]||0)/shareBase.withdraw*100:0;return `<tr><td>${index+1}</td><td><span class="channel-platform-pill">${esc(row[1])}</span></td><td>${esc(row[2])}</td><td><span class="channel-type-pill">${esc(row[3])}</span></td><td>${fmtRate(depositShare)}</td><td>${fmtRate(withdrawShare)}</td><td>${fmtMoney(row[4])}</td><td>${fmtNumber(row[6])}</td><td>${fmtNumber(row[7])}</td><td class="${channelRateClass(row[8])}">${fmtRate(Number(row[8]||0)*100)}</td><td>${fmtMoney(row[5])}</td><td>${fmtNumber(row[9])}</td><td>${fmtNumber(row[10])}</td><td class="${channelRateClass(row[11])}">${fmtRate(Number(row[11]||0)*100)}</td><td>${fee?`${fmtMoney(feeTotal)}<br><small>代收 ${fee[0]}% · 代付 ${fee[1]}% + ₹${fee[2]}/单</small>`:'费率未配置'}</td></tr>`}).join(''):`<tr><td colspan="15">当前筛选条件没有数据</td></tr>`;
       const info=document.getElementById('financeTableInfo');if(info)info.innerText=`${fmtNumber(rows.length)} 条记录`;
       const note=document.getElementById('channelTableNote');if(note)note.innerText=(rows.length>250?`当前显示前 250 条，共 ${fmtNumber(rows.length)} 条。可使用上方搜索工具缩小范围。`:`共 ${fmtNumber(rows.length)} 条记录。`)+` 已排除待审核、待审查及未分配三方通道的订单。`;
       const title=document.getElementById('recordDetailTitle');if(title)title.innerText=channelAggregateView==='merchant'?'全部平台三方通道汇总':'印度三方通道明细';
