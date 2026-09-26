@@ -2047,7 +2047,7 @@
           <div class="channel-summary-strip" id="channelSummaryStrip"></div>
           <div class="channel-data-wrap" id="channelWorkbookWrap">
             <table class="channel-data-table">
-              <thead><tr><th>排名</th><th>平台</th><th>商户名称</th><th>通道类型</th><th>代收金额</th><th>代收订单</th><th>代收成功订单</th><th>代收成功率</th><th>代付金额</th><th>代付订单</th><th>代付成功订单</th><th>代付成功率</th><th>通道费率</th></tr></thead>
+              <thead><tr><th>排名</th><th>平台</th><th>商户名称</th><th>通道类型</th><th>代收金额</th><th>代收订单</th><th>代收成功订单</th><th>代收成功率</th><th>代付金额</th><th>代付订单</th><th>代付成功订单</th><th>代付成功率</th><th>预估通道费</th></tr></thead>
               <tbody id="channelWorkbookBody"><tr><td colspan="13">正在读取通道数据</td></tr></tbody>
             </table>
           </div>
@@ -4375,6 +4375,17 @@
       throw new Error(lastErr || '所有CSV链接都读取失败');
     }
 
+    async function fetchFinanceDailyPages(reportDate) {
+      const rows=[];
+      for(let from=0;from<20000;from+=1000){
+        const {data,error}=await supabaseClient.from('finance_daily').select('*').gte('report_date','2026-09-01').lte('report_date',reportDate).order('report_date',{ascending:false}).range(from,from+999);
+        if(error)throw error;
+        rows.push(...(data||[]));
+        if(!data||data.length<1000)break;
+      }
+      return rows;
+    }
+
     async function loadFinanceData(force = false) {
       if (financeLoading) return;
       financeLoading = true;
@@ -5411,18 +5422,14 @@
       try {
         const reportDate = getRelativeISODate(activeGlobalDate,0);
         const hourlyStartDate = getRelativeISODate(reportDate,-2);
-        const [{ data, error }, { data:hourlyData, error:hourlyError }] = await Promise.all([
-          supabaseClient.from('finance_daily').select('*')
-            .lte('report_date',reportDate)
-            .order('report_date',{ascending:false})
-            .limit(1000),
+        const [data, { data:hourlyData, error:hourlyError }] = await Promise.all([
+          fetchFinanceDailyPages(reportDate),
           supabaseClient.from('finance_hourly').select('*')
             .gte('report_date',hourlyStartDate)
             .lte('report_date',reportDate)
             .order('report_date',{ascending:false})
             .limit(1000)
         ]);
-        if (error) throw error;
         if (hourlyError) console.warn('Supabase 每小时财务读取失败',hourlyError.message);
         dbFinance = (data || []).map(row => ({
           '日期':String(row.report_date || '').replace(/-/g,'/'),
@@ -5815,19 +5822,24 @@
       if(dateInput&&dates.length){dateInput.min=dates[0];dateInput.max=dates[dates.length-1];if(!dates.includes(dateInput.value))dateInput.value=dates[dates.length-1]}
     }
 
+    const CHANNEL_FEE_RULES={
+      swaypay:[4,3,6],busspay:[4,3,6],win2pay:[4,3,6],tukpay:[4,3,6],tigerpay:[4,3,6],rushpay:[4,3,6],rhinopay:[4,3,6],onepay:[4,3,6],masterpay:[3.9,3,6],lkgopay:[3.8,3,6],icpay2:[4,3,6],ic2pay:[4,3,6],hfpay:[4,3,6],freepapay:[4,3,6],freepay:[4,3,6],fastpay:[4,3,6],elepay:[4,3,6],chakrapay:[4,3,6],cedarpay:[4,3,6],bibipay:[4,3,6],apay:[4,3,6],"999pay":[3.8,3,6],"3tapay":[4,2.5,6],aelopay:[4,3,6],wzpay:[3.8,2.5,6],nova3pay:[3.7,3,6],maxpay:[4,3,6],movpay:[4,3,6],lovepay:[3.5,2,6],hengxpay:[3.8,2.7,6],cqgpay:[3.5,2.5,6],dypay:[4,2.8,6],rrpay:[4,3,6],t3pay:[3.8,3,6],atpay:[4,1,6],arupi:[4,0,6],ttpay:[4,3,6],smoopay:[3.8,3,6],deepay:[4.5,2.5,6],nekpay:[4.3,3,6],lsppay:[3.7,2.5,6],btpay:[3.5,2.5,6],umpay:[4,2.5,6],jdpay:[4,3,6],wypay:[4,2.6,6],ox2pay:[3.8,2.5,6],huixpay:[4.5,3,6]
+    };
+    function channelFeeRule(merchant){return CHANNEL_FEE_RULES[String(merchant||'').toLowerCase().replace(/\s+/g,'')]||null}
+
     function channelExportRows(){
       const grouped=new Map();
       (dbFinance||[]).forEach(row=>{
         const parts=String(row['渠道']||'').split('|');
         if(parts.length<3||!['RECHARGE','WITHDRAW'].includes(parts[0]))return;
-        const date=String(row['日期']||'').replace(/\//g,'-'),platform=String(row['平台']||'-'),merchant=parts[1]||'未分配',type=parts[2]||'其他';
+        const date=String(row['日期']||'').replace(/\//g,'-'),platform=String(row['平台']||'-'),merchant=parts[1]||'通道未填写',type=parts[2]||'其他';
         const key=`${date}|${platform}|${merchant}|${type}`;
         if(!grouped.has(key))grouped.set(key,[date,platform,merchant,type,0,0,0,0,0,0,0,0,0]);
         const item=grouped.get(key),orders=Number(row['总订单']||0),success=Number(row['成功']||0),amount=Number(row['金额']||0);
         if(parts[0]==='RECHARGE'){item[4]+=amount;item[6]+=orders;item[7]+=success}
         else {item[5]+=amount;item[9]+=orders;item[10]+=success}
       });
-      return [...grouped.values()].map(item=>{item[8]=item[6]?item[7]/item[6]:0;item[11]=item[9]?item[10]/item[9]:0;return item});
+      return [...grouped.values()].map(item=>{item[2]=item[2]==='未分配'?'通道未填写':item[2];item[8]=item[6]?item[7]/item[6]:0;item[11]=item[9]?item[10]/item[9]:0;return item});
     }
 
     function channelRateClass(rate) {
@@ -5856,7 +5868,7 @@
       const summary=document.getElementById('channelSummaryStrip');
       if(summary)summary.innerHTML=[['商户记录',fmtNumber(rows.length)],['代收总金额',fmtMoney(totalDeposit)],['代收成功率',fmtRate(depositOrders?depositSuccess/depositOrders*100:0)],['代付成功率',fmtRate(withdrawOrders?withdrawSuccess/withdrawOrders*100:0)]].map(([label,value])=>`<div class="channel-summary-card"><span>${label}</span><strong>${value}</strong></div>`).join('');
       const visible=rows.slice(0,250);
-      body.innerHTML=visible.length?visible.map((row,index)=>`<tr><td>${index+1}</td><td><span class="channel-platform-pill">${esc(row[1])}</span></td><td>${esc(row[2])}</td><td><span class="channel-type-pill">${esc(row[3])}</span></td><td>${fmtMoney(row[4])}</td><td>${fmtNumber(row[6])}</td><td>${fmtNumber(row[7])}</td><td class="${channelRateClass(row[8])}">${fmtRate(Number(row[8]||0)*100)}</td><td>${fmtMoney(row[5])}</td><td>${fmtNumber(row[9])}</td><td>${fmtNumber(row[10])}</td><td class="${channelRateClass(row[11])}">${fmtRate(Number(row[11]||0)*100)}</td><td>${fmtRate(Number(row[12]||0)*100)}</td></tr>`).join(''):`<tr><td colspan="13">当前筛选条件没有数据</td></tr>`;
+      body.innerHTML=visible.length?visible.map((row,index)=>{const fee=channelFeeRule(row[2]);const feeTotal=fee?Number(row[4]||0)*fee[0]/100+Number(row[5]||0)*fee[1]/100+Number(row[9]||0)*fee[2]:null;return `<tr><td>${index+1}</td><td><span class="channel-platform-pill">${esc(row[1])}</span></td><td>${esc(row[2])}</td><td><span class="channel-type-pill">${esc(row[3])}</span></td><td>${fmtMoney(row[4])}</td><td>${fmtNumber(row[6])}</td><td>${fmtNumber(row[7])}</td><td class="${channelRateClass(row[8])}">${fmtRate(Number(row[8]||0)*100)}</td><td>${fmtMoney(row[5])}</td><td>${fmtNumber(row[9])}</td><td>${fmtNumber(row[10])}</td><td class="${channelRateClass(row[11])}">${fmtRate(Number(row[11]||0)*100)}</td><td>${fee?`${fmtMoney(feeTotal)}<br><small>代收 ${fee[0]}% · 代付 ${fee[1]}% + ₹${fee[2]}/单</small>`:'费率未配置'}</td></tr>`}).join(''):`<tr><td colspan="13">当前筛选条件没有数据</td></tr>`;
       const info=document.getElementById('financeTableInfo');if(info)info.innerText=`${fmtNumber(rows.length)} 条记录`;
       const note=document.getElementById('channelTableNote');if(note)note.innerText=rows.length>250?`当前显示前 250 条，共 ${fmtNumber(rows.length)} 条。可使用上方搜索工具缩小范围。`:`共 ${fmtNumber(rows.length)} 条记录。数据来源：HGX 印度三方通道。`;
     }
