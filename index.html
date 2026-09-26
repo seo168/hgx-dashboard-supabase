@@ -5865,6 +5865,7 @@
         const parts=String(row['渠道']||'').split('|');
         if(parts.length<3||!['RECHARGE','WITHDRAW'].includes(parts[0]))return;
         const date=String(row['日期']||'').replace(/\//g,'-'),platform=String(row['平台']||'-'),merchant=canonicalChannelName(parts[1]),type=parts[2]||'其他';
+        if(merchant==='通道未填写'||merchant.includes('未分配通道'))return;
         const key=channelAggregateView==='merchant'?`${date}|${merchant}`:`${date}|${platform}|${merchant}|${type}`;
         if(!grouped.has(key))grouped.set(key,{date,platform:channelAggregateView==='merchant'?'全部平台':platform,merchant,types:new Set(),depositAmount:0,withdrawAmount:0,depositOrders:0,depositSuccess:0,withdrawOrders:0,withdrawSuccess:0});
         const item=grouped.get(key),orders=Number(row['总订单']||0),success=Number(row['成功']||0),amount=Number(row['金额']||0);
@@ -5904,7 +5905,7 @@
       const visible=rows.slice(0,250);
       body.innerHTML=visible.length?visible.map((row,index)=>{const fee=channelFeeRule(row[2]);const feeTotal=fee?Number(row[4]||0)*fee[0]/100+Number(row[5]||0)*fee[1]/100+Number(row[9]||0)*fee[2]:null;return `<tr><td>${index+1}</td><td><span class="channel-platform-pill">${esc(row[1])}</span></td><td>${esc(row[2])}</td><td><span class="channel-type-pill">${esc(row[3])}</span></td><td>${fee?`${fee[0]}%`:'未配置'}</td><td>${fee?`${fee[1]}% + ₹${fee[2]}/单`:'未配置'}</td><td>${fmtMoney(row[4])}</td><td>${fmtNumber(row[6])}</td><td>${fmtNumber(row[7])}</td><td class="${channelRateClass(row[8])}">${fmtRate(Number(row[8]||0)*100)}</td><td>${fmtMoney(row[5])}</td><td>${fmtNumber(row[9])}</td><td>${fmtNumber(row[10])}</td><td class="${channelRateClass(row[11])}">${fmtRate(Number(row[11]||0)*100)}</td><td>${fee?`${fmtMoney(feeTotal)}<br><small>代收 ${fee[0]}% · 代付 ${fee[1]}% + ₹${fee[2]}/单</small>`:'费率未配置'}</td></tr>`}).join(''):`<tr><td colspan="15">当前筛选条件没有数据</td></tr>`;
       const info=document.getElementById('financeTableInfo');if(info)info.innerText=`${fmtNumber(rows.length)} 条记录`;
-      const note=document.getElementById('channelTableNote');if(note)note.innerText=rows.length>250?`当前显示前 250 条，共 ${fmtNumber(rows.length)} 条。可使用上方搜索工具缩小范围。`:`共 ${fmtNumber(rows.length)} 条记录。数据来源：HGX 印度三方通道。`;
+      const note=document.getElementById('channelTableNote');if(note)note.innerText=(rows.length>250?`当前显示前 250 条，共 ${fmtNumber(rows.length)} 条。可使用上方搜索工具缩小范围。`:`共 ${fmtNumber(rows.length)} 条记录。`)+` 已排除待审核、待审查及未分配三方通道的订单。`;
       const title=document.getElementById('recordDetailTitle');if(title)title.innerText=channelAggregateView==='merchant'?'全部平台三方通道汇总':'印度三方通道明细';
       const desc=document.getElementById('recordDetailDesc');if(desc)desc.innerText=channelAggregateView==='merchant'?'已合并全部平台，并按标准化后的三方名称汇总。':'按日期、平台、通道类型和商户名称筛选代收及代付表现。';
     }
