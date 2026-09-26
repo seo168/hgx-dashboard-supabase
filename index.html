@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="channel-data.js"></script>
 
   <style>
     :root{
@@ -1125,6 +1126,27 @@
       gap:8px;
       white-space:nowrap;
     }
+    .channel-search-panel{margin-bottom:1rem}
+    .channel-search-grid{display:grid;grid-template-columns:1.05fr 1fr 1fr 1.35fr 1.15fr auto;gap:10px;align-items:end}
+    .channel-search-grid .filter-group input,.channel-search-grid .filter-group select{height:43px}
+    .channel-summary-strip{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;padding:16px 16px 0}
+    .channel-summary-card{padding:13px 15px;border:1px solid rgba(148,163,184,.16);border-radius:16px;background:rgba(8,17,31,.42)}
+    .channel-summary-card span{display:block;color:#94a3b8;font-size:.65rem;font-weight:900;margin-bottom:5px}
+    .channel-summary-card strong{display:block;color:#f8fbff;font-size:1.12rem;font-weight:950;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .channel-data-wrap{overflow:auto;max-height:720px;margin:16px;border:1px solid rgba(148,163,184,.14);border-radius:18px}
+    .channel-data-table{width:100%;min-width:1380px;border-collapse:separate;border-spacing:0}
+    .channel-data-table th{position:sticky;top:0;z-index:3;padding:12px 10px;background:#14233b;color:#bfdbfe;font-size:.67rem;text-align:center;border-bottom:1px solid rgba(96,165,250,.30)}
+    .channel-data-table td{padding:11px 10px;color:#dce8f8;font-size:.7rem;text-align:center;border-bottom:1px solid rgba(148,163,184,.09)}
+    .channel-data-table tbody tr:nth-child(even) td{background:rgba(30,41,59,.22)}
+    .channel-data-table tbody tr:hover td{background:rgba(37,99,235,.10)}
+    .channel-data-table td:nth-child(3){text-align:left;font-weight:900;color:#fff}
+    .channel-platform-pill,.channel-type-pill{display:inline-flex;align-items:center;justify-content:center;padding:4px 9px;border-radius:999px;font-size:.62rem;font-weight:900;white-space:nowrap}
+    .channel-platform-pill{color:#dbeafe;background:rgba(37,99,235,.18);border:1px solid rgba(96,165,250,.25)}
+    .channel-type-pill{color:#d1fae5;background:rgba(16,185,129,.12);border:1px solid rgba(52,211,153,.20)}
+    .channel-rate-good{color:#34d399!important;font-weight:950}.channel-rate-mid{color:#fbbf24!important;font-weight:950}.channel-rate-low{color:#fb7185!important;font-weight:950}
+    .channel-table-note{padding:0 16px 16px;color:#91a3bd;font-size:.68rem;font-weight:800}
+    @media(max-width:1180px){.channel-search-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+    @media(max-width:700px){.channel-search-grid,.channel-summary-strip{grid-template-columns:1fr 1fr}}
     .finance-table-wrap{overflow-x:auto}
     .finance-table-wrap table{min-width:1180px}
     .finance-readable-board{
@@ -1993,11 +2015,13 @@
           <span>正在从 Supabase 读取财务数据。</span>
         </div>
 
-        <div class="filter-wrapper">
-          <div class="finance-filter-grid">
-            <div class="filter-group"><label>日期</label><input type="text" id="financeDateFilter" placeholder="例如 2026/05/27" oninput="renderFinanceReport()"></div>
-            <div class="filter-group"><label>平台</label><select id="financePlatformFilter" onchange="renderFinanceReport()"><option value="">全部</option></select></div>
-            <div class="filter-group"><label>通道</label><select id="financeChannelFilter" onchange="renderFinanceReport()"><option value="">全部</option></select></div>
+        <div class="filter-wrapper channel-search-panel">
+          <div class="channel-search-grid">
+            <div class="filter-group"><label>日期</label><input type="date" id="financeDateFilter" oninput="renderFinanceReport()"></div>
+            <div class="filter-group"><label>平台</label><select id="financePlatformFilter" onchange="renderFinanceReport()"><option value="">全部平台</option></select></div>
+            <div class="filter-group"><label>通道类型</label><select id="financeChannelFilter" onchange="renderFinanceReport()"><option value="">全部类型</option></select></div>
+            <div class="filter-group"><label>搜索商户</label><input type="search" id="channelMerchantSearch" placeholder="输入商户名称" oninput="renderFinanceReport()"></div>
+            <div class="filter-group"><label>排序</label><select id="channelSortFilter" onchange="renderFinanceReport()"><option value="depositAmount">代收金额从高到低</option><option value="depositRate">代收成功率从高到低</option><option value="withdrawAmount">代付金额从高到低</option><option value="withdrawRate">代付成功率从高到低</option><option value="merchant">商户名称 A–Z</option></select></div>
             <button class="finance-action-btn" onclick="resetFinanceFilters()"><i class="fas fa-filter-circle-xmark"></i> 重置</button>
           </div>
         </div>
@@ -2016,15 +2040,21 @@
         <div class="finance-readable-board" id="financeDetailBoard">
           <div class="table-head-bar finance-readable-head">
             <div>
-              <span><i class="fas fa-table-cells-large"></i> <b id="recordDetailTitle">财务详细数据表</b></span>
-              <div class="finance-readable-desc" id="recordDetailDesc">每个平台一个卡片，上方看总览，下方看 唤醒 / 扫码 / 原生 三种支付数据。</div>
+              <span><i class="fas fa-table-cells-large"></i> <b id="recordDetailTitle">印度三方通道明细</b></span>
+              <div class="finance-readable-desc" id="recordDetailDesc">按日期、平台、通道类型和商户名称筛选代收及代付表现。</div>
             </div>
             <span id="financeTableInfo" style="font-size:.76rem;font-weight:900;color:#9fb0cf;">0 条数据</span>
           </div>
-          <div class="finance-scroll-hint"><i class="fas fa-arrow-right-arrow-left"></i> 如果内容太宽，可以左右滑动查看完整数据</div>
-          <div id="financeReportBody" class="finance-card-board">
-            <div class="finance-card-empty">Supabase 暂无数据</div>
+          <div class="finance-scroll-hint"><i class="fas fa-arrow-right-arrow-left"></i> 可左右滑动查看完整字段；颜色用于快速识别成功率。</div>
+          <div class="channel-summary-strip" id="channelSummaryStrip"></div>
+          <div class="channel-data-wrap" id="channelWorkbookWrap">
+            <table class="channel-data-table">
+              <thead><tr><th>排名</th><th>平台</th><th>商户名称</th><th>通道类型</th><th>代收金额</th><th>代收订单</th><th>代收成功订单</th><th>代收成功率</th><th>代付金额</th><th>代付订单</th><th>代付成功订单</th><th>代付成功率</th><th>通道费率</th></tr></thead>
+              <tbody id="channelWorkbookBody"><tr><td colspan="13">正在读取通道数据</td></tr></tbody>
+            </table>
           </div>
+          <div class="channel-table-note" id="channelTableNote"></div>
+          <div class="finance-card-board" id="financeReportBody" style="display:none"></div>
         </div>
 
         <div class="finance-readable-board payout-platform-panel" id="payoutPlatformPanel">
@@ -2806,9 +2836,13 @@
       const platform = document.getElementById('financePlatformCards');
       if (platform) platform.innerHTML = `<div class="finance-platform-card"><div class="finance-platform-name">${dashboardLabel}${connectedRow ? '数据已连接' : '暂无数据'}</div><div class="finance-platform-row"><span>状态</span><b>${connectedRow ? '自动同步' : '等待数据接口'}</b></div><div class="finance-platform-row"><span>报告日期</span><b>${reportDate}</b></div></div>`;
       const report = document.getElementById('financeReportBody');
-      if (report) report.innerHTML = isService && serviceRow
+      if (report) {
+        report.style.display = 'grid';
+        report.innerHTML = isService && serviceRow
         ? `<div class="finance-platform-card"><div class="finance-platform-name">${reportDate} ${dashboardLabel}汇总</div><div class="finance-platform-row"><span>回复总量</span><b>${fmtNumber(serviceRow[3])}</b></div><div class="finance-platform-row"><span>平均回复时长</span><b>${Number(serviceRow[4] || 0).toFixed(2)} 秒</b></div></div>`
         : payoutRow ? `<div class="finance-platform-card"><div class="finance-platform-name">${reportDate} 出款汇总</div><div class="finance-platform-row"><span>处理总数</span><b>${fmtNumber(payoutRow[5])}</b></div><div class="finance-platform-row"><span>通过总数</span><b>${fmtNumber(payoutRow[3])}</b></div><div class="finance-platform-row"><span>拒绝总数</span><b>${fmtNumber(payoutRow[4])}</b></div><div class="finance-platform-row"><span>通过率</span><b>${esc(payoutRow[6] || '-')}</b></div></div>` : `<div class="finance-card-empty">${label}模块暂无数据</div>`;
+      }
+      ['channelWorkbookWrap','channelSummaryStrip','channelTableNote'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none'});
       const info = document.getElementById('financeTableInfo'); if (info) info.innerText = connectedRow ? '1 条数据' : '0 条数据';
       const status = document.getElementById('financePlatformStatus'); if (status) status.innerText = connectedRow ? '已自动同步' : '等待数据';
       const trend = document.getElementById('financeTrendStatus'); if (trend) trend.innerText = `${reportDate} · 7日对比`;
@@ -5767,6 +5801,62 @@
         return `<div class="kpi-platform-card" style="--platform-color:${palette[index%palette.length]}"><b>${esc(item.name)}</b><span>${esc(firstLabel)}<strong>${esc(firstValue)}</strong></span><span>${esc(secondLabel)}<strong>${esc(secondValue)}</strong></span></div>`;
       }).join('');
     }
+
+    function ensureChannelFilterOptions() {
+      const data=Array.isArray(window.HGX_CHANNEL_DATA)?window.HGX_CHANNEL_DATA:[];
+      const fill=(id,values,placeholder)=>{
+        const select=document.getElementById(id); if(!select)return;
+        const current=select.value;
+        select.innerHTML=`<option value="">${placeholder}</option>`+values.map(value=>`<option value="${esc(value)}">${esc(value)}</option>`).join('');
+        if(values.includes(current))select.value=current;
+      };
+      fill('financePlatformFilter',[...new Set(data.map(row=>row[1]))].sort(),'全部平台');
+      fill('financeChannelFilter',[...new Set(data.map(row=>row[3]))].sort(),'全部类型');
+      const dateInput=document.getElementById('financeDateFilter');
+      const dates=[...new Set(data.map(row=>row[0]))].sort();
+      if(dateInput&&dates.length){dateInput.min=dates[0];dateInput.max=dates[dates.length-1];if(!dates.includes(dateInput.value))dateInput.value=dates[dates.length-1]}
+    }
+
+    function channelRateClass(rate) {
+      const value=Number(rate||0)*100;
+      return value>=80?'channel-rate-good':value>=50?'channel-rate-mid':'channel-rate-low';
+    }
+
+    function renderChannelWorkbookTable() {
+      ensureChannelFilterOptions();
+      const body=document.getElementById('channelWorkbookBody'); if(!body)return;
+      const legacyBoard=document.getElementById('financeReportBody');if(legacyBoard)legacyBoard.style.display='none';
+      const workbookWrap=document.getElementById('channelWorkbookWrap');if(workbookWrap)workbookWrap.style.display='block';
+      const summaryWrap=document.getElementById('channelSummaryStrip');if(summaryWrap)summaryWrap.style.display='grid';
+      const noteWrap=document.getElementById('channelTableNote');if(noteWrap)noteWrap.style.display='block';
+      const date=document.getElementById('financeDateFilter')?.value||'';
+      const platform=document.getElementById('financePlatformFilter')?.value||'';
+      const type=document.getElementById('financeChannelFilter')?.value||'';
+      const query=(document.getElementById('channelMerchantSearch')?.value||'').trim().toLowerCase();
+      const sort=document.getElementById('channelSortFilter')?.value||'depositAmount';
+      let rows=(window.HGX_CHANNEL_DATA||[]).filter(row=>(!date||row[0]===date)&&(!platform||row[1]===platform)&&(!type||row[3]===type)&&(!query||String(row[2]).toLowerCase().includes(query)));
+      const sorters={depositAmount:(a,b)=>b[4]-a[4],depositRate:(a,b)=>b[8]-a[8],withdrawAmount:(a,b)=>b[5]-a[5],withdrawRate:(a,b)=>b[11]-a[11],merchant:(a,b)=>String(a[2]).localeCompare(String(b[2]))};
+      rows=rows.slice().sort(sorters[sort]||sorters.depositAmount);
+      const totalDeposit=rows.reduce((sum,row)=>sum+Number(row[4]||0),0);
+      const depositOrders=rows.reduce((sum,row)=>sum+Number(row[6]||0),0),depositSuccess=rows.reduce((sum,row)=>sum+Number(row[7]||0),0);
+      const withdrawOrders=rows.reduce((sum,row)=>sum+Number(row[9]||0),0),withdrawSuccess=rows.reduce((sum,row)=>sum+Number(row[10]||0),0);
+      const summary=document.getElementById('channelSummaryStrip');
+      if(summary)summary.innerHTML=[['商户记录',fmtNumber(rows.length)],['代收总金额',fmtMoney(totalDeposit)],['代收成功率',fmtRate(depositOrders?depositSuccess/depositOrders*100:0)],['代付成功率',fmtRate(withdrawOrders?withdrawSuccess/withdrawOrders*100:0)]].map(([label,value])=>`<div class="channel-summary-card"><span>${label}</span><strong>${value}</strong></div>`).join('');
+      const visible=rows.slice(0,250);
+      body.innerHTML=visible.length?visible.map((row,index)=>`<tr><td>${index+1}</td><td><span class="channel-platform-pill">${esc(row[1])}</span></td><td>${esc(row[2])}</td><td><span class="channel-type-pill">${esc(row[3])}</span></td><td>${fmtMoney(row[4])}</td><td>${fmtNumber(row[6])}</td><td>${fmtNumber(row[7])}</td><td class="${channelRateClass(row[8])}">${fmtRate(Number(row[8]||0)*100)}</td><td>${fmtMoney(row[5])}</td><td>${fmtNumber(row[9])}</td><td>${fmtNumber(row[10])}</td><td class="${channelRateClass(row[11])}">${fmtRate(Number(row[11]||0)*100)}</td><td>${fmtRate(Number(row[12]||0)*100)}</td></tr>`).join(''):`<tr><td colspan="13">当前筛选条件没有数据</td></tr>`;
+      const info=document.getElementById('financeTableInfo');if(info)info.innerText=`${fmtNumber(rows.length)} 条记录`;
+      const note=document.getElementById('channelTableNote');if(note)note.innerText=rows.length>250?`当前显示前 250 条，共 ${fmtNumber(rows.length)} 条。可使用上方搜索工具缩小范围。`:`共 ${fmtNumber(rows.length)} 条记录。数据来源：HGX 印度三方通道。`;
+    }
+
+    const originalRenderFinanceTable=renderFinanceTable;
+    renderFinanceTable=function(){renderChannelWorkbookTable()};
+    const originalResetFinanceFilters=resetFinanceFilters;
+    resetFinanceFilters=function(){
+      ['financePlatformFilter','financeChannelFilter','channelMerchantSearch'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=''});
+      const sort=document.getElementById('channelSortFilter');if(sort)sort.value='depositAmount';
+      const date=document.getElementById('financeDateFilter'),dates=[...new Set((window.HGX_CHANNEL_DATA||[]).map(row=>row[0]))].sort();if(date&&dates.length)date.value=dates[dates.length-1];
+      renderFinanceReport();
+    };
 
     document.addEventListener('keydown', e => {
       if (e.key === "Escape") {
