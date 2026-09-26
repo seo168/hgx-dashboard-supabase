@@ -8,7 +8,6 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="channel-data.js"></script>
 
   <style>
     :root{
@@ -828,8 +827,7 @@
     .finance-trend-full{margin-bottom:1rem}
     .finance-trend-full .finance-chart-box{height:390px}
     #finance.finance-chart-only .finance-trend-full .finance-chart-box{height:470px}
-    #finance.finance-chart-only #financePlatformPanel,
-    #finance.finance-chart-only #financeDetailBoard{display:none!important}
+    #finance.finance-chart-only #financePlatformPanel{display:none!important}
     #finance.record-service > .filter-wrapper,
     #finance.record-service #financePlatformPanel,
     #finance.record-service #financeDetailBoard,
@@ -5803,7 +5801,7 @@
     }
 
     function ensureChannelFilterOptions() {
-      const data=Array.isArray(window.HGX_CHANNEL_DATA)?window.HGX_CHANNEL_DATA:[];
+      const data=channelExportRows();
       const fill=(id,values,placeholder)=>{
         const select=document.getElementById(id); if(!select)return;
         const current=select.value;
@@ -5815,6 +5813,21 @@
       const dateInput=document.getElementById('financeDateFilter');
       const dates=[...new Set(data.map(row=>row[0]))].sort();
       if(dateInput&&dates.length){dateInput.min=dates[0];dateInput.max=dates[dates.length-1];if(!dates.includes(dateInput.value))dateInput.value=dates[dates.length-1]}
+    }
+
+    function channelExportRows(){
+      const grouped=new Map();
+      (dbFinance||[]).forEach(row=>{
+        const parts=String(row['渠道']||'').split('|');
+        if(parts.length<3||!['RECHARGE','WITHDRAW'].includes(parts[0]))return;
+        const date=String(row['日期']||'').replace(/\//g,'-'),platform=String(row['平台']||'-'),merchant=parts[1]||'未分配',type=parts[2]||'其他';
+        const key=`${date}|${platform}|${merchant}|${type}`;
+        if(!grouped.has(key))grouped.set(key,[date,platform,merchant,type,0,0,0,0,0,0,0,0,0]);
+        const item=grouped.get(key),orders=Number(row['总订单']||0),success=Number(row['成功']||0),amount=Number(row['金额']||0);
+        if(parts[0]==='RECHARGE'){item[4]+=amount;item[6]+=orders;item[7]+=success}
+        else {item[5]+=amount;item[9]+=orders;item[10]+=success}
+      });
+      return [...grouped.values()].map(item=>{item[8]=item[6]?item[7]/item[6]:0;item[11]=item[9]?item[10]/item[9]:0;return item});
     }
 
     function channelRateClass(rate) {
@@ -5834,7 +5847,7 @@
       const type=document.getElementById('financeChannelFilter')?.value||'';
       const query=(document.getElementById('channelMerchantSearch')?.value||'').trim().toLowerCase();
       const sort=document.getElementById('channelSortFilter')?.value||'depositAmount';
-      let rows=(window.HGX_CHANNEL_DATA||[]).filter(row=>(!date||row[0]===date)&&(!platform||row[1]===platform)&&(!type||row[3]===type)&&(!query||String(row[2]).toLowerCase().includes(query)));
+      let rows=channelExportRows().filter(row=>(!date||row[0]===date)&&(!platform||row[1]===platform)&&(!type||row[3]===type)&&(!query||String(row[2]).toLowerCase().includes(query)));
       const sorters={depositAmount:(a,b)=>b[4]-a[4],depositRate:(a,b)=>b[8]-a[8],withdrawAmount:(a,b)=>b[5]-a[5],withdrawRate:(a,b)=>b[11]-a[11],merchant:(a,b)=>String(a[2]).localeCompare(String(b[2]))};
       rows=rows.slice().sort(sorters[sort]||sorters.depositAmount);
       const totalDeposit=rows.reduce((sum,row)=>sum+Number(row[4]||0),0);
@@ -5854,7 +5867,7 @@
     resetFinanceFilters=function(){
       ['financePlatformFilter','financeChannelFilter','channelMerchantSearch'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=''});
       const sort=document.getElementById('channelSortFilter');if(sort)sort.value='depositAmount';
-      const date=document.getElementById('financeDateFilter'),dates=[...new Set((window.HGX_CHANNEL_DATA||[]).map(row=>row[0]))].sort();if(date&&dates.length)date.value=dates[dates.length-1];
+      const date=document.getElementById('financeDateFilter'),dates=[...new Set(channelExportRows().map(row=>row[0]))].sort();if(date&&dates.length)date.value=dates[dates.length-1];
       renderFinanceReport();
     };
 
