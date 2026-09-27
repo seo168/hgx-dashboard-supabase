@@ -1713,6 +1713,48 @@
     .logout-btn{background:#f5e5e1;color:#a34f49;border-color:#e4c5bf}.logout-btn:hover{background:#eed4cf}
     input,select,.kpi-datetime-trigger,.kpi-datetime-panel,.kpi-datetime-panel input[type="date"],.kpi-time-part select{background:#fff!important;color:#26383d!important;border-color:#d4cec5!important}
     .login-gate{background:radial-gradient(circle at 20% 18%,rgba(63,125,122,.14),transparent 34%),radial-gradient(circle at 82% 78%,rgba(192,138,50,.12),transparent 34%),#f4f1eb}
+    /* Solid neutral dashboard palette */
+    :root{
+      --bg:#e5e7eb;--panel:#ffffff;--panel2:#f3f4f6;--border:#cbd5e1;
+      --text-main:#111827;--text-muted:#4b5563;--blue:#2563eb;--purple:#7c3aed;
+      --yellow:#d97706;--red:#dc2626;--cyan:#0891b2;--green:#059669;
+      --shadow:0 10px 24px rgba(17,24,39,.12);
+    }
+    body{background:#e5e7eb!important;color:#111827!important}
+    body::before{background:#e5e7eb!important}
+    body::after,.ambient-bg,.float-word-layer{display:none!important}
+    nav{background:#ffffff!important;border-bottom:1px solid #cbd5e1!important;box-shadow:0 3px 12px rgba(17,24,39,.12)!important}
+    .brand-title,.brand-title span{color:#111827!important}.brand-title i{color:#2563eb!important}
+    .amt-clock{background:#374151!important;color:#ffffff!important;border:1px solid #1f2937!important;box-shadow:none!important}
+    .side-menu,.sidebar,.nav-menu{background:#2f343b!important;border-color:#1f2937!important;box-shadow:0 8px 20px rgba(17,24,39,.18)!important}
+    .side-menu-title,.nav-title{color:#f9fafb!important}
+    .side-menu .menu-btn,.side-menu .sub-menu-btn,.menu-btn,.sub-menu-btn{background:#3f454d!important;color:#f3f4f6!important;border:1px solid #59616b!important;box-shadow:none!important}
+    .side-menu .menu-btn:hover,.side-menu .sub-menu-btn:hover,.menu-btn:hover,.sub-menu-btn:hover{background:#4b5563!important;color:#ffffff!important;border-color:#6b7280!important}
+    .side-menu .menu-btn.active,.side-menu .sub-menu-btn.active,.menu-btn.active,.sub-menu-btn.active{background:#2563eb!important;color:#ffffff!important;border-color:#1d4ed8!important;box-shadow:none!important}
+    .glass-shell,.finance-readable-board,.finance-panel,.top-highlight-panel,.home-chart-card,.home-kpi,.home-hero,.filter-wrapper,.table-container,.modal-content,.stat-modal-content,.kpi-detail-modal,.order-summary-card,.finance-platform-card,.finance-report-card,.finance-kpi-card,.sub-page-title,.module-context{
+      background:#ffffff!important;color:#111827!important;border:1px solid #cbd5e1!important;box-shadow:0 6px 18px rgba(17,24,39,.09)!important;
+    }
+    .home-kpi,.finance-kpi-card{border-top:4px solid var(--highlight,#2563eb)!important}
+    .highlight-staff{--highlight:#2563eb}.highlight-finance{--highlight:#059669}.highlight-reply{--highlight:#7c3aed}.highlight-payout{--highlight:#d97706}.highlight-service{--highlight:#0891b2}
+    .home-kpi-label,.home-chart-title,.home-chart-head,.home-staff-title,.work-mode-title,.onsite-role-title{color:#374151!important}
+    .home-kpi-value,.home-chart-value,.finance-kpi-value,.finance-summary-value,.channel-summary-card strong,.finance-platform-name{color:#111827!important}
+    .home-kpi-note,.finance-readable-desc,.channel-table-note,.finance-kpi-note,.channel-summary-card span{color:#4b5563!important}
+    .finance-action-btn,.login-submit,.kpi-range-apply,.kpi-time-confirm{background:#2563eb!important;color:#ffffff!important;border:1px solid #1d4ed8!important;box-shadow:none!important}
+    .channel-view-btn.active,.record-view-btn.active,.payout-stat-btn.active,.home-chart-btn.active,.kpi-date-btn.active{background:#2563eb!important;color:#ffffff!important;border-color:#1d4ed8!important}
+    .channel-view-btn,.record-view-btn,.payout-stat-btn,.home-chart-btn,.kpi-date-btn,.work-mode-btn,.onsite-role-btn{background:#f3f4f6!important;color:#374151!important;border:1px solid #cbd5e1!important}
+    .table-head-bar,.finance-readable-head,.stat-modal-top,.shift-column-head{background:#374151!important;color:#ffffff!important;border-color:#1f2937!important}
+    table th,.channel-data-table th,.kpi-popup-table th,.shift-list-table th{background:#4b5563!important;color:#ffffff!important;border-color:#374151!important}
+    table td,.channel-data-table td,.kpi-popup-table td{background:#ffffff!important;color:#1f2937!important;border-color:#e5e7eb!important}
+    tbody tr:nth-child(even) td,.channel-data-table tbody tr:nth-child(even) td{background:#f3f4f6!important}
+    tbody tr:hover td,.channel-data-table tbody tr:hover td{background:#dbeafe!important}
+    .channel-summary-card,.stat-summary-card,.kpi-support-card,.kpi-platform-card,.finance-summary-box,.finance-compare-box,.home-staff-unit,.home-work-stat,.shift-member-card,.stat-member-card,.stat-member-item{background:#f3f4f6!important;border:1px solid #d1d5db!important;box-shadow:none!important}
+    .channel-platform-pill{background:#2563eb!important;color:#ffffff!important;border-color:#1d4ed8!important}
+    .channel-type-pill{background:#374151!important;color:#ffffff!important;border-color:#1f2937!important}
+    .channel-rate-good{color:#047857!important}.channel-rate-mid{color:#b45309!important}.channel-rate-low{color:#b91c1c!important}
+    input,select,.kpi-datetime-trigger,.kpi-datetime-panel,.kpi-datetime-panel input[type="date"],.kpi-time-part select{background:#ffffff!important;color:#111827!important;border:1px solid #9ca3af!important}
+    .finance-chart-box,.kpi-popup-chart,.channel-data-wrap,.finance-card-board,.finance-channel-table-wrap,.payout-platform-table-wrap{background:#ffffff!important;border-color:#cbd5e1!important}
+    .logout-btn{background:#dc2626!important;color:#ffffff!important;border-color:#b91c1c!important}
+    .login-gate{background:#e5e7eb!important}.login-card{background:#ffffff!important;border-color:#cbd5e1!important;box-shadow:0 18px 42px rgba(17,24,39,.18)!important}
     .channel-data-wrap,.finance-card-board,.finance-channel-table-wrap,.payout-platform-table-wrap{background:#fafbfc;border-color:#d9dee5;scrollbar-color:rgba(100,116,139,.18) transparent}
     .channel-platform-pill,.channel-type-pill,.tag-wd,.tag-cs,.tag-fn,.date-badge{background:#e3e7eb!important;color:#4b5865!important;border-color:#d0d6dc!important}
     .finance-chart-box,.kpi-popup-chart{background:#f4f6f8!important;border-color:#d9dee5!important}
