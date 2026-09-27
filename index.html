@@ -1812,6 +1812,20 @@
     .nav-account{gap:8px!important}.amt-clock{background:#eef3f8!important;color:#607086!important;border:1px solid #e1e7ee!important;border-radius:18px!important;padding:8px 15px!important;box-shadow:none!important}
     .profile-trigger{background:#fff!important;border-color:#e1e7ee!important;color:#607086!important;border-radius:18px!important;height:38px!important;padding:0 13px 0 5px!important;box-shadow:0 1px 4px rgba(31,45,61,.04)!important}.profile-trigger:hover,.profile-trigger.open{background:#f4f8ff!important;border-color:#bfd2fa!important;color:#2468e8!important}
     .profile-avatar{width:28px!important;height:28px!important;background:transparent!important}.login-brand{gap:13px!important}
+    /* Softer low-contrast admin surface */
+    html,body,body::before{background:#f6f8fb!important;color:#435164!important}
+    nav{background:#fcfdff!important;border-bottom-color:#edf1f5!important;box-shadow:0 1px 4px rgba(51,65,85,.035)!important}
+    .side-menu,.sidebar,.nav-menu{background:#30465b!important;border-color:#30465b!important}
+    .side-menu .menu-btn,.side-menu .sub-menu-btn,.menu-btn,.sub-menu-btn{background:#30465b!important;color:#dce5ed!important}
+    .side-menu .menu-btn:hover,.side-menu .sub-menu-btn:hover,.menu-btn:hover,.sub-menu-btn:hover{background:#3b566e!important}
+    .side-menu .menu-btn.active,.side-menu .sub-menu-btn.active,.menu-btn.active,.sub-menu-btn.active{background:#5b7fba!important;border-color:#5b7fba!important}
+    .glass-shell,.finance-readable-board,.finance-panel,.top-highlight-panel,.home-chart-card,.home-kpi,.home-hero,.filter-wrapper,.table-container,.modal-content,.stat-modal-content,.kpi-detail-modal,.order-summary-card,.finance-platform-card,.finance-report-card,.finance-kpi-card,.sub-page-title,.module-context{border-color:#e8edf3!important;box-shadow:0 1px 5px rgba(51,65,85,.035)!important}
+    .finance-action-btn,.login-submit,.kpi-range-apply,.kpi-time-confirm,.channel-view-btn.active,.record-view-btn.active,.payout-stat-btn.active,.home-chart-btn.active,.kpi-date-btn.active{background:#5b7fba!important;border-color:#5b7fba!important}
+    .home-kpi-label,.home-chart-title,.home-chart-head,.home-staff-title,.work-mode-title,.onsite-role-title{color:#69788b!important}
+    .home-kpi-value,.home-chart-value,.finance-kpi-value,.finance-summary-value,.channel-summary-card strong,.finance-platform-name{color:#39475a!important}
+    table th,.channel-data-table th,.kpi-popup-table th,.shift-list-table th{background:#f7f9fc!important;color:#657489!important;border-color:#e8edf3!important}
+    table td,.channel-data-table td,.kpi-popup-table td{color:#526176!important;border-color:#edf1f5!important}
+    tbody tr:nth-child(even) td,.channel-data-table tbody tr:nth-child(even) td{background:#fcfdff!important}
   </style>
 </head>
 
@@ -1862,6 +1876,7 @@
   <div class="password-modal" id="passwordModal" onclick="closePasswordModal(event)">
     <form class="password-card" id="passwordForm" onclick="event.stopPropagation()" onsubmit="changeDashboardPassword(event)">
       <div class="password-head"><strong><i class="fas fa-key"></i> 修改密码</strong><button class="password-close" type="button" onclick="closePasswordModal()"><i class="fas fa-xmark"></i></button></div>
+      <div class="password-field"><label for="currentPassword">当前密码</label><input id="currentPassword" type="password" autocomplete="current-password" required placeholder="请输入当前密码"></div>
       <div class="password-field"><label for="newPassword">新密码</label><input id="newPassword" type="password" minlength="6" autocomplete="new-password" required placeholder="至少 6 个字符"></div>
       <div class="password-field"><label for="confirmPassword">确认新密码</label><input id="confirmPassword" type="password" minlength="6" autocomplete="new-password" required placeholder="再次输入新密码"></div>
       <div class="password-message" id="passwordMessage"></div>
@@ -2478,7 +2493,7 @@
       const message = document.getElementById('passwordMessage');
       if (message) message.textContent = '';
       document.getElementById('passwordModal')?.classList.add('show');
-      setTimeout(()=>document.getElementById('newPassword')?.focus(),50);
+      setTimeout(()=>document.getElementById('currentPassword')?.focus(),50);
     }
 
     function closePasswordModal(event) {
@@ -2489,19 +2504,35 @@
 
     async function changeDashboardPassword(event) {
       event.preventDefault();
+      const currentPassword = document.getElementById('currentPassword')?.value || '';
       const password = document.getElementById('newPassword')?.value || '';
       const confirmation = document.getElementById('confirmPassword')?.value || '';
       const message = document.getElementById('passwordMessage');
       const button = document.getElementById('passwordSave');
+      if (!currentPassword) { if (message) message.textContent = '请输入当前密码'; return; }
       if (password.length < 6) { if (message) message.textContent = '密码至少需要 6 个字符'; return; }
       if (password !== confirmation) { if (message) message.textContent = '两次输入的密码不一致'; return; }
+      if (password === currentPassword) { if (message) message.textContent = '新密码不能与当前密码相同'; return; }
       if (button) button.disabled = true;
-      if (message) { message.style.color = '#64748b'; message.textContent = '正在保存…'; }
-      const { error } = await supabaseClient.auth.updateUser({ password });
-      if (button) button.disabled = false;
-      if (error) { if (message) { message.style.color = '#dc2626'; message.textContent = `修改失败：${error.message}`; } return; }
-      if (message) { message.style.color = '#059669'; message.textContent = '密码修改成功'; }
-      setTimeout(()=>closePasswordModal(),900);
+      if (message) { message.style.color = '#64748b'; message.textContent = '正在验证当前密码…'; }
+      try {
+        const { data:userData, error:userError } = await supabaseClient.auth.getUser();
+        if (userError || !userData?.user?.email) throw new Error('无法读取当前登录账号');
+        const { error:verifyError } = await supabaseClient.auth.signInWithPassword({ email:userData.user.email, password:currentPassword });
+        if (verifyError) {
+          if (message) { message.style.color = '#dc2626'; message.textContent = '当前密码不正确'; }
+          return;
+        }
+        if (message) message.textContent = '正在保存新密码…';
+        const { error:updateError } = await supabaseClient.auth.updateUser({ password });
+        if (updateError) throw updateError;
+        if (message) { message.style.color = '#059669'; message.textContent = '密码修改成功'; }
+        setTimeout(()=>closePasswordModal(),900);
+      } catch (error) {
+        if (message) { message.style.color = '#dc2626'; message.textContent = `修改失败：${error.message || error}`; }
+      } finally {
+        if (button) button.disabled = false;
+      }
     }
 
     async function updateProfileName() {
@@ -4647,9 +4678,9 @@
       throw new Error(lastErr || '所有CSV链接都读取失败');
     }
 
-    async function fetchFinanceDailyPages(reportDate) {
+    async function fetchFinanceDailyPages(reportDate, lookbackDays = 7) {
       const rows=[];
-      const startDate=getRelativeISODate(reportDate,-7);
+      const startDate=getRelativeISODate(reportDate,-Math.max(0,Number(lookbackDays)||0));
       for(let from=0;from<20000;from+=1000){
         const {data,error}=await supabaseClient.from('finance_daily').select('*').gte('report_date',startDate).lte('report_date',reportDate).order('report_date',{ascending:false}).range(from,from+999);
         if(error)throw error;
@@ -4657,6 +4688,19 @@
         if(!data||data.length<1000)break;
       }
       return rows;
+    }
+
+    function mapFinanceDailyRows(rows) {
+      return (rows || []).map(row => ({
+        '日期':String(row.report_date || '').replace(/-/g,'/'),
+        '平台':row.platform || '-',
+        '渠道':row.channel || '-',
+        '总订单':Number(row.total_orders || 0),
+        '成功':Number(row.successful_orders || 0),
+        '处理中':Number(row.processing_orders || 0),
+        '失败':Number(row.failed_orders || 0),
+        '金额':Number(row.amount || 0)
+      }));
     }
 
     async function loadFinanceData(force = false) {
@@ -5696,11 +5740,11 @@
       if (financeLoading) return;
       financeLoading = true;
       const notice = document.getElementById('financeSheetNotice');
+      const reportDate = getRelativeISODate(activeGlobalDate,0);
       try {
-        const reportDate = getRelativeISODate(activeGlobalDate,0);
         const hourlyStartDate = getRelativeISODate(reportDate,-2);
         const [data, { data:hourlyData, error:hourlyError }] = await Promise.all([
-          fetchFinanceDailyPages(reportDate),
+          fetchFinanceDailyPages(reportDate,0),
           supabaseClient.from('finance_hourly').select('*')
             .gte('report_date',hourlyStartDate)
             .lte('report_date',reportDate)
@@ -5708,16 +5752,7 @@
             .limit(1000)
         ]);
         if (hourlyError) console.warn('Supabase 每小时财务读取失败',hourlyError.message);
-        dbFinance = (data || []).map(row => ({
-          '日期':String(row.report_date || '').replace(/-/g,'/'),
-          '平台':row.platform || '-',
-          '渠道':row.channel || '-',
-          '总订单':Number(row.total_orders || 0),
-          '成功':Number(row.successful_orders || 0),
-          '处理中':Number(row.processing_orders || 0),
-          '失败':Number(row.failed_orders || 0),
-          '金额':Number(row.amount || 0)
-        }));
+        dbFinance = mapFinanceDailyRows(data);
         const hourlyGroups = new Map();
         (hourlyData || []).forEach(item => {
           const key = `${item.report_date}|${item.platform}`;
@@ -5742,6 +5777,20 @@
       initFinanceFilters();
       if (activeRecordModule === 'finance') renderFinanceReport();
       renderHomeDashboard();
+      const historyToken = `${reportDate}-${Date.now()}`;
+      window.__financeHistoryToken = historyToken;
+      setTimeout(async () => {
+        try {
+          const historyRows = await fetchFinanceDailyPages(reportDate,7);
+          if (window.__financeHistoryToken !== historyToken || getRelativeISODate(activeGlobalDate,0) !== reportDate) return;
+          dbFinance = mapFinanceDailyRows(historyRows);
+          initFinanceFilters();
+          if (activeRecordModule === 'finance') renderFinanceReport();
+          renderHomeDashboard();
+        } catch (error) {
+          console.warn('Supabase 财务历史数据后台读取失败',error.message || error);
+        }
+      },80);
     }
 
     async function loadPayoutData(force = false) {
@@ -5749,7 +5798,9 @@
       payoutLoading = true;
       try {
         const reportDate = getRelativeISODate(activeGlobalDate,-1);
+        const startDate = getRelativeISODate(reportDate,-7);
         const { data, error } = await supabaseClient.from('payout_daily').select('*')
+          .gte('report_date',startDate)
           .lte('report_date',reportDate)
           .order('report_date',{ascending:false})
           .limit(1000);
@@ -5794,7 +5845,12 @@
       if (serviceLoading) return;
       serviceLoading = true;
       try {
-        const { data, error } = await supabaseClient.from('service_daily').select('*').order('report_date',{ascending:true});
+        const reportDate = getRelativeISODate(activeGlobalDate,0);
+        const startDate = getRelativeISODate(reportDate,-7);
+        const { data, error } = await supabaseClient.from('service_daily').select('*')
+          .gte('report_date',startDate)
+          .lte('report_date',reportDate)
+          .order('report_date',{ascending:true});
         if (error) throw error;
         dbServiceDaily = (data || []).map(row => [
           row.report_date,
