@@ -1134,6 +1134,19 @@
     .channel-summary-card{padding:13px 15px;border:1px solid rgba(148,163,184,.18);border-radius:16px;background:#151e2d}
     .channel-summary-card span{display:block;color:#94a3b8;font-size:.65rem;font-weight:900;margin-bottom:5px}
     .channel-summary-card strong{display:block;color:#f8fbff;font-size:1.12rem;font-weight:950;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .channel-data-table tr.channel-drill-row{cursor:pointer;transition:background .16s ease,transform .16s ease}
+    .channel-data-table tr.channel-drill-row:hover td{background:#eef4fb!important}
+    .channel-data-table tr.channel-drill-row:focus{outline:2px solid #5b7fba;outline-offset:-2px}
+    .channel-platform-modal{position:fixed;inset:0;z-index:1700;display:none;align-items:center;justify-content:center;padding:24px;background:rgba(30,41,59,.38);backdrop-filter:blur(4px)}
+    .channel-platform-modal.show{display:flex}
+    .channel-platform-dialog{width:min(1040px,96vw);max-height:88vh;overflow:hidden;background:#fff;border:1px solid #e4eaf1;border-radius:14px;box-shadow:0 24px 70px rgba(30,41,59,.22)}
+    .channel-platform-head{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;padding:18px 20px;border-bottom:1px solid #e8edf3}
+    .channel-platform-head strong{display:block;color:#334155;font-size:1rem}.channel-platform-head small{display:block;margin-top:5px;color:#7b8797;font-weight:700}
+    .channel-platform-close{width:34px;height:34px;border:1px solid #dce3eb;border-radius:8px;background:#f8fafc;color:#64748b;cursor:pointer}
+    .channel-platform-content{padding:16px 20px 20px;overflow:auto;max-height:calc(88vh - 76px)}
+    .channel-platform-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:14px}
+    .channel-platform-summary>div{padding:12px 14px;border:1px solid #e7ecf2;border-radius:9px;background:#f7f9fc}.channel-platform-summary span{display:block;color:#7a8797;font-size:.7rem;font-weight:800}.channel-platform-summary b{display:block;margin-top:5px;color:#334155;font-size:1rem}
+    @media(max-width:720px){.channel-platform-summary{grid-template-columns:1fr 1fr}.channel-platform-modal{padding:10px}}
     .channel-data-wrap{overflow:auto;max-height:720px;margin:16px;border:1px solid rgba(148,163,184,.14);border-radius:18px;scrollbar-width:thin;scrollbar-color:rgba(148,163,184,.14) transparent}
     .channel-data-wrap::-webkit-scrollbar{width:5px;height:5px}
     .channel-data-wrap::-webkit-scrollbar-track{background:transparent}
@@ -1882,6 +1895,16 @@
       <div class="password-message" id="passwordMessage"></div>
       <div class="password-actions"><button class="password-cancel" type="button" onclick="closePasswordModal()">取消</button><button class="password-save" id="passwordSave" type="submit">保存密码</button></div>
     </form>
+  </div>
+
+  <div class="channel-platform-modal" id="channelPlatformModal" onclick="closeChannelPlatformModal(event)">
+    <div class="channel-platform-dialog" onclick="event.stopPropagation()">
+      <div class="channel-platform-head"><div><strong id="channelPlatformTitle">通道平台明细</strong><small id="channelPlatformSub">-</small></div><button class="channel-platform-close" type="button" onclick="closeChannelPlatformModal()"><i class="fas fa-xmark"></i></button></div>
+      <div class="channel-platform-content">
+        <div class="channel-platform-summary" id="channelPlatformSummary"></div>
+        <div class="channel-data-wrap"><table class="channel-data-table"><thead><tr><th>平台</th><th>代收金额</th><th>代收订单</th><th>代收成功订单</th><th>代收成功率</th><th>代付金额</th><th>代付订单</th><th>代付成功订单</th><th>代付成功率</th></tr></thead><tbody id="channelPlatformBody"></tbody></table></div>
+      </div>
+    </div>
   </div>
 
   <div class="app-layout">
@@ -6203,6 +6226,38 @@
       return value>=80?'channel-rate-good':value>=50?'channel-rate-mid':'channel-rate-low';
     }
 
+    function closeChannelPlatformModal(event) {
+      if(event&&event.target!==event.currentTarget)return;
+      document.getElementById('channelPlatformModal')?.classList.remove('show');
+    }
+
+    function openChannelPlatformModal(encodedMerchant) {
+      const merchant=decodeURIComponent(encodedMerchant||'');
+      const date=document.getElementById('financeDateFilter')?.value||'';
+      const typeFilter=document.getElementById('financeChannelFilter')?.value||'';
+      const grouped=new Map();
+      (dbFinance||[]).forEach(row=>{
+        const parts=String(row['渠道']||'').split('|');
+        if(parts.length<3||!['RECHARGE','WITHDRAW'].includes(parts[0]))return;
+        const rowDate=String(row['日期']||'').replace(/\//g,'-');
+        const rowMerchant=canonicalChannelName(parts[1]);
+        const rowType=parts[2]||'其他';
+        if(rowDate!==date||rowMerchant!==merchant||(typeFilter&&rowType!==typeFilter))return;
+        const platform=String(row['平台']||'未知平台');
+        if(!grouped.has(platform))grouped.set(platform,{platform,depositAmount:0,depositOrders:0,depositSuccess:0,withdrawAmount:0,withdrawOrders:0,withdrawSuccess:0});
+        const item=grouped.get(platform),orders=Number(row['总订单']||0),success=Number(row['成功']||0),amount=Number(row['金额']||0);
+        if(parts[0]==='RECHARGE'){item.depositAmount+=amount;item.depositOrders+=orders;item.depositSuccess+=success}
+        else{item.withdrawAmount+=amount;item.withdrawOrders+=orders;item.withdrawSuccess+=success}
+      });
+      const rows=[...grouped.values()].sort((a,b)=>(b.depositAmount+b.withdrawAmount)-(a.depositAmount+a.withdrawAmount));
+      const totals=rows.reduce((sum,row)=>({depositAmount:sum.depositAmount+row.depositAmount,depositOrders:sum.depositOrders+row.depositOrders,depositSuccess:sum.depositSuccess+row.depositSuccess,withdrawAmount:sum.withdrawAmount+row.withdrawAmount,withdrawOrders:sum.withdrawOrders+row.withdrawOrders,withdrawSuccess:sum.withdrawSuccess+row.withdrawSuccess}),{depositAmount:0,depositOrders:0,depositSuccess:0,withdrawAmount:0,withdrawOrders:0,withdrawSuccess:0});
+      const title=document.getElementById('channelPlatformTitle');if(title)title.innerText=`${merchant} · 各平台明细`;
+      const sub=document.getElementById('channelPlatformSub');if(sub)sub.innerText=`数据日期：${date||'-'}${typeFilter?` · 通道类型：${typeFilter}`:''}`;
+      const summary=document.getElementById('channelPlatformSummary');if(summary)summary.innerHTML=[['平台数量',fmtNumber(rows.length)],['代收总金额',fmtMoney(totals.depositAmount)],['代收成功率',fmtRate(totals.depositOrders?totals.depositSuccess/totals.depositOrders*100:0)],['代付成功率',fmtRate(totals.withdrawOrders?totals.withdrawSuccess/totals.withdrawOrders*100:0)]].map(([label,value])=>`<div><span>${label}</span><b>${value}</b></div>`).join('');
+      const body=document.getElementById('channelPlatformBody');if(body)body.innerHTML=rows.length?rows.map(row=>`<tr><td><span class="channel-platform-pill">${esc(row.platform)}</span></td><td>${fmtMoney(row.depositAmount)}</td><td>${fmtNumber(row.depositOrders)}</td><td>${fmtNumber(row.depositSuccess)}</td><td class="${channelRateClass(row.depositOrders?row.depositSuccess/row.depositOrders:0)}">${fmtRate(row.depositOrders?row.depositSuccess/row.depositOrders*100:0)}</td><td>${fmtMoney(row.withdrawAmount)}</td><td>${fmtNumber(row.withdrawOrders)}</td><td>${fmtNumber(row.withdrawSuccess)}</td><td class="${channelRateClass(row.withdrawOrders?row.withdrawSuccess/row.withdrawOrders:0)}">${fmtRate(row.withdrawOrders?row.withdrawSuccess/row.withdrawOrders*100:0)}</td></tr>`).join(''):'<tr><td colspan="9">当前日期没有平台明细数据</td></tr>';
+      document.getElementById('channelPlatformModal')?.classList.add('show');
+    }
+
     function renderChannelWorkbookTable() {
       ensureChannelFilterOptions();
       const body=document.getElementById('channelWorkbookBody'); if(!body)return;
@@ -6233,7 +6288,7 @@
       if(summary)summary.innerHTML=[['商户记录',fmtNumber(rows.length)],['代收总金额',fmtMoney(totalDeposit)],['代收成功率',fmtRate(depositOrders?depositSuccess/depositOrders*100:0)],['代付成功率',fmtRate(withdrawOrders?withdrawSuccess/withdrawOrders*100:0)]].map(([label,value])=>`<div class="channel-summary-card"><span>${label}</span><strong>${value}</strong></div>`).join('');
       const renderLimit=100;
       const visible=rows.slice(0,renderLimit);
-      body.innerHTML=visible.length?visible.map((row,index)=>{const fee=channelFeeRule(row[2]);const feeTotal=fee?Number(row[4]||0)*fee[0]/100+Number(row[5]||0)*fee[1]/100+Number(row[9]||0)*fee[2]:null;const shareKey=channelAggregateView==='merchant'?row[0]:`${row[0]}|${row[1]}`;const shareBase=shareTotals.get(shareKey)||{deposit:0,withdraw:0};const depositShare=shareBase.deposit?Number(row[4]||0)/shareBase.deposit*100:0;const withdrawShare=shareBase.withdraw?Number(row[5]||0)/shareBase.withdraw*100:0;return `<tr><td>${index+1}</td><td><span class="channel-platform-pill">${esc(row[1])}</span></td><td>${esc(row[2])}</td><td><span class="channel-type-pill">${esc(row[3])}</span></td><td>${fmtRate(depositShare)}</td><td>${fmtRate(withdrawShare)}</td><td>${fmtMoney(row[4])}</td><td>${fmtNumber(row[6])}</td><td>${fmtNumber(row[7])}</td><td class="${channelRateClass(row[8])}">${fmtRate(Number(row[8]||0)*100)}</td><td>${fmtMoney(row[5])}</td><td>${fmtNumber(row[9])}</td><td>${fmtNumber(row[10])}</td><td class="${channelRateClass(row[11])}">${fmtRate(Number(row[11]||0)*100)}</td><td>${fee?`${fmtMoney(feeTotal)}<br><small>代收 ${fee[0]}% · 代付 ${fee[1]}% + ₹${fee[2]}/单</small>`:'费率未配置'}</td></tr>`}).join(''):`<tr><td colspan="15">当前筛选条件没有数据</td></tr>`;
+      body.innerHTML=visible.length?visible.map((row,index)=>{const fee=channelFeeRule(row[2]);const feeTotal=fee?Number(row[4]||0)*fee[0]/100+Number(row[5]||0)*fee[1]/100+Number(row[9]||0)*fee[2]:null;const shareKey=channelAggregateView==='merchant'?row[0]:`${row[0]}|${row[1]}`;const shareBase=shareTotals.get(shareKey)||{deposit:0,withdraw:0};const depositShare=shareBase.deposit?Number(row[4]||0)/shareBase.deposit*100:0;const withdrawShare=shareBase.withdraw?Number(row[5]||0)/shareBase.withdraw*100:0;const drill=channelAggregateView==='merchant'?` class="channel-drill-row" tabindex="0" title="点击查看各平台明细" onclick="openChannelPlatformModal('${encodeURIComponent(row[2])}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openChannelPlatformModal('${encodeURIComponent(row[2])}')}"`:'';return `<tr${drill}><td>${index+1}</td><td><span class="channel-platform-pill">${esc(row[1])}</span></td><td>${esc(row[2])}</td><td><span class="channel-type-pill">${esc(row[3])}</span></td><td>${fmtRate(depositShare)}</td><td>${fmtRate(withdrawShare)}</td><td>${fmtMoney(row[4])}</td><td>${fmtNumber(row[6])}</td><td>${fmtNumber(row[7])}</td><td class="${channelRateClass(row[8])}">${fmtRate(Number(row[8]||0)*100)}</td><td>${fmtMoney(row[5])}</td><td>${fmtNumber(row[9])}</td><td>${fmtNumber(row[10])}</td><td class="${channelRateClass(row[11])}">${fmtRate(Number(row[11]||0)*100)}</td><td>${fee?`${fmtMoney(feeTotal)}<br><small>代收 ${fee[0]}% · 代付 ${fee[1]}% + ₹${fee[2]}/单</small>`:'费率未配置'}</td></tr>`}).join(''):`<tr><td colspan="15">当前筛选条件没有数据</td></tr>`;
       const info=document.getElementById('financeTableInfo');if(info)info.innerText=`${fmtNumber(rows.length)} 条记录`;
       const note=document.getElementById('channelTableNote');if(note)note.innerText=(rows.length>renderLimit?`当前显示前 ${renderLimit} 条，共 ${fmtNumber(rows.length)} 条。可使用上方搜索工具缩小范围。`:`共 ${fmtNumber(rows.length)} 条记录。`)+` 已排除待审核、待审查及未分配三方通道的订单。`;
       const title=document.getElementById('recordDetailTitle');if(title)title.innerText=channelAggregateView==='merchant'?'全部平台三方通道汇总':'印度三方通道明细';
@@ -6255,6 +6310,7 @@
         closeModal();
         closeStatModal();
         closeKpiDetailModal();
+        closeChannelPlatformModal();
       }
     });
 
