@@ -1762,6 +1762,49 @@
     .login-gate{background:linear-gradient(135deg,#eef1f4,#e5eaee)}
     .login-card{background:#f8f9fa;color:#273443;border-color:#d5dbe2;box-shadow:0 24px 70px rgba(71,85,105,.18)}
     .login-brand,.login-field span{color:#34404c}.login-subtitle{color:#6f7a86}.login-field input{background:#fff;color:#34404c;border-color:#d1d8df}
+
+    /* Admin console palette inspired by the supplied reference */
+    :root{
+      --bg:#f3f6f9;--panel:#ffffff;--panel2:#f8fafc;--border:#dfe5ec;
+      --text-main:#253247;--text-muted:#78869a;--blue:#2468e8;--green:#20b486;
+      --yellow:#f59e0b;--red:#ef4444;--cyan:#249bc7;--purple:#7259d6;
+      --shadow:0 2px 8px rgba(31,45,61,.06);
+    }
+    html,body{background:#f3f6f9!important;color:#253247!important}
+    body::before{background:#f3f6f9!important}
+    nav{background:#ffffff!important;border-bottom:1px solid #e2e7ed!important;box-shadow:0 1px 4px rgba(31,45,61,.07)!important}
+    .brand-title,.brand-title span{color:#263449!important}.brand-title i{color:#2468e8!important}
+    .amt-clock{background:#2468e8!important;color:#fff!important;border-color:#2468e8!important;border-radius:6px!important}
+    .side-menu,.sidebar,.nav-menu{background:#031d2e!important;border:0!important;border-radius:0!important;box-shadow:none!important}
+    .side-menu-title,.nav-title{color:#dce8f2!important;border-color:#173549!important}
+    .side-menu .menu-btn,.side-menu .sub-menu-btn,.menu-btn,.sub-menu-btn{
+      background:#031d2e!important;color:#c8d6e2!important;border:0!important;border-radius:6px!important;box-shadow:none!important;
+    }
+    .side-menu .menu-btn:hover,.side-menu .sub-menu-btn:hover,.menu-btn:hover,.sub-menu-btn:hover{background:#0c3047!important;color:#fff!important;border:0!important}
+    .side-menu .menu-btn.active,.side-menu .sub-menu-btn.active,.menu-btn.active,.sub-menu-btn.active{background:#2468e8!important;color:#fff!important;border:0!important;box-shadow:none!important}
+    .glass-shell,.finance-readable-board,.finance-panel,.top-highlight-panel,.home-chart-card,.home-kpi,.home-hero,.filter-wrapper,.table-container,.modal-content,.stat-modal-content,.kpi-detail-modal,.order-summary-card,.finance-platform-card,.finance-report-card,.finance-kpi-card,.sub-page-title,.module-context{
+      background:#fff!important;color:#253247!important;border:1px solid #e0e6ed!important;border-radius:8px!important;box-shadow:0 2px 8px rgba(31,45,61,.05)!important;
+    }
+    .home-kpi,.finance-kpi-card{border-top:3px solid var(--highlight,#2468e8)!important}
+    .home-kpi-label,.home-chart-title,.home-chart-head,.home-staff-title,.work-mode-title,.onsite-role-title{color:#536175!important}
+    .home-kpi-value,.home-chart-value,.finance-kpi-value,.finance-summary-value,.channel-summary-card strong,.finance-platform-name{color:#1f2d3d!important}
+    .home-kpi-note,.finance-readable-desc,.channel-table-note,.finance-kpi-note,.channel-summary-card span{color:#8290a3!important}
+    .finance-action-btn,.login-submit,.kpi-range-apply,.kpi-time-confirm{background:#2468e8!important;color:#fff!important;border-color:#2468e8!important;border-radius:5px!important;box-shadow:none!important}
+    .channel-view-btn.active,.record-view-btn.active,.payout-stat-btn.active,.home-chart-btn.active,.kpi-date-btn.active{background:#2468e8!important;color:#fff!important;border-color:#2468e8!important}
+    .channel-view-btn,.record-view-btn,.payout-stat-btn,.home-chart-btn,.kpi-date-btn,.work-mode-btn,.onsite-role-btn{background:#fff!important;color:#59687b!important;border:1px solid #d9e0e8!important;border-radius:5px!important}
+    .table-head-bar,.finance-readable-head,.stat-modal-top,.shift-column-head{background:#f7f9fb!important;color:#344257!important;border-color:#e0e6ed!important}
+    table th,.channel-data-table th,.kpi-popup-table th,.shift-list-table th{background:#f5f7fa!important;color:#526176!important;border-color:#dfe5ec!important;font-weight:700!important}
+    table td,.channel-data-table td,.kpi-popup-table td{background:#fff!important;color:#334155!important;border-color:#e8edf2!important}
+    tbody tr:nth-child(even) td,.channel-data-table tbody tr:nth-child(even) td{background:#fbfcfd!important}
+    tbody tr:hover td,.channel-data-table tbody tr:hover td{background:#eef5ff!important}
+    .channel-summary-card,.stat-summary-card,.kpi-support-card,.kpi-platform-card,.finance-summary-box,.finance-compare-box,.home-staff-unit,.home-work-stat,.shift-member-card,.stat-member-card,.stat-member-item{background:#f8fafc!important;border:1px solid #e1e7ee!important;border-radius:6px!important;box-shadow:none!important}
+    .channel-platform-pill{background:#e8f0ff!important;color:#2468e8!important;border-color:#bfd2fa!important}
+    .channel-type-pill,.tag-wd,.tag-cs,.tag-fn,.date-badge{background:#edf1f5!important;color:#536175!important;border-color:#d9e0e8!important}
+    input,select,.kpi-datetime-trigger,.kpi-datetime-panel,.kpi-datetime-panel input[type="date"],.kpi-time-part select{background:#fff!important;color:#344257!important;border:1px solid #d9e0e8!important;border-radius:5px!important}
+    .finance-chart-box,.kpi-popup-chart,.channel-data-wrap,.finance-card-board,.finance-channel-table-wrap,.payout-platform-table-wrap{background:#fff!important;border-color:#e0e6ed!important;border-radius:7px!important}
+    .logout-btn{background:#fff!important;color:#ef4444!important;border-color:#f3b6b6!important;border-radius:5px!important}
+    .login-gate{background:#f3f6f9!important}.login-card{background:#fff!important;color:#253247!important;border-color:#dfe5ec!important;border-radius:8px!important;box-shadow:0 12px 36px rgba(31,45,61,.12)!important}
+    .login-brand,.login-field span{color:#253247!important}.login-subtitle{color:#7d8a9c!important}.login-field input{background:#fff!important;color:#253247!important;border-color:#d9e0e8!important}
   </style>
 </head>
 
