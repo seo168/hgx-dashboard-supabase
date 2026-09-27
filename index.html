@@ -4643,8 +4643,9 @@
 
     async function fetchFinanceDailyPages(reportDate) {
       const rows=[];
+      const startDate=getRelativeISODate(reportDate,-7);
       for(let from=0;from<20000;from+=1000){
-        const {data,error}=await supabaseClient.from('finance_daily').select('*').gte('report_date','2026-09-01').lte('report_date',reportDate).order('report_date',{ascending:false}).range(from,from+999);
+        const {data,error}=await supabaseClient.from('finance_daily').select('*').gte('report_date',startDate).lte('report_date',reportDate).order('report_date',{ascending:false}).range(from,from+999);
         if(error)throw error;
         rows.push(...(data||[]));
         if(!data||data.length<1000)break;
@@ -5662,7 +5663,12 @@
     async function loadData() {
       updateClock();
       if (!window.__hgxClockTimer) window.__hgxClockTimer = setInterval(updateClock, 1000);
-      const { data, error } = await supabaseClient.from('staff_master').select('*');
+      const [{ data, error }] = await Promise.all([
+        supabaseClient.from('staff_master').select('*'),
+        loadFinanceData(false),
+        loadPayoutData(false),
+        loadServiceData(false)
+      ]);
       if (error) {
         console.error('Supabase 员工数据读取失败', error.message);
         dbMaster = [];
@@ -5677,7 +5683,6 @@
       updateOnsiteRoleButtons();
       toggleOnsiteRoleWrap();
       runFilters();
-      await Promise.all([loadFinanceData(false), loadPayoutData(false), loadServiceData(false)]);
       renderHomeDashboard();
     }
 
@@ -6164,10 +6169,11 @@
       const withdrawOrders=rows.reduce((sum,row)=>sum+Number(row[9]||0),0),withdrawSuccess=rows.reduce((sum,row)=>sum+Number(row[10]||0),0);
       const summary=document.getElementById('channelSummaryStrip');
       if(summary)summary.innerHTML=[['商户记录',fmtNumber(rows.length)],['代收总金额',fmtMoney(totalDeposit)],['代收成功率',fmtRate(depositOrders?depositSuccess/depositOrders*100:0)],['代付成功率',fmtRate(withdrawOrders?withdrawSuccess/withdrawOrders*100:0)]].map(([label,value])=>`<div class="channel-summary-card"><span>${label}</span><strong>${value}</strong></div>`).join('');
-      const visible=rows.slice(0,250);
+      const renderLimit=100;
+      const visible=rows.slice(0,renderLimit);
       body.innerHTML=visible.length?visible.map((row,index)=>{const fee=channelFeeRule(row[2]);const feeTotal=fee?Number(row[4]||0)*fee[0]/100+Number(row[5]||0)*fee[1]/100+Number(row[9]||0)*fee[2]:null;const shareKey=channelAggregateView==='merchant'?row[0]:`${row[0]}|${row[1]}`;const shareBase=shareTotals.get(shareKey)||{deposit:0,withdraw:0};const depositShare=shareBase.deposit?Number(row[4]||0)/shareBase.deposit*100:0;const withdrawShare=shareBase.withdraw?Number(row[5]||0)/shareBase.withdraw*100:0;return `<tr><td>${index+1}</td><td><span class="channel-platform-pill">${esc(row[1])}</span></td><td>${esc(row[2])}</td><td><span class="channel-type-pill">${esc(row[3])}</span></td><td>${fmtRate(depositShare)}</td><td>${fmtRate(withdrawShare)}</td><td>${fmtMoney(row[4])}</td><td>${fmtNumber(row[6])}</td><td>${fmtNumber(row[7])}</td><td class="${channelRateClass(row[8])}">${fmtRate(Number(row[8]||0)*100)}</td><td>${fmtMoney(row[5])}</td><td>${fmtNumber(row[9])}</td><td>${fmtNumber(row[10])}</td><td class="${channelRateClass(row[11])}">${fmtRate(Number(row[11]||0)*100)}</td><td>${fee?`${fmtMoney(feeTotal)}<br><small>代收 ${fee[0]}% · 代付 ${fee[1]}% + ₹${fee[2]}/单</small>`:'费率未配置'}</td></tr>`}).join(''):`<tr><td colspan="15">当前筛选条件没有数据</td></tr>`;
       const info=document.getElementById('financeTableInfo');if(info)info.innerText=`${fmtNumber(rows.length)} 条记录`;
-      const note=document.getElementById('channelTableNote');if(note)note.innerText=(rows.length>250?`当前显示前 250 条，共 ${fmtNumber(rows.length)} 条。可使用上方搜索工具缩小范围。`:`共 ${fmtNumber(rows.length)} 条记录。`)+` 已排除待审核、待审查及未分配三方通道的订单。`;
+      const note=document.getElementById('channelTableNote');if(note)note.innerText=(rows.length>renderLimit?`当前显示前 ${renderLimit} 条，共 ${fmtNumber(rows.length)} 条。可使用上方搜索工具缩小范围。`:`共 ${fmtNumber(rows.length)} 条记录。`)+` 已排除待审核、待审查及未分配三方通道的订单。`;
       const title=document.getElementById('recordDetailTitle');if(title)title.innerText=channelAggregateView==='merchant'?'全部平台三方通道汇总':'印度三方通道明细';
       const desc=document.getElementById('recordDetailDesc');if(desc)desc.innerText=channelAggregateView==='merchant'?'已合并全部平台，并按标准化后的三方名称汇总。':'按日期、平台、通道类型和商户名称筛选代收及代付表现。';
     }
