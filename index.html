@@ -1146,6 +1146,7 @@
     .channel-platform-content{padding:16px 20px 20px;overflow:auto;max-height:calc(88vh - 76px)}
     .channel-platform-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:14px}
     .channel-platform-summary>div{padding:12px 14px;border:1px solid #e7ecf2;border-radius:9px;background:#f7f9fc}.channel-platform-summary span{display:block;color:#7a8797;font-size:.7rem;font-weight:800}.channel-platform-summary b{display:block;margin-top:5px;color:#334155;font-size:1rem}
+    .finance-date-range{position:relative}.finance-date-trigger{width:100%;height:38px;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:0 11px;border:1px solid #d9e0e8;border-radius:6px;background:#fff;color:#526176;font-weight:750;cursor:pointer}.finance-date-trigger i{color:#8090a3}.finance-date-popover{position:absolute;top:calc(100% + 7px);left:0;z-index:80;display:none;width:min(470px,88vw);padding:14px;border:1px solid #dce4ed;border-radius:10px;background:#fff;box-shadow:0 16px 40px rgba(30,41,59,.16)}.finance-date-popover.show{display:block}.finance-date-inputs{display:grid;grid-template-columns:1fr auto 1fr;align-items:end;gap:9px}.finance-date-inputs label{display:grid;gap:5px;color:#718096;font-size:.68rem;font-weight:850}.finance-date-inputs input{width:100%;height:36px;border:1px solid #dce3eb;border-radius:6px;padding:0 9px;color:#435164;background:#f9fbfd}.finance-date-inputs span{padding-bottom:9px;color:#9aa6b4}.finance-date-presets{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:12px;padding-top:11px;border-top:1px solid #edf1f5}.finance-date-quick{display:flex;gap:6px}.finance-date-quick button,.finance-date-confirm{height:30px;padding:0 11px;border:1px solid #dce4ed;border-radius:6px;background:#f7f9fc;color:#526176;font-weight:850;cursor:pointer}.finance-date-confirm{background:#5b7fba!important;border-color:#5b7fba!important;color:#fff!important}
     @media(max-width:720px){.channel-platform-summary{grid-template-columns:1fr 1fr}.channel-platform-modal{padding:10px}}
     .channel-data-wrap{overflow:auto;max-height:720px;margin:16px;border:1px solid rgba(148,163,184,.14);border-radius:18px;scrollbar-width:thin;scrollbar-color:rgba(148,163,184,.14) transparent}
     .channel-data-wrap::-webkit-scrollbar{width:5px;height:5px}
@@ -2264,11 +2265,12 @@
             <button class="channel-view-btn" id="channelView-merchant" onclick="setChannelAggregateView('merchant')"><i class="fas fa-object-group"></i> 全部通道汇总</button>
           </div>
           <div class="channel-search-grid">
-            <div class="filter-group"><label>日期</label><input type="date" id="financeDateFilter" oninput="renderFinanceReport()"></div>
-            <div class="filter-group"><label>平台</label><select id="financePlatformFilter" onchange="renderFinanceReport()"><option value="">全部平台</option></select></div>
-            <div class="filter-group"><label>通道类型</label><select id="financeChannelFilter" onchange="renderFinanceReport()"><option value="">全部类型</option></select></div>
-            <div class="filter-group"><label>搜索商户</label><input type="search" id="channelMerchantSearch" placeholder="输入商户名称" oninput="renderFinanceReport()"></div>
-            <div class="filter-group"><label>排序</label><select id="channelSortFilter" onchange="renderFinanceReport()"><option value="depositAmount">代收金额从高到低</option><option value="depositRate">代收成功率从高到低</option><option value="withdrawAmount">代付金额从高到低</option><option value="withdrawRate">代付成功率从高到低</option><option value="merchant">商户名称 A–Z</option></select></div>
+            <div class="filter-group finance-date-range"><label>日期范围</label><button type="button" class="finance-date-trigger" id="financeDateTrigger" onclick="toggleFinanceDatePopover(event)"><span id="financeDateLabel">-</span><i class="fas fa-calendar-days"></i></button><input type="hidden" id="financeDateFilter"><input type="hidden" id="financeStartDateFilter"><div class="finance-date-popover" id="financeDatePopover" onclick="event.stopPropagation()"><div class="finance-date-inputs"><label>开始日期<input type="date" id="financeDraftStart"></label><span>→</span><label>结束日期<input type="date" id="financeDraftEnd"></label></div><div class="finance-date-presets"><div class="finance-date-quick"><button type="button" onclick="setFinanceDatePreset(0)">今天</button><button type="button" onclick="setFinanceDatePreset(-1)">昨天</button></div><button type="button" class="finance-date-confirm" onclick="confirmFinanceDateRange()">确认</button></div></div></div>
+            <div class="filter-group"><label>平台</label><select id="financePlatformFilter"><option value="">全部平台</option></select></div>
+            <div class="filter-group"><label>通道类型</label><select id="financeChannelFilter"><option value="">全部类型</option></select></div>
+            <div class="filter-group"><label>搜索商户</label><input type="search" id="channelMerchantSearch" placeholder="输入商户名称"></div>
+            <div class="filter-group"><label>排序</label><select id="channelSortFilter"><option value="depositAmount">代收金额从高到低</option><option value="depositRate">代收成功率从高到低</option><option value="withdrawAmount">代付金额从高到低</option><option value="withdrawRate">代付成功率从高到低</option><option value="merchant">商户名称 A–Z</option></select></div>
+            <button class="finance-action-btn" onclick="searchFinanceReport(event)"><i class="fas fa-magnifying-glass"></i> 搜索</button>
             <button class="finance-action-btn" onclick="resetFinanceFilters()"><i class="fas fa-filter-circle-xmark"></i> 重置</button>
           </div>
         </div>
@@ -4612,7 +4614,7 @@
     }
 
     function fmtMoney(n) {
-      return '₹ ' + Number(n || 0).toLocaleString('en-US', { maximumFractionDigits: 2 });
+      return Number(n || 0).toLocaleString('en-US', { maximumFractionDigits: 2 });
     }
 
     function fmtRate(n) {
@@ -4831,6 +4833,61 @@
       fill('financeChannelFilter', channels);
     }
 
+    function setFinanceDateFields(startDate,endDate) {
+      const start=startDate||endDate||getRelativeISODate(activeGlobalDate,0);
+      const end=endDate||start;
+      const startHidden=document.getElementById('financeStartDateFilter'),endHidden=document.getElementById('financeDateFilter');
+      const draftStart=document.getElementById('financeDraftStart'),draftEnd=document.getElementById('financeDraftEnd');
+      if(startHidden)startHidden.value=start;if(endHidden)endHidden.value=end;
+      if(draftStart)draftStart.value=start;if(draftEnd)draftEnd.value=end;
+      const label=document.getElementById('financeDateLabel');if(label)label.innerText=start===end?start:`${start} → ${end}`;
+    }
+
+    function toggleFinanceDatePopover(event) {
+      event?.stopPropagation();
+      document.getElementById('financeDatePopover')?.classList.toggle('show');
+    }
+
+    function setFinanceDatePreset(offset) {
+      const date=getRelativeISODate(activeGlobalDate,Number(offset)||0);
+      const start=document.getElementById('financeDraftStart'),end=document.getElementById('financeDraftEnd');
+      if(start)start.value=date;if(end)end.value=date;
+    }
+
+    function confirmFinanceDateRange() {
+      let start=document.getElementById('financeDraftStart')?.value||getRelativeISODate(activeGlobalDate,0);
+      let end=document.getElementById('financeDraftEnd')?.value||start;
+      if(start>end)[start,end]=[end,start];
+      setFinanceDateFields(start,end);
+      document.getElementById('financeDatePopover')?.classList.remove('show');
+    }
+
+    async function fetchFinanceDateRange(startDate,endDate) {
+      const rows=[];
+      for(let from=0;from<20000;from+=1000){
+        const {data,error}=await supabaseClient.from('finance_daily').select('*').gte('report_date',startDate).lte('report_date',endDate).order('report_date',{ascending:false}).range(from,from+999);
+        if(error)throw error;rows.push(...(data||[]));if(!data||data.length<1000)break;
+      }
+      return rows;
+    }
+
+    async function searchFinanceReport(event) {
+      const start=document.getElementById('financeStartDateFilter')?.value||getRelativeISODate(activeGlobalDate,0);
+      const end=document.getElementById('financeDateFilter')?.value||start;
+      const button=event?.currentTarget||null;
+      if(button){button.disabled=true;button.innerHTML='<i class="fas fa-spinner fa-spin"></i> 搜索中';}
+      try {
+        dbFinance=mapFinanceDailyRows(await fetchFinanceDateRange(start,end));
+        initFinanceFilters();
+        renderFinanceReport();
+      } catch(error) {
+        console.error('Supabase 财务搜索失败',error.message||error);
+        const notice=document.getElementById('financeSheetNotice');if(notice){notice.style.display='flex';notice.innerHTML=`<i class="fas fa-triangle-exclamation"></i><span>搜索失败：${esc(error.message||error)}</span>`;}
+      } finally {
+        if(button){button.disabled=false;button.innerHTML='<i class="fas fa-magnifying-glass"></i> 搜索';}
+      }
+    }
+
     function syncFinanceDateToLatestComplete() {
       const input = document.getElementById('financeDateFilter');
       if (!input) return;
@@ -4848,13 +4905,14 @@
     }
 
     function resetFinanceFilters() {
-      const d = document.getElementById('financeDateFilter');
       const p = document.getElementById('financePlatformFilter');
       const c = document.getElementById('financeChannelFilter');
-      if (d) d.value = getRelativeISODate(activeGlobalDate, 0).replaceAll('-', '/');
       if (p) p.value = '';
       if (c) c.value = '';
-      renderFinanceReport();
+      const merchant=document.getElementById('channelMerchantSearch');if(merchant)merchant.value='';
+      const sort=document.getElementById('channelSortFilter');if(sort)sort.value='depositAmount';
+      const today=getRelativeISODate(activeGlobalDate,0);setFinanceDateFields(today,today);
+      searchFinanceReport();
     }
 
     function getFinanceDate(row) { return normalizeDateText(getAny(row, ['日期（公式）','日期','Date','时间','日期时间'], '')); }
@@ -4927,15 +4985,16 @@
     }
 
     function getFilteredFinanceRows() {
-      const date = normalizeDateText(document.getElementById('financeDateFilter')?.value || '');
+      const startDate = normalizeDateText(document.getElementById('financeStartDateFilter')?.value || '');
+      const endDate = normalizeDateText(document.getElementById('financeDateFilter')?.value || '');
       const platform = document.getElementById('financePlatformFilter')?.value || '';
       const channel = document.getElementById('financeChannelFilter')?.value || '';
-      const autoDates = date ? null : getFinanceAutoDateSet(1);
+      const autoDates = endDate ? null : getFinanceAutoDateSet(1);
 
       return dbFinance.filter(r => {
         if (!isFinanceRowReliable(r)) return false;
         const rowDate = getFinanceDate(r);
-        const okDate = date ? rowDate.includes(date) : autoDates.has(rowDate);
+        const okDate = endDate ? (!startDate||rowDate>=startDate.replace(/-/g,'/'))&&rowDate<=endDate.replace(/-/g,'/') : autoDates.has(rowDate);
         const okPlatform = !platform || getFinancePlatform(r) === platform;
         const okChannel = !channel || getFinanceChannel(r) === channel;
         return okDate && okPlatform && okChannel;
@@ -5798,22 +5857,9 @@
         financeLoading = false;
       }
       initFinanceFilters();
+      setFinanceDateFields(reportDate,reportDate);
       if (activeRecordModule === 'finance') renderFinanceReport();
       renderHomeDashboard();
-      const historyToken = `${reportDate}-${Date.now()}`;
-      window.__financeHistoryToken = historyToken;
-      setTimeout(async () => {
-        try {
-          const historyRows = await fetchFinanceDailyPages(reportDate,7);
-          if (window.__financeHistoryToken !== historyToken || getRelativeISODate(activeGlobalDate,0) !== reportDate) return;
-          dbFinance = mapFinanceDailyRows(historyRows);
-          initFinanceFilters();
-          if (activeRecordModule === 'finance') renderFinanceReport();
-          renderHomeDashboard();
-        } catch (error) {
-          console.warn('Supabase 财务历史数据后台读取失败',error.message || error);
-        }
-      },80);
     }
 
     async function loadPayoutData(force = false) {
@@ -6173,9 +6219,6 @@
       };
       fill('financePlatformFilter',[...new Set(data.map(row=>row[1]))].sort(),'全部平台');
       fill('financeChannelFilter',[...new Set(data.map(row=>row[3]))].sort(),'全部类型');
-      const dateInput=document.getElementById('financeDateFilter');
-      const dates=[...new Set(data.map(row=>row[0]))].sort();
-      if(dateInput&&dates.length){dateInput.min=dates[0];dateInput.max=dates[dates.length-1];if(!dates.includes(dateInput.value))dateInput.value=dates[dates.length-1]}
     }
 
     const CHANNEL_FEE_RULES={
@@ -6186,6 +6229,7 @@
     let channelAggregateView='platform';
     const CHANNEL_NAME_ALIASES={
       haoxpay:'LovePay',haopay:'LovePay',lovepay:'LovePay',
+      arupi:'ARUPI',
       ic2pay:'ICPay2',icpay2:'ICPay2',
       bibipay:'BibiPay',cbibipay:'BibiPay',
       lkgopay:'LkgoPay',freepapay:'FreePay',umpay:'UmPay'
@@ -6211,7 +6255,7 @@
         if(parts.length<3||!['RECHARGE','WITHDRAW'].includes(parts[0]))return;
         const date=String(row['日期']||'').replace(/\//g,'-'),platform=String(row['平台']||'-'),merchant=canonicalChannelName(parts[1]),type=parts[2]||'其他';
         if(merchant==='通道未填写'||merchant.includes('未分配通道'))return;
-        const key=channelAggregateView==='merchant'?`${date}|${merchant}`:`${date}|${platform}|${merchant}|${type}`;
+        const key=channelAggregateView==='merchant'?merchant:`${date}|${platform}|${merchant}|${type}`;
         if(!grouped.has(key))grouped.set(key,{date,platform:channelAggregateView==='merchant'?'全部平台':platform,merchant,types:new Set(),depositAmount:0,withdrawAmount:0,depositOrders:0,depositSuccess:0,withdrawOrders:0,withdrawSuccess:0});
         const item=grouped.get(key),orders=Number(row['总订单']||0),success=Number(row['成功']||0),amount=Number(row['金额']||0);
         item.types.add(type);
@@ -6233,7 +6277,8 @@
 
     function openChannelPlatformModal(encodedMerchant) {
       const merchant=decodeURIComponent(encodedMerchant||'');
-      const date=document.getElementById('financeDateFilter')?.value||'';
+      const startDate=document.getElementById('financeStartDateFilter')?.value||'';
+      const endDate=document.getElementById('financeDateFilter')?.value||startDate;
       const typeFilter=document.getElementById('financeChannelFilter')?.value||'';
       const grouped=new Map();
       (dbFinance||[]).forEach(row=>{
@@ -6242,7 +6287,7 @@
         const rowDate=String(row['日期']||'').replace(/\//g,'-');
         const rowMerchant=canonicalChannelName(parts[1]);
         const rowType=parts[2]||'其他';
-        if(rowDate!==date||rowMerchant!==merchant||(typeFilter&&rowType!==typeFilter))return;
+        if((startDate&&rowDate<startDate)||(endDate&&rowDate>endDate)||rowMerchant!==merchant||(typeFilter&&rowType!==typeFilter))return;
         const platform=String(row['平台']||'未知平台');
         if(!grouped.has(platform))grouped.set(platform,{platform,depositAmount:0,depositOrders:0,depositSuccess:0,withdrawAmount:0,withdrawOrders:0,withdrawSuccess:0});
         const item=grouped.get(platform),orders=Number(row['总订单']||0),success=Number(row['成功']||0),amount=Number(row['金额']||0);
@@ -6252,7 +6297,7 @@
       const rows=[...grouped.values()].sort((a,b)=>(b.depositAmount+b.withdrawAmount)-(a.depositAmount+a.withdrawAmount));
       const totals=rows.reduce((sum,row)=>({depositAmount:sum.depositAmount+row.depositAmount,depositOrders:sum.depositOrders+row.depositOrders,depositSuccess:sum.depositSuccess+row.depositSuccess,withdrawAmount:sum.withdrawAmount+row.withdrawAmount,withdrawOrders:sum.withdrawOrders+row.withdrawOrders,withdrawSuccess:sum.withdrawSuccess+row.withdrawSuccess}),{depositAmount:0,depositOrders:0,depositSuccess:0,withdrawAmount:0,withdrawOrders:0,withdrawSuccess:0});
       const title=document.getElementById('channelPlatformTitle');if(title)title.innerText=`${merchant} · 各平台明细`;
-      const sub=document.getElementById('channelPlatformSub');if(sub)sub.innerText=`数据日期：${date||'-'}${typeFilter?` · 通道类型：${typeFilter}`:''}`;
+      const sub=document.getElementById('channelPlatformSub');if(sub)sub.innerText=`数据日期：${startDate===endDate?endDate:`${startDate} → ${endDate}`}${typeFilter?` · 通道类型：${typeFilter}`:''}`;
       const summary=document.getElementById('channelPlatformSummary');if(summary)summary.innerHTML=[['平台数量',fmtNumber(rows.length)],['代收总金额',fmtMoney(totals.depositAmount)],['代收成功率',fmtRate(totals.depositOrders?totals.depositSuccess/totals.depositOrders*100:0)],['代付成功率',fmtRate(totals.withdrawOrders?totals.withdrawSuccess/totals.withdrawOrders*100:0)]].map(([label,value])=>`<div><span>${label}</span><b>${value}</b></div>`).join('');
       const body=document.getElementById('channelPlatformBody');if(body)body.innerHTML=rows.length?rows.map(row=>`<tr><td><span class="channel-platform-pill">${esc(row.platform)}</span></td><td>${fmtMoney(row.depositAmount)}</td><td>${fmtNumber(row.depositOrders)}</td><td>${fmtNumber(row.depositSuccess)}</td><td class="${channelRateClass(row.depositOrders?row.depositSuccess/row.depositOrders:0)}">${fmtRate(row.depositOrders?row.depositSuccess/row.depositOrders*100:0)}</td><td>${fmtMoney(row.withdrawAmount)}</td><td>${fmtNumber(row.withdrawOrders)}</td><td>${fmtNumber(row.withdrawSuccess)}</td><td class="${channelRateClass(row.withdrawOrders?row.withdrawSuccess/row.withdrawOrders:0)}">${fmtRate(row.withdrawOrders?row.withdrawSuccess/row.withdrawOrders*100:0)}</td></tr>`).join(''):'<tr><td colspan="9">当前日期没有平台明细数据</td></tr>';
       document.getElementById('channelPlatformModal')?.classList.add('show');
@@ -6266,7 +6311,8 @@
       const workbookTable=workbookWrap?.querySelector('.channel-data-table');if(workbookTable)workbookTable.classList.toggle('aggregate-view',channelAggregateView==='merchant');
       const summaryWrap=document.getElementById('channelSummaryStrip');if(summaryWrap)summaryWrap.style.display='grid';
       const noteWrap=document.getElementById('channelTableNote');if(noteWrap)noteWrap.style.display='block';
-      const date=document.getElementById('financeDateFilter')?.value||'';
+      const startDate=document.getElementById('financeStartDateFilter')?.value||'';
+      const endDate=document.getElementById('financeDateFilter')?.value||startDate;
       const platform=document.getElementById('financePlatformFilter')?.value||'';
       const type=document.getElementById('financeChannelFilter')?.value||'';
       const query=(document.getElementById('channelMerchantSearch')?.value||'').trim().toLowerCase();
@@ -6278,7 +6324,7 @@
         if(!shareTotals.has(key))shareTotals.set(key,{deposit:0,withdraw:0});
         const total=shareTotals.get(key);total.deposit+=Number(row[4]||0);total.withdraw+=Number(row[5]||0);
       });
-      let rows=sourceRows.filter(row=>(!date||row[0]===date)&&(channelAggregateView==='merchant'||!platform||row[1]===platform)&&(!type||String(row[3]).split(' / ').includes(type))&&(!query||String(row[2]).toLowerCase().includes(query)));
+      let rows=sourceRows.filter(row=>(!startDate||row[0]>=startDate)&&(!endDate||row[0]<=endDate)&&(channelAggregateView==='merchant'||!platform||row[1]===platform)&&(!type||String(row[3]).split(' / ').includes(type))&&(!query||String(row[2]).toLowerCase().includes(query)));
       const sorters={depositAmount:(a,b)=>b[4]-a[4],depositRate:(a,b)=>b[8]-a[8],withdrawAmount:(a,b)=>b[5]-a[5],withdrawRate:(a,b)=>b[11]-a[11],merchant:(a,b)=>String(a[2]).localeCompare(String(b[2]))};
       rows=rows.slice().sort(sorters[sort]||sorters.depositAmount);
       const totalDeposit=rows.reduce((sum,row)=>sum+Number(row[4]||0),0);
@@ -6288,7 +6334,7 @@
       if(summary)summary.innerHTML=[['商户记录',fmtNumber(rows.length)],['代收总金额',fmtMoney(totalDeposit)],['代收成功率',fmtRate(depositOrders?depositSuccess/depositOrders*100:0)],['代付成功率',fmtRate(withdrawOrders?withdrawSuccess/withdrawOrders*100:0)]].map(([label,value])=>`<div class="channel-summary-card"><span>${label}</span><strong>${value}</strong></div>`).join('');
       const renderLimit=100;
       const visible=rows.slice(0,renderLimit);
-      body.innerHTML=visible.length?visible.map((row,index)=>{const fee=channelFeeRule(row[2]);const feeTotal=fee?Number(row[4]||0)*fee[0]/100+Number(row[5]||0)*fee[1]/100+Number(row[9]||0)*fee[2]:null;const shareKey=channelAggregateView==='merchant'?row[0]:`${row[0]}|${row[1]}`;const shareBase=shareTotals.get(shareKey)||{deposit:0,withdraw:0};const depositShare=shareBase.deposit?Number(row[4]||0)/shareBase.deposit*100:0;const withdrawShare=shareBase.withdraw?Number(row[5]||0)/shareBase.withdraw*100:0;const drill=channelAggregateView==='merchant'?` class="channel-drill-row" tabindex="0" title="点击查看各平台明细" onclick="openChannelPlatformModal('${encodeURIComponent(row[2])}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openChannelPlatformModal('${encodeURIComponent(row[2])}')}"`:'';return `<tr${drill}><td>${index+1}</td><td><span class="channel-platform-pill">${esc(row[1])}</span></td><td>${esc(row[2])}</td><td><span class="channel-type-pill">${esc(row[3])}</span></td><td>${fmtRate(depositShare)}</td><td>${fmtRate(withdrawShare)}</td><td>${fmtMoney(row[4])}</td><td>${fmtNumber(row[6])}</td><td>${fmtNumber(row[7])}</td><td class="${channelRateClass(row[8])}">${fmtRate(Number(row[8]||0)*100)}</td><td>${fmtMoney(row[5])}</td><td>${fmtNumber(row[9])}</td><td>${fmtNumber(row[10])}</td><td class="${channelRateClass(row[11])}">${fmtRate(Number(row[11]||0)*100)}</td><td>${fee?`${fmtMoney(feeTotal)}<br><small>代收 ${fee[0]}% · 代付 ${fee[1]}% + ₹${fee[2]}/单</small>`:'费率未配置'}</td></tr>`}).join(''):`<tr><td colspan="15">当前筛选条件没有数据</td></tr>`;
+      body.innerHTML=visible.length?visible.map((row,index)=>{const fee=channelFeeRule(row[2]);const feeTotal=fee?Number(row[4]||0)*fee[0]/100+Number(row[5]||0)*fee[1]/100+Number(row[9]||0)*fee[2]:null;const shareKey=channelAggregateView==='merchant'?row[0]:`${row[0]}|${row[1]}`;const shareBase=shareTotals.get(shareKey)||{deposit:0,withdraw:0};const depositShare=shareBase.deposit?Number(row[4]||0)/shareBase.deposit*100:0;const withdrawShare=shareBase.withdraw?Number(row[5]||0)/shareBase.withdraw*100:0;const drill=channelAggregateView==='merchant'?` class="channel-drill-row" tabindex="0" title="点击查看各平台明细" onclick="openChannelPlatformModal('${encodeURIComponent(row[2])}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openChannelPlatformModal('${encodeURIComponent(row[2])}')}"`:'';return `<tr${drill}><td>${index+1}</td><td><span class="channel-platform-pill">${esc(row[1])}</span></td><td>${esc(row[2])}</td><td><span class="channel-type-pill">${esc(row[3])}</span></td><td>${fmtRate(depositShare)}</td><td>${fmtRate(withdrawShare)}</td><td>${fmtMoney(row[4])}</td><td>${fmtNumber(row[6])}</td><td>${fmtNumber(row[7])}</td><td class="${channelRateClass(row[8])}">${fmtRate(Number(row[8]||0)*100)}</td><td>${fmtMoney(row[5])}</td><td>${fmtNumber(row[9])}</td><td>${fmtNumber(row[10])}</td><td class="${channelRateClass(row[11])}">${fmtRate(Number(row[11]||0)*100)}</td><td>${fee?`${fmtMoney(feeTotal)}<br><small>代收 ${fee[0]}% · 代付 ${fee[1]}% + ${fee[2]}/单</small>`:'费率未配置'}</td></tr>`}).join(''):`<tr><td colspan="15">当前筛选条件没有数据</td></tr>`;
       const info=document.getElementById('financeTableInfo');if(info)info.innerText=`${fmtNumber(rows.length)} 条记录`;
       const note=document.getElementById('channelTableNote');if(note)note.innerText=(rows.length>renderLimit?`当前显示前 ${renderLimit} 条，共 ${fmtNumber(rows.length)} 条。可使用上方搜索工具缩小范围。`:`共 ${fmtNumber(rows.length)} 条记录。`)+` 已排除待审核、待审查及未分配三方通道的订单。`;
       const title=document.getElementById('recordDetailTitle');if(title)title.innerText=channelAggregateView==='merchant'?'全部平台三方通道汇总':'印度三方通道明细';
@@ -6301,9 +6347,11 @@
     resetFinanceFilters=function(){
       ['financePlatformFilter','financeChannelFilter','channelMerchantSearch'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=''});
       const sort=document.getElementById('channelSortFilter');if(sort)sort.value='depositAmount';
-      const date=document.getElementById('financeDateFilter'),dates=[...new Set(channelExportRows().map(row=>row[0]))].sort();if(date&&dates.length)date.value=dates[dates.length-1];
-      renderFinanceReport();
+      const today=getRelativeISODate(activeGlobalDate,0);setFinanceDateFields(today,today);
+      searchFinanceReport();
     };
+
+    document.addEventListener('click',()=>document.getElementById('financeDatePopover')?.classList.remove('show'));
 
     document.addEventListener('keydown', e => {
       if (e.key === "Escape") {
