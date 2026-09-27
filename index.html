@@ -1806,13 +1806,19 @@
     .login-gate{background:#f3f6f9!important}.login-card{background:#fff!important;color:#253247!important;border-color:#dfe5ec!important;border-radius:8px!important;box-shadow:0 12px 36px rgba(31,45,61,.12)!important}
     .login-brand,.login-field span{color:#253247!important}.login-subtitle{color:#7d8a9c!important}.login-field input{background:#fff!important;color:#253247!important;border-color:#d9e0e8!important}
     .profile-wrap{position:relative}.profile-trigger{height:38px;padding:0 12px;display:flex;align-items:center;gap:9px;background:#fff;border:1px solid #d9e0e8;border-radius:6px;color:#344257;font-weight:800;cursor:pointer}.profile-trigger:hover,.profile-trigger.open{border-color:#2468e8;background:#f4f8ff}.profile-avatar{width:25px;height:25px;border-radius:50%;display:grid;place-items:center;background:#2468e8;color:#fff;font-size:.72rem}.profile-name{max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.profile-menu{position:absolute;right:0;top:46px;width:170px;padding:6px;background:#fff;border:1px solid #dfe5ec;border-radius:7px;box-shadow:0 10px 28px rgba(31,45,61,.16);z-index:3000;display:none}.profile-menu.show{display:block}.profile-menu button{width:100%;padding:10px 11px;display:flex;align-items:center;gap:10px;border:0;border-radius:5px;background:#fff;color:#344257;font-weight:700;cursor:pointer;text-align:left}.profile-menu button:hover{background:#eef5ff;color:#2468e8}.profile-menu .profile-logout{color:#dc2626}.profile-menu .profile-logout:hover{background:#fff1f2;color:#dc2626}.password-modal{position:fixed;inset:0;z-index:5000;display:none;align-items:center;justify-content:center;background:rgba(15,23,42,.35);padding:20px}.password-modal.show{display:flex}.password-card{width:min(420px,100%);background:#fff;border:1px solid #dfe5ec;border-radius:8px;box-shadow:0 18px 50px rgba(31,45,61,.2);padding:22px}.password-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}.password-head strong{font-size:1rem;color:#253247}.password-close{border:0;background:#edf1f5;color:#526176;width:30px;height:30px;border-radius:5px;cursor:pointer}.password-field{display:grid;gap:7px;margin-bottom:13px}.password-field label{font-size:.76rem;font-weight:800;color:#526176}.password-field input{height:40px;padding:0 11px}.password-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:17px}.password-cancel,.password-save{height:38px;padding:0 16px;border-radius:5px;font-weight:800;cursor:pointer}.password-cancel{background:#fff;border:1px solid #d9e0e8;color:#59687b}.password-save{background:#2468e8;border:1px solid #2468e8;color:#fff}.password-message{min-height:18px;font-size:.75rem;color:#dc2626;margin-top:4px}
+    .brand-logo{width:34px;height:34px;display:block;object-fit:contain}.login-logo{width:48px;height:48px;display:block;object-fit:contain}.profile-logo{width:28px;height:28px;display:block;object-fit:contain}
+    nav{background:#f9fbfd!important;border-bottom:1px solid #e7ecf1!important;box-shadow:0 1px 6px rgba(31,45,61,.045)!important}
+    .brand-title{gap:9px;color:#526176!important;font-size:.88rem!important}.brand-title span{color:#8a96a6!important;font-weight:700!important}
+    .nav-account{gap:8px!important}.amt-clock{background:#eef3f8!important;color:#607086!important;border:1px solid #e1e7ee!important;border-radius:18px!important;padding:8px 15px!important;box-shadow:none!important}
+    .profile-trigger{background:#fff!important;border-color:#e1e7ee!important;color:#607086!important;border-radius:18px!important;height:38px!important;padding:0 13px 0 5px!important;box-shadow:0 1px 4px rgba(31,45,61,.04)!important}.profile-trigger:hover,.profile-trigger.open{background:#f4f8ff!important;border-color:#bfd2fa!important;color:#2468e8!important}
+    .profile-avatar{width:28px!important;height:28px!important;background:transparent!important}.login-brand{gap:13px!important}
   </style>
 </head>
 
 <body class="auth-pending">
   <div class="login-gate" id="loginGate">
     <form class="login-card" id="loginForm" onsubmit="loginWithUsername(event)">
-      <div class="login-brand"><i class="fas fa-chart-pie"></i><span>HGX 数据中心</span></div>
+      <div class="login-brand"><img class="login-logo" src="assets/168-logo.png" alt="168"><span>168 数据中心</span></div>
       <div class="login-subtitle">请输入用户名和密码以查看内部数据</div>
       <label class="login-field"><span>用户名</span><input id="loginUsername" type="text" autocomplete="username" required placeholder="请输入用户名"></label>
       <label class="login-field"><span>密码</span><input id="loginPassword" type="password" autocomplete="current-password" required placeholder="请输入密码"></label>
@@ -1836,12 +1842,12 @@
   </div>
 
   <nav>
-    <div class="brand-title"><i class="fas fa-chart-pie"></i> HGX <span>员工信息</span></div>
+    <div class="brand-title"><img class="brand-logo" src="assets/168-logo.png" alt="168"><strong>168</strong><span>数据中心</span></div>
     <div class="nav-account">
       <div class="amt-clock" id="clock">00:00:00 AMT</div>
       <div class="profile-wrap" id="profileWrap">
         <button class="profile-trigger" id="profileTrigger" type="button" onclick="toggleProfileMenu(event)">
-          <span class="profile-avatar"><i class="fas fa-user"></i></span>
+          <span class="profile-avatar"><img class="profile-logo" src="assets/168-logo.png" alt="168"></span>
           <span class="profile-name" id="profileName">用户</span>
           <i class="fas fa-chevron-down"></i>
         </button>
