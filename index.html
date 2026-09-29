@@ -2860,8 +2860,10 @@
       if (input) input.value = activeGlobalDate;
       if (label) label.innerText = formatGlobalDate(activeGlobalDate);
 
-      const financeDate = document.getElementById('financeDateFilter');
-      if (financeDate) financeDate.value = getRelativeISODate(activeGlobalDate, 0).replaceAll('-', '/');
+      if (activeRecordModule === 'finance') {
+        const selectedFinanceDate=getRelativeISODate(activeGlobalDate,0);
+        setFinanceDateFields(selectedFinanceDate,selectedFinanceDate);
+      }
       if (document.getElementById('finance')?.classList.contains('active')) renderFinanceReport();
       updateExtraPages();
       if (activeMistakeModule === 'noDeduction') renderMistakeData();
@@ -3211,7 +3213,9 @@
     const kpiSparkCharts = [null,null,null,null,null,null];
     function renderKpiSparklines() {
       if (typeof Chart === 'undefined') return;
-      const endDate=getRelativeISODate(activeGlobalDate,-1);
+      const financeLatest=activeRecordModule==='finance'?[...new Set(dbFinance.filter(row=>isFinanceRowReliable(row)&&(getFinanceOrders(row)>0||getFinanceAmount(row)>0)).map(getFinanceDate).filter(Boolean))]
+        .map(canonicalPayoutDate).filter(date=>date&&date<=activeGlobalDate).sort().pop():'';
+      const endDate=financeLatest||getRelativeISODate(activeGlobalDate,-1);
       const dates=Array.from({length:7},(_,index)=>getRelativeISODate(endDate,index-6));
       let series=[[],[],[],[],[],[]];
       if (activeRecordModule==='finance') {
@@ -4941,7 +4945,7 @@
 
     function syncFinanceDateToLatestComplete() {
       const input = document.getElementById('financeDateFilter');
-      if (!input) return;
+      if (!input) return '';
       const reportDate = financeDateToObj(getRelativeISODate(activeGlobalDate, 0));
       const validDates = [...new Set(dbFinance
         .filter(row => isFinanceRowReliable(row) && (getFinanceOrders(row) > 0 || getFinanceAmount(row) > 0))
@@ -4952,7 +4956,12 @@
         }))]
         .sort((a,b)=>(financeDateToObj(a)?.getTime()||0)-(financeDateToObj(b)?.getTime()||0));
       const requested = normalizeDateText(input.value || '');
-      if (!requested || !validDates.includes(requested)) input.value = validDates[validDates.length - 1] || '';
+      const latest=validDates[validDates.length - 1] || '';
+      if (!requested || !validDates.includes(requested)) {
+        const iso=canonicalPayoutDate(latest);
+        if(iso)setFinanceDateFields(iso,iso);
+      }
+      return latest;
     }
 
     function resetFinanceFilters() {
@@ -5924,6 +5933,7 @@
       }
       initFinanceFilters();
       setFinanceDateFields(reportDate,reportDate);
+      syncFinanceDateToLatestComplete();
       if (activeRecordModule === 'finance') renderFinanceReport();
       renderHomeDashboard();
       toggleFinanceTableLoading(false);
