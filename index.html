@@ -1843,7 +1843,7 @@
     table th,.channel-data-table th,.kpi-popup-table th,.shift-list-table th{background:#f7f9fc!important;color:#657489!important;border-color:#e8edf3!important}
     table td,.channel-data-table td,.kpi-popup-table td{color:#526176!important;border-color:#edf1f5!important}
     tbody tr:nth-child(even) td,.channel-data-table tbody tr:nth-child(even) td{background:#fcfdff!important}
-    .finance-analytics-head{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:14px}.finance-analytics-head h3{margin:0;color:#26384e}.finance-analytics-head span{color:#718096;font-size:.75rem;font-weight:750}.finance-analytics-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.finance-analytics-card{min-height:310px;padding:16px;border:1px solid #dce4ed;border-radius:10px;background:#fff}.finance-analytics-card h4{margin:0 0 12px;color:#344257;font-size:.84rem}.finance-analytics-canvas{position:relative;height:245px}.finance-analytics-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:14px}.finance-analytics-stat{padding:14px;border:1px solid #dce4ed;border-radius:9px;background:#fff}.finance-analytics-stat span{display:block;color:#8491a2;font-size:.66rem;font-weight:800}.finance-analytics-stat strong{display:block;margin-top:6px;color:#26384e;font-size:1.18rem}.finance-analytics-empty{display:none;padding:46px;text-align:center;color:#8491a2;border:1px dashed #ccd6e2;border-radius:10px;background:#fff}.finance-analytics-empty.show{display:block}@media(max-width:900px){.finance-analytics-grid{grid-template-columns:1fr}.finance-analytics-summary{grid-template-columns:repeat(2,1fr)}}
+    .finance-analytics-head{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:14px}.finance-analytics-head h3{margin:0;color:#26384e}.finance-analytics-head span{color:#718096;font-size:.75rem;font-weight:750}.finance-fee-toolbar{display:flex;align-items:end;gap:12px;margin-bottom:14px;padding:14px;border:1px solid #dce4ed;border-radius:10px;background:#fff}.finance-fee-toolbar label{display:grid;gap:6px;color:#718096;font-size:.68rem;font-weight:800}.finance-fee-toolbar select{min-width:220px;padding:10px 36px 10px 12px;border:1px solid #d5dee8;border-radius:8px;background:#f8fafc;color:#344257;font-weight:750}.finance-analytics-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.finance-analytics-card{min-height:310px;padding:16px;border:1px solid #dce4ed;border-radius:10px;background:#fff}.finance-analytics-card h4{margin:0 0 12px;color:#344257;font-size:.84rem}.finance-analytics-canvas{position:relative;height:245px}.finance-analytics-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:14px 0}.finance-analytics-stat{padding:14px;border:1px solid #dce4ed;border-radius:9px;background:#fff}.finance-analytics-stat span{display:block;color:#8491a2;font-size:.66rem;font-weight:800}.finance-analytics-stat strong{display:block;margin-top:6px;color:#26384e;font-size:1.18rem}.finance-fee-table-wrap{overflow:auto;margin-top:14px;border:1px solid #dce4ed;border-radius:10px;background:#fff}.finance-fee-table{width:100%;min-width:1200px;border-collapse:collapse}.finance-fee-table th,.finance-fee-table td{padding:11px 12px;border-bottom:1px solid #edf1f5;text-align:right;font-size:.72rem}.finance-fee-table th{position:sticky;top:0;background:#f5f7fa;color:#657489}.finance-fee-table th:nth-child(-n+2),.finance-fee-table td:nth-child(-n+2){text-align:left}.finance-fee-table tfoot td{background:#f8fafc;font-weight:900}.finance-analytics-empty{display:none;padding:46px;text-align:center;color:#8491a2;border:1px dashed #ccd6e2;border-radius:10px;background:#fff}.finance-analytics-empty.show{display:block}@media(max-width:900px){.finance-analytics-grid{grid-template-columns:1fr}.finance-analytics-summary{grid-template-columns:repeat(2,1fr)}.finance-fee-toolbar{align-items:stretch;flex-direction:column}.finance-fee-toolbar select{width:100%}}
   </style>
 </head>
 
@@ -2153,15 +2153,17 @@
       </div>
 
       <div id="financeAnalytics" class="page-content">
-        <div class="finance-analytics-head"><div><h3><i class="fas fa-chart-line"></i> 财务数据统计</h3><span>数据1 · 基于数据2明细自动汇总</span></div><button class="refresh-btn" type="button" onclick="loadFinanceData(true)"><i class="fas fa-rotate"></i> 刷新数据</button></div>
-        <div class="finance-analytics-summary" id="financeAnalyticsSummary"></div>
+        <div class="finance-analytics-head"><div><h3><i class="fas fa-coins"></i> 三方通道费用统计</h3><span>数据1 · 按平台与三方通道自动计算代收、代付费用</span></div><button class="refresh-btn" type="button" onclick="loadFinanceData(true)"><i class="fas fa-rotate"></i> 刷新数据</button></div>
+        <div class="finance-fee-toolbar"><label>平台选择<select id="financeFeePlatform" onchange="renderFinanceAnalytics()"><option value="ALL">全部平台</option></select></label><span id="financeFeeDateLabel"></span></div>
         <div class="finance-analytics-empty" id="financeAnalyticsEmpty"><i class="fas fa-database"></i> 当前日期范围暂无统计数据</div>
         <div class="finance-analytics-grid" id="financeAnalyticsGrid">
-          <section class="finance-analytics-card"><h4>近7日充值成功率</h4><div class="finance-analytics-canvas"><canvas id="financeAnalyticsRate"></canvas></div></section>
-          <section class="finance-analytics-card"><h4>近7日订单与成功订单</h4><div class="finance-analytics-canvas"><canvas id="financeAnalyticsOrders"></canvas></div></section>
-          <section class="finance-analytics-card"><h4>各平台成功率</h4><div class="finance-analytics-canvas"><canvas id="financeAnalyticsPlatforms"></canvas></div></section>
-          <section class="finance-analytics-card"><h4>各平台成功金额</h4><div class="finance-analytics-canvas"><canvas id="financeAnalyticsAmounts"></canvas></div></section>
+          <section class="finance-analytics-card"><h4>近7日三方费用趋势</h4><div class="finance-analytics-canvas"><canvas id="financeAnalyticsRate"></canvas></div></section>
+          <section class="finance-analytics-card"><h4>代收费用与代付费用</h4><div class="finance-analytics-canvas"><canvas id="financeAnalyticsOrders"></canvas></div></section>
+          <section class="finance-analytics-card"><h4>各平台三方总费用</h4><div class="finance-analytics-canvas"><canvas id="financeAnalyticsPlatforms"></canvas></div></section>
+          <section class="finance-analytics-card"><h4>三方通道费用占比</h4><div class="finance-analytics-canvas"><canvas id="financeAnalyticsAmounts"></canvas></div></section>
         </div>
+        <div class="finance-analytics-summary" id="financeAnalyticsSummary"></div>
+        <div class="finance-fee-table-wrap"><table class="finance-fee-table"><thead><tr><th>平台</th><th>三方通道</th><th>代收订单</th><th>代收成功</th><th>代收成功金额</th><th>代收费率</th><th>代收费用</th><th>代付订单</th><th>代付成功</th><th>代付成功金额</th><th>代付费率</th><th>代付费用</th><th>费用合计</th></tr></thead><tbody id="financeFeeTableBody"></tbody><tfoot id="financeFeeTableFoot"></tfoot></table></div>
       </div>
 
       <div id="finance" class="page-content">
@@ -5116,15 +5118,33 @@
     function renderFinanceAnalytics() {
       const summary=document.getElementById('financeAnalyticsSummary'),empty=document.getElementById('financeAnalyticsEmpty'),grid=document.getElementById('financeAnalyticsGrid');
       if(!summary||typeof Chart==='undefined')return;
-      const latest=[...new Set(dbFinance.filter(row=>isFinanceRowReliable(row)&&(getFinanceOrders(row)>0||getFinanceAmount(row)>0)).map(getFinanceDate).filter(Boolean))].sort((a,b)=>(financeDateToObj(a)?.getTime()||0)-(financeDateToObj(b)?.getTime()||0)).pop()||'';
-      const latestObj=financeDateToObj(latest);
-      const dates=latestObj?Array.from({length:7},(_,i)=>{const d=new Date(latestObj);d.setDate(d.getDate()+i-6);return financeDateFromObj(d)}):[];
-      const daily=dates.map(date=>{const rows=getFinanceDepositSummaryRows(dbFinance.filter(row=>getFinanceDate(row)===date));const orders=rows.reduce((s,r)=>s+getFinanceOrders(r),0),success=rows.reduce((s,r)=>s+getFinanceSuccess(r),0),amount=rows.reduce((s,r)=>s+getFinanceAmount(r),0);return{date,orders,success,amount,rate:orders?success/orders*100:0}});
-      const todayRows=getFinanceDepositSummaryRows(dbFinance.filter(row=>getFinanceDate(row)===latest));
-      const platformMap=new Map();todayRows.forEach(row=>{const p=getFinancePlatform(row);const item=platformMap.get(p)||{orders:0,success:0,amount:0};item.orders+=getFinanceOrders(row);item.success+=getFinanceSuccess(row);item.amount+=getFinanceAmount(row);platformMap.set(p,item)});
-      const platforms=[...platformMap.keys()].sort(),items=platforms.map(p=>platformMap.get(p));const totalOrders=items.reduce((s,x)=>s+x.orders,0),totalSuccess=items.reduce((s,x)=>s+x.success,0),totalAmount=items.reduce((s,x)=>s+x.amount,0);
-      const hasData=Boolean(latest&&totalOrders);empty?.classList.toggle('show',!hasData);if(grid)grid.style.display=hasData?'grid':'none';
-      summary.innerHTML=[['数据日期',latest||'-'],['总订单',fmtNumber(totalOrders)],['成功订单',fmtNumber(totalSuccess)],['成功率',fmtRate(totalOrders?totalSuccess/totalOrders*100:0)]].map(([k,v])=>`<div class="finance-analytics-stat"><span>${k}</span><strong>${v}</strong></div>`).join('');
+      const source=[];
+      (dbFinance||[]).forEach(row=>{
+        const parts=String(row['渠道']||'').split('|');
+        if(parts.length<3||!['RECHARGE','WITHDRAW'].includes(parts[0]))return;
+        const merchant=canonicalChannelName(parts[1]);
+        if(merchant==='通道未填写'||merchant.includes('未分配通道'))return;
+        const fee=channelFeeRule(merchant);if(!fee)return;
+        const date=getFinanceDate(row),platform=getFinancePlatform(row),orders=getFinanceOrders(row),success=getFinanceSuccess(row),amount=getFinanceAmount(row);
+        source.push({date,platform,merchant,kind:parts[0],orders,success,amount,depositRate:fee[0],withdrawRate:fee[1],fixedFee:fee[2]});
+      });
+      const latest=[...new Set(source.map(row=>row.date).filter(Boolean))].sort((a,b)=>(financeDateToObj(a)?.getTime()||0)-(financeDateToObj(b)?.getTime()||0)).pop()||'';
+      const selector=document.getElementById('financeFeePlatform');
+      const platformOptions=[...new Set(source.map(row=>row.platform).filter(value=>value&&value!=='-'))].sort();
+      const previous=selector?.value||'ALL';
+      if(selector){selector.innerHTML='<option value="ALL">全部平台</option>'+platformOptions.map(value=>`<option value="${esc(value)}">${esc(value)}</option>`).join('');selector.value=platformOptions.includes(previous)?previous:'ALL'}
+      const selected=selector?.value||'ALL';
+      const dateLabel=document.getElementById('financeFeeDateLabel');if(dateLabel)dateLabel.innerText=`数据日期：${latest||'-'} · ${selected==='ALL'?'全部平台':selected}`;
+      const latestRows=source.filter(row=>row.date===latest&&(selected==='ALL'||row.platform===selected));
+      const grouped=new Map();latestRows.forEach(row=>{const key=`${row.platform}|${row.merchant}`;if(!grouped.has(key))grouped.set(key,{platform:row.platform,merchant:row.merchant,depositOrders:0,depositSuccess:0,depositAmount:0,depositFee:0,withdrawOrders:0,withdrawSuccess:0,withdrawAmount:0,withdrawFee:0,depositRate:row.depositRate,withdrawRate:row.withdrawRate,fixedFee:row.fixedFee});const item=grouped.get(key);if(row.kind==='RECHARGE'){item.depositOrders+=row.orders;item.depositSuccess+=row.success;item.depositAmount+=row.amount;item.depositFee+=row.amount*row.depositRate/100}else{item.withdrawOrders+=row.orders;item.withdrawSuccess+=row.success;item.withdrawAmount+=row.amount;item.withdrawFee+=row.amount*row.withdrawRate/100+row.success*row.fixedFee}});
+      const rows=[...grouped.values()].sort((a,b)=>(b.depositFee+b.withdrawFee)-(a.depositFee+a.withdrawFee));
+      const totals=rows.reduce((sum,row)=>{Object.keys(sum).forEach(key=>sum[key]+=Number(row[key]||0));return sum},{depositOrders:0,depositSuccess:0,depositAmount:0,depositFee:0,withdrawOrders:0,withdrawSuccess:0,withdrawAmount:0,withdrawFee:0});
+      totals.totalFee=totals.depositFee+totals.withdrawFee;
+      const hasData=Boolean(latest&&rows.length);empty?.classList.toggle('show',!hasData);if(grid)grid.style.display=hasData?'grid':'none';
+      summary.innerHTML=[['数据日期',latest||'-'],['代收成功金额',fmtMoney(totals.depositAmount)],['代收费用',fmtMoney(totals.depositFee)],['代收费用比例',fmtRate(totals.depositAmount?totals.depositFee/totals.depositAmount*100:0)],['代付成功金额',fmtMoney(totals.withdrawAmount)],['代付费用',fmtMoney(totals.withdrawFee)],['代付费用比例',fmtRate(totals.withdrawAmount?totals.withdrawFee/totals.withdrawAmount*100:0)],['全部费用合计',fmtMoney(totals.totalFee)]].map(([k,v])=>`<div class="finance-analytics-stat"><span>${k}</span><strong>${v}</strong></div>`).join('');
+      const body=document.getElementById('financeFeeTableBody'),foot=document.getElementById('financeFeeTableFoot');
+      if(body)body.innerHTML=rows.length?rows.map(row=>`<tr><td>${esc(row.platform)}</td><td>${esc(row.merchant)}</td><td>${fmtNumber(row.depositOrders)}</td><td>${fmtNumber(row.depositSuccess)}</td><td>${fmtMoney(row.depositAmount)}</td><td>${fmtRate(row.depositRate)}</td><td>${fmtMoney(row.depositFee)}</td><td>${fmtNumber(row.withdrawOrders)}</td><td>${fmtNumber(row.withdrawSuccess)}</td><td>${fmtMoney(row.withdrawAmount)}</td><td>${fmtRate(row.withdrawRate)} + ${fmtMoney(row.fixedFee)}/单</td><td>${fmtMoney(row.withdrawFee)}</td><td>${fmtMoney(row.depositFee+row.withdrawFee)}</td></tr>`).join(''):'<tr><td colspan="13">当前平台暂无已配置费率的三方数据</td></tr>';
+      if(foot)foot.innerHTML=`<tr><td colspan="2">全部合计</td><td>${fmtNumber(totals.depositOrders)}</td><td>${fmtNumber(totals.depositSuccess)}</td><td>${fmtMoney(totals.depositAmount)}</td><td>${fmtRate(totals.depositAmount?totals.depositFee/totals.depositAmount*100:0)}</td><td>${fmtMoney(totals.depositFee)}</td><td>${fmtNumber(totals.withdrawOrders)}</td><td>${fmtNumber(totals.withdrawSuccess)}</td><td>${fmtMoney(totals.withdrawAmount)}</td><td>${fmtRate(totals.withdrawAmount?totals.withdrawFee/totals.withdrawAmount*100:0)}</td><td>${fmtMoney(totals.withdrawFee)}</td><td>${fmtMoney(totals.totalFee)}</td></tr>`;
       financeAnalyticsCharts.forEach(chart=>chart?.destroy());financeAnalyticsCharts=[];if(!hasData)return;
       const colors=['#2563eb','#16a34a','#f59e0b','#7c3aed','#0891b2','#dc2626','#db2777','#0f766e'];
       const make=(id,config)=>{const c=document.getElementById(id);if(c)financeAnalyticsCharts.push(new Chart(c.getContext('2d'),config))};
@@ -5132,10 +5152,15 @@
       // the last bar in the second dataset can briefly look missing while the chart
       // is still drawing, which makes a finalized day appear incomplete.
       const base={responsive:true,maintainAspectRatio:false,animation:false,plugins:{legend:{labels:{color:'#526176',usePointStyle:true}}},scales:{x:{ticks:{color:'#718096'},grid:{color:'#edf1f5'}},y:{ticks:{color:'#718096'},grid:{color:'#edf1f5'}}}};
-      make('financeAnalyticsRate',{type:'line',data:{labels:dates.map(d=>d.slice(5)),datasets:[{label:'成功率',data:daily.map(x=>x.rate),borderColor:'#16a34a',backgroundColor:'rgba(22,163,74,.12)',fill:true,tension:.32}]},options:base});
-      make('financeAnalyticsOrders',{type:'bar',data:{labels:dates.map(d=>d.slice(5)),datasets:[{label:'总订单',data:daily.map(x=>x.orders),backgroundColor:'#93c5fd'},{label:'成功订单',data:daily.map(x=>x.success),backgroundColor:'#2563eb'}]},options:base});
-      make('financeAnalyticsPlatforms',{type:'bar',data:{labels:platforms,datasets:[{label:'成功率',data:items.map(x=>x.orders?x.success/x.orders*100:0),backgroundColor:platforms.map((_,i)=>colors[i%colors.length])}]},options:base});
-      make('financeAnalyticsAmounts',{type:'doughnut',data:{labels:platforms,datasets:[{label:'成功金额',data:items.map(x=>x.amount),backgroundColor:platforms.map((_,i)=>colors[i%colors.length])}]},options:{responsive:true,maintainAspectRatio:false,animation:false,plugins:{legend:{position:'right',labels:{color:'#526176',usePointStyle:true}}}}});
+      const latestObj=financeDateToObj(latest),dates=latestObj?Array.from({length:7},(_,i)=>{const d=new Date(latestObj);d.setDate(d.getDate()+i-6);return financeDateFromObj(d)}):[];
+      const feeFor=row=>row.kind==='RECHARGE'?row.amount*row.depositRate/100:row.amount*row.withdrawRate/100+row.success*row.fixedFee;
+      const daily=dates.map(date=>{const list=source.filter(row=>row.date===date&&(selected==='ALL'||row.platform===selected));return{deposit:list.filter(row=>row.kind==='RECHARGE').reduce((sum,row)=>sum+feeFor(row),0),withdraw:list.filter(row=>row.kind==='WITHDRAW').reduce((sum,row)=>sum+feeFor(row),0)}});
+      const platformFees=platformOptions.map(platform=>({platform,fee:source.filter(row=>row.date===latest&&row.platform===platform).reduce((sum,row)=>sum+feeFor(row),0)})).filter(item=>item.fee>0);
+      const merchantFees=rows.reduce((map,row)=>map.set(row.merchant,(map.get(row.merchant)||0)+row.depositFee+row.withdrawFee),new Map());const merchants=[...merchantFees.entries()].sort((a,b)=>b[1]-a[1]).slice(0,12);
+      make('financeAnalyticsRate',{type:'line',data:{labels:dates.map(d=>d.slice(5)),datasets:[{label:'代收费用',data:daily.map(x=>x.deposit),borderColor:'#2563eb',backgroundColor:'rgba(37,99,235,.10)',fill:true,tension:.32},{label:'代付费用',data:daily.map(x=>x.withdraw),borderColor:'#f59e0b',backgroundColor:'rgba(245,158,11,.10)',fill:true,tension:.32}]},options:base});
+      make('financeAnalyticsOrders',{type:'doughnut',data:{labels:['代收费用','代付费用'],datasets:[{label:'费用',data:[totals.depositFee,totals.withdrawFee],backgroundColor:['#2563eb','#f59e0b']}]},options:{responsive:true,maintainAspectRatio:false,animation:false,plugins:{legend:{position:'right',labels:{color:'#526176',usePointStyle:true}}}}});
+      make('financeAnalyticsPlatforms',{type:'bar',data:{labels:platformFees.map(x=>x.platform),datasets:[{label:'三方总费用',data:platformFees.map(x=>x.fee),backgroundColor:platformFees.map((_,i)=>colors[i%colors.length])}]},options:base});
+      make('financeAnalyticsAmounts',{type:'doughnut',data:{labels:merchants.map(x=>x[0]),datasets:[{label:'三方费用',data:merchants.map(x=>x[1]),backgroundColor:merchants.map((_,i)=>colors[i%colors.length])}]},options:{responsive:true,maintainAspectRatio:false,animation:false,plugins:{legend:{position:'right',labels:{color:'#526176',usePointStyle:true}}}}});
     }
 
     function renderFinanceKpi(rows) {
