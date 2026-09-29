@@ -6308,16 +6308,27 @@
           name:getTrendPlatform(row),
           values:Array.from({length:24},(_,hour)=>(hour<customStartHour||hour>customEndHour)?null:toRateNumber(getTrendHourValue(row,hour)))
         })).filter(item=>item.name&&item.name!=='-'&&item.values.some(value=>Number.isFinite(value)&&value>0));
-        const useHourly=hourlyPlatforms.length>0;
+        // Hourly rows only contain success-rate data.  Never reuse that series
+        // for the other KPI popups: each eye button must visualize the same
+        // metric as the card the user clicked.
+        const useHourly=activeKpiDetailIndex===0&&hourlyPlatforms.length>0;
         const oneDayPayout=activeRecordModule==='payout'&&activeKpiDetailRange===1&&dates.length===1;
         const useOneDayBars=oneDayFinance&&!useHourly;
+        const financeMetric={
+          0:{label:'成功率',value:item=>item.orders?item.success/item.orders*100:0,percent:true},
+          1:{label:'总订单',value:item=>item.orders},
+          2:{label:'总金额',value:item=>item.amount,money:true},
+          3:{label:'成功订单',value:item=>item.success},
+          4:{label:'失败订单',value:item=>Math.max(0,item.orders-item.success)},
+          5:{label:'平均订单金额',value:item=>item.orders?item.amount/item.orders:0,money:true}
+        }[activeKpiDetailIndex]||{label:'统计值',value:item=>item.values[0]||0};
         const chartLabels=useHourly
           ? Array.from({length:24},(_,hour)=>`${String(hour).padStart(2,'0')}:00`)
           : useOneDayBars ? platforms.map(item=>item.name) : oneDayPayout ? ['通过','拒绝','待处理'] : dates.map(date=>date.slice(5));
         const chartDatasets=useHourly
           ? hourlyPlatforms.slice(0,10).map((item,index)=>({label:item.name,data:item.values,borderColor:palette[index%palette.length],backgroundColor:'transparent',borderWidth:2,pointRadius:2,pointHoverRadius:5,tension:.28,spanGaps:true}))
           : useOneDayBars
-            ? [{label:'平台成功率',data:platforms.map(item=>item.orders?item.success/item.orders*100:0),backgroundColor:platforms.map((_,index)=>`${palette[index%palette.length]}cc`),borderColor:platforms.map((_,index)=>palette[index%palette.length]),borderWidth:1,borderRadius:6}]
+            ? [{label:`平台${financeMetric.label}`,data:platforms.map(financeMetric.value),backgroundColor:platforms.map((_,index)=>`${palette[index%palette.length]}cc`),borderColor:platforms.map((_,index)=>palette[index%palette.length]),borderWidth:1,borderRadius:6}]
             : oneDayPayout
               ? platforms.map((item,index)=>({label:item.name,data:[item.success,item.amount,item.secondary],borderColor:palette[index%palette.length],backgroundColor:'transparent',borderWidth:2.5,pointRadius:4,pointHoverRadius:6,tension:.3}))
             : platforms.map((item,index)=>({label:item.name,data:item.values,borderColor:palette[index%palette.length],backgroundColor:'transparent',borderWidth:2,pointRadius:3,pointHoverRadius:5,tension:.3}));
@@ -6325,8 +6336,10 @@
           ? `出款 · ${activeKpiCustomRange?`${activeKpiStartDateTime.replace('T',' ')} 至 ${activeKpiEndDateTime.replace('T',' ')}`:(activeKpiDetailRange===1?'前一天':'前七天')}各平台统计`
           : useHourly
           ? `${recordModuleMeta[activeRecordModule]?.label||'数据'} · ${dates[0]} ${activeKpiCustomRange?`${activeKpiStartDateTime.slice(11)}–${activeKpiEndDateTime.slice(11)}`:'24小时'}各平台成功率`
-          : `${recordModuleMeta[activeRecordModule]?.label||'数据'} · ${activeKpiDetailRange===1?'前一天平台对比':'前七天趋势与平台对比'}`;
-        kpiDetailChartInstance=new Chart(canvas,{type:useOneDayBars?'bar':'line',data:{labels:chartLabels,datasets:chartDatasets},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,labels:{color:'#cbd5e1',boxWidth:10,font:{size:10,weight:'bold'}}},tooltip:{callbacks:{label:context=>`${context.dataset.label||''}: ${Number(context.parsed.y||0).toFixed((useHourly||useOneDayBars)?2:0)}${(useHourly||useOneDayBars)?'%':''}`}}},scales:{x:{ticks:{color:'#94a3b8',autoSkip:useHourly,maxTicksLimit:useHourly?8:12},grid:{color:'rgba(148,163,184,.08)'}},y:{suggestedMin:(useHourly||useOneDayBars)?0:undefined,suggestedMax:(useHourly||useOneDayBars)?100:undefined,ticks:{color:'#94a3b8',callback:value=>(useHourly||useOneDayBars)?`${value}%`:value},grid:{color:'rgba(148,163,184,.08)'}}},interaction:{intersect:false,mode:useOneDayBars?'nearest':'index'}}});
+          : `${recordModuleMeta[activeRecordModule]?.label||'数据'} · ${activeKpiDetailRange===1?`${dates[0]||''} 各平台${financeMetric.label}`:'前七天趋势与平台对比'}`;
+        const chartIsPercent=useHourly||(useOneDayBars&&financeMetric.percent);
+        const formatChartValue=value=>chartIsPercent?`${Number(value||0).toFixed(2)}%`:(useOneDayBars&&financeMetric.money?fmtMoney(value):fmtNumber(value));
+        kpiDetailChartInstance=new Chart(canvas,{type:useOneDayBars?'bar':'line',data:{labels:chartLabels,datasets:chartDatasets},options:{responsive:true,maintainAspectRatio:false,animation:false,plugins:{legend:{display:true,labels:{color:'#cbd5e1',boxWidth:10,font:{size:10,weight:'bold'}}},tooltip:{callbacks:{label:context=>`${context.dataset.label||''}: ${formatChartValue(context.parsed.y)}`}}},scales:{x:{ticks:{color:'#94a3b8',autoSkip:useHourly,maxTicksLimit:useHourly?8:12},grid:{color:'rgba(148,163,184,.08)'}},y:{suggestedMin:chartIsPercent?0:undefined,suggestedMax:chartIsPercent?100:undefined,ticks:{color:'#94a3b8',callback:value=>chartIsPercent?`${value}%`:value},grid:{color:'rgba(148,163,184,.08)'}}},interaction:{intersect:false,mode:useOneDayBars?'nearest':'index'}}});
       }
       if(!platformGrid)return;
       if(!platforms.length){platformGrid.innerHTML='<div class="kpi-platform-empty">当前日期范围暂无平台明细数据</div>';return;}
