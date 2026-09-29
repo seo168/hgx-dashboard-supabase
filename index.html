@@ -5139,7 +5139,7 @@
       const selected=selector?.value||'ALL';
       const dateLabel=document.getElementById('financeFeeDateLabel');if(dateLabel)dateLabel.innerText=`当前结果：${targetDate||'-'} · ${selected==='ALL'?'全部平台':selected}`;
       const selectedRows=source.filter(row=>row.date===targetDate&&(selected==='ALL'||row.platform===selected));
-      const grouped=new Map();selectedRows.forEach(row=>{const key=`${row.platform}|${row.merchant}`;if(!grouped.has(key))grouped.set(key,{platform:row.platform,merchant:row.merchant,depositOrders:0,depositSuccess:0,depositAmount:0,depositFee:0,withdrawOrders:0,withdrawSuccess:0,withdrawAmount:0,withdrawFee:0,depositRate:row.depositRate,withdrawRate:row.withdrawRate,fixedFee:row.fixedFee});const item=grouped.get(key);if(row.kind==='RECHARGE'){item.depositOrders+=row.orders;item.depositSuccess+=row.success;item.depositAmount+=row.amount;item.depositFee+=row.amount*row.depositRate/100}else{item.withdrawOrders+=row.orders;item.withdrawSuccess+=row.success;item.withdrawAmount+=row.amount;item.withdrawFee+=row.amount*row.withdrawRate/100+row.success*row.fixedFee}});
+      const grouped=new Map();selectedRows.forEach(row=>{const key=`${row.platform}|${row.merchant}`;if(!grouped.has(key))grouped.set(key,{platform:row.platform,merchant:row.merchant,depositOrders:0,depositSuccess:0,depositAmount:0,depositFee:0,withdrawOrders:0,withdrawSuccess:0,withdrawAmount:0,withdrawFee:0,depositRate:row.depositRate,withdrawRate:row.withdrawRate,fixedFee:row.fixedFee});const item=grouped.get(key);if(row.kind==='RECHARGE'){item.depositOrders+=row.orders;item.depositSuccess+=row.success;item.depositAmount+=row.amount;item.depositFee+=row.amount*row.depositRate/100}else{item.withdrawOrders+=row.orders;item.withdrawSuccess+=row.success;item.withdrawAmount+=row.amount;item.withdrawFee+=row.amount*row.withdrawRate/100+row.orders*row.fixedFee}});
       const rows=[...grouped.values()].sort((a,b)=>(b.depositFee+b.withdrawFee)-(a.depositFee+a.withdrawFee));
       const totals=rows.reduce((sum,row)=>{Object.keys(sum).forEach(key=>sum[key]+=Number(row[key]||0));return sum},{depositOrders:0,depositSuccess:0,depositAmount:0,depositFee:0,withdrawOrders:0,withdrawSuccess:0,withdrawAmount:0,withdrawFee:0});
       totals.totalFee=totals.depositFee+totals.withdrawFee;
@@ -5156,7 +5156,7 @@
       // is still drawing, which makes a finalized day appear incomplete.
       const base={responsive:true,maintainAspectRatio:false,animation:false,plugins:{legend:{labels:{color:'#526176',usePointStyle:true}}},scales:{x:{ticks:{color:'#718096'},grid:{color:'#edf1f5'}},y:{ticks:{color:'#718096'},grid:{color:'#edf1f5'}}}};
       const targetObj=financeDateToObj(targetDate),dates=targetObj?Array.from({length:7},(_,i)=>{const d=new Date(targetObj);d.setDate(d.getDate()+i-6);return canonicalPayoutDate(financeDateFromObj(d))}):[];
-      const feeFor=row=>row.kind==='RECHARGE'?row.amount*row.depositRate/100:row.amount*row.withdrawRate/100+row.success*row.fixedFee;
+      const feeFor=row=>row.kind==='RECHARGE'?row.amount*row.depositRate/100:row.amount*row.withdrawRate/100+row.orders*row.fixedFee;
       const daily=dates.map(date=>{const list=source.filter(row=>row.date===date&&(selected==='ALL'||row.platform===selected));return{deposit:list.filter(row=>row.kind==='RECHARGE').reduce((sum,row)=>sum+feeFor(row),0),withdraw:list.filter(row=>row.kind==='WITHDRAW').reduce((sum,row)=>sum+feeFor(row),0)}});
       const platformFees=platformOptions.map(platform=>({platform,fee:source.filter(row=>row.date===targetDate&&row.platform===platform).reduce((sum,row)=>sum+feeFor(row),0)})).filter(item=>item.fee>0);
       const merchantFees=rows.reduce((map,row)=>map.set(row.merchant,(map.get(row.merchant)||0)+row.depositFee+row.withdrawFee),new Map());const merchants=[...merchantFees.entries()].sort((a,b)=>b[1]-a[1]).slice(0,12);
@@ -6397,7 +6397,7 @@
       arupi:'ARUPI',
       ic2pay:'ICPay2',icpay2:'ICPay2',
       bibipay:'BibiPay',cbibipay:'BibiPay',
-      lkgopay:'LkgoPay',freepapay:'FreePay',free2pay:'FreePay',fastpay:'FastPay',umpay:'UmPay'
+      lkgopay:'LkgoPay',freepapay:'FreePay',free2pay:'FreePay',fastpay:'FastPay',jdpay2:'JDPay',umpay:'UmPay'
     };
     function canonicalChannelName(value){
       const raw=String(value||'').trim();
