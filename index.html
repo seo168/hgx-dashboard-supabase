@@ -1843,6 +1843,7 @@
     table th,.channel-data-table th,.kpi-popup-table th,.shift-list-table th{background:#f7f9fc!important;color:#657489!important;border-color:#e8edf3!important}
     table td,.channel-data-table td,.kpi-popup-table td{color:#526176!important;border-color:#edf1f5!important}
     tbody tr:nth-child(even) td,.channel-data-table tbody tr:nth-child(even) td{background:#fcfdff!important}
+    .finance-analytics-head{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:14px}.finance-analytics-head h3{margin:0;color:#26384e}.finance-analytics-head span{color:#718096;font-size:.75rem;font-weight:750}.finance-analytics-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.finance-analytics-card{min-height:310px;padding:16px;border:1px solid #dce4ed;border-radius:10px;background:#fff}.finance-analytics-card h4{margin:0 0 12px;color:#344257;font-size:.84rem}.finance-analytics-canvas{position:relative;height:245px}.finance-analytics-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:14px}.finance-analytics-stat{padding:14px;border:1px solid #dce4ed;border-radius:9px;background:#fff}.finance-analytics-stat span{display:block;color:#8491a2;font-size:.66rem;font-weight:800}.finance-analytics-stat strong{display:block;margin-top:6px;color:#26384e;font-size:1.18rem}.finance-analytics-empty{display:none;padding:46px;text-align:center;color:#8491a2;border:1px dashed #ccd6e2;border-radius:10px;background:#fff}.finance-analytics-empty.show{display:block}@media(max-width:900px){.finance-analytics-grid{grid-template-columns:1fr}.finance-analytics-summary{grid-template-columns:repeat(2,1fr)}}
   </style>
 </head>
 
@@ -2148,6 +2149,18 @@
           <div class="department-placeholder-icon"><i class="fas fa-chart-column"></i></div>
           <strong id="departmentPlaceholderName">数据</strong>
           <span>该数据页面正在准备中，后续将在这里连接对应的 Supabase 数据与图表。</span>
+        </div>
+      </div>
+
+      <div id="financeAnalytics" class="page-content">
+        <div class="finance-analytics-head"><div><h3><i class="fas fa-chart-line"></i> 财务数据统计</h3><span>数据1 · 基于数据2明细自动汇总</span></div><button class="refresh-btn" type="button" onclick="loadFinanceData(true)"><i class="fas fa-rotate"></i> 刷新数据</button></div>
+        <div class="finance-analytics-summary" id="financeAnalyticsSummary"></div>
+        <div class="finance-analytics-empty" id="financeAnalyticsEmpty"><i class="fas fa-database"></i> 当前日期范围暂无统计数据</div>
+        <div class="finance-analytics-grid" id="financeAnalyticsGrid">
+          <section class="finance-analytics-card"><h4>近7日充值成功率</h4><div class="finance-analytics-canvas"><canvas id="financeAnalyticsRate"></canvas></div></section>
+          <section class="finance-analytics-card"><h4>近7日订单与成功订单</h4><div class="finance-analytics-canvas"><canvas id="financeAnalyticsOrders"></canvas></div></section>
+          <section class="finance-analytics-card"><h4>各平台成功率</h4><div class="finance-analytics-canvas"><canvas id="financeAnalyticsPlatforms"></canvas></div></section>
+          <section class="finance-analytics-card"><h4>各平台成功金额</h4><div class="finance-analytics-canvas"><canvas id="financeAnalyticsAmounts"></canvas></div></section>
         </div>
       </div>
 
@@ -2651,6 +2664,7 @@
     let activeServiceRegion = '全部';
     const INDONESIA_SERVICE_STAFF_IDS = new Set(['CS000177','CS00075','CS000437']);
     let financeTrendChart = null;
+    let financeAnalyticsCharts = [];
     let financeLoaded = false;
     let payoutLoaded = false;
     let serviceLoaded = false;
@@ -3698,7 +3712,17 @@
       document.querySelectorAll('[id^="sideDept-"]').forEach(btn => btn.classList.remove('active'));
       document.getElementById(`sideDept-${module}-${dataIndex}`)?.classList.add('active');
 
-      if (dataIndex === 1 && module !== 'risk') {
+      if (module === 'finance' && dataIndex === 1) {
+        showPage('financeAnalytics');
+        document.querySelectorAll('.side-menu-btn').forEach(btn => btn.classList.remove('active'));
+        document.getElementById('btn-finance')?.classList.add('active');
+        activeRecordModule='finance';
+        ensureRecordModuleData('finance');
+        renderFinanceAnalytics();
+        return;
+      }
+
+      if (((module === 'finance' && dataIndex === 2) || (module !== 'finance' && dataIndex === 1)) && module !== 'risk') {
         showPage('finance');
         document.querySelectorAll('.side-menu-btn').forEach(btn => btn.classList.remove('active'));
         document.getElementById(`btn-${module}`)?.classList.add('active');
@@ -4892,7 +4916,10 @@
       event?.stopPropagation();
       const popover=document.getElementById('financeDatePopover');if(!popover)return;
       const willOpen=!popover.classList.contains('show');popover.classList.toggle('show',willOpen);
-      if(willOpen)openNativeDatePicker(document.getElementById('financeDraftStart'),event);
+      if(willOpen){
+        document.getElementById('financeDraftStart')?.blur();
+        document.getElementById('financeDraftEnd')?.blur();
+      }
     }
 
     function openNativeDatePicker(input,event) {
@@ -5084,6 +5111,28 @@
       renderFinancePlatformCards(rows);
       renderFinanceTrend();
       renderFinanceTable(rows);
+    }
+
+    function renderFinanceAnalytics() {
+      const summary=document.getElementById('financeAnalyticsSummary'),empty=document.getElementById('financeAnalyticsEmpty'),grid=document.getElementById('financeAnalyticsGrid');
+      if(!summary||typeof Chart==='undefined')return;
+      const latest=[...new Set(dbFinance.filter(row=>isFinanceRowReliable(row)&&(getFinanceOrders(row)>0||getFinanceAmount(row)>0)).map(getFinanceDate).filter(Boolean))].sort((a,b)=>(financeDateToObj(a)?.getTime()||0)-(financeDateToObj(b)?.getTime()||0)).pop()||'';
+      const latestObj=financeDateToObj(latest);
+      const dates=latestObj?Array.from({length:7},(_,i)=>{const d=new Date(latestObj);d.setDate(d.getDate()+i-6);return financeDateFromObj(d)}):[];
+      const daily=dates.map(date=>{const rows=getFinanceDepositSummaryRows(dbFinance.filter(row=>getFinanceDate(row)===date));const orders=rows.reduce((s,r)=>s+getFinanceOrders(r),0),success=rows.reduce((s,r)=>s+getFinanceSuccess(r),0),amount=rows.reduce((s,r)=>s+getFinanceAmount(r),0);return{date,orders,success,amount,rate:orders?success/orders*100:0}});
+      const todayRows=getFinanceDepositSummaryRows(dbFinance.filter(row=>getFinanceDate(row)===latest));
+      const platformMap=new Map();todayRows.forEach(row=>{const p=getFinancePlatform(row);const item=platformMap.get(p)||{orders:0,success:0,amount:0};item.orders+=getFinanceOrders(row);item.success+=getFinanceSuccess(row);item.amount+=getFinanceAmount(row);platformMap.set(p,item)});
+      const platforms=[...platformMap.keys()].sort(),items=platforms.map(p=>platformMap.get(p));const totalOrders=items.reduce((s,x)=>s+x.orders,0),totalSuccess=items.reduce((s,x)=>s+x.success,0),totalAmount=items.reduce((s,x)=>s+x.amount,0);
+      const hasData=Boolean(latest&&totalOrders);empty?.classList.toggle('show',!hasData);if(grid)grid.style.display=hasData?'grid':'none';
+      summary.innerHTML=[['数据日期',latest||'-'],['总订单',fmtNumber(totalOrders)],['成功订单',fmtNumber(totalSuccess)],['成功率',fmtRate(totalOrders?totalSuccess/totalOrders*100:0)]].map(([k,v])=>`<div class="finance-analytics-stat"><span>${k}</span><strong>${v}</strong></div>`).join('');
+      financeAnalyticsCharts.forEach(chart=>chart?.destroy());financeAnalyticsCharts=[];if(!hasData)return;
+      const colors=['#2563eb','#16a34a','#f59e0b','#7c3aed','#0891b2','#dc2626','#db2777','#0f766e'];
+      const make=(id,config)=>{const c=document.getElementById(id);if(c)financeAnalyticsCharts.push(new Chart(c.getContext('2d'),config))};
+      const base={responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#526176',usePointStyle:true}}},scales:{x:{ticks:{color:'#718096'},grid:{color:'#edf1f5'}},y:{ticks:{color:'#718096'},grid:{color:'#edf1f5'}}}};
+      make('financeAnalyticsRate',{type:'line',data:{labels:dates.map(d=>d.slice(5)),datasets:[{label:'成功率',data:daily.map(x=>x.rate),borderColor:'#16a34a',backgroundColor:'rgba(22,163,74,.12)',fill:true,tension:.32}]},options:base});
+      make('financeAnalyticsOrders',{type:'bar',data:{labels:dates.map(d=>d.slice(5)),datasets:[{label:'总订单',data:daily.map(x=>x.orders),backgroundColor:'#93c5fd'},{label:'成功订单',data:daily.map(x=>x.success),backgroundColor:'#2563eb'}]},options:base});
+      make('financeAnalyticsPlatforms',{type:'bar',data:{labels:platforms,datasets:[{label:'成功率',data:items.map(x=>x.orders?x.success/x.orders*100:0),backgroundColor:platforms.map((_,i)=>colors[i%colors.length])}]},options:base});
+      make('financeAnalyticsAmounts',{type:'doughnut',data:{labels:platforms,datasets:[{label:'成功金额',data:items.map(x=>x.amount),backgroundColor:platforms.map((_,i)=>colors[i%colors.length])}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{color:'#526176',usePointStyle:true}}}}});
     }
 
     function renderFinanceKpi(rows) {
@@ -5935,6 +5984,7 @@
       setFinanceDateFields(reportDate,reportDate);
       syncFinanceDateToLatestComplete();
       if (activeRecordModule === 'finance') renderFinanceReport();
+      renderFinanceAnalytics();
       renderHomeDashboard();
       toggleFinanceTableLoading(false);
     }
