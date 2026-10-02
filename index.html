@@ -1871,11 +1871,11 @@
     .side-menu-brand{display:none}
     .side-menu-brand img{width:30px;height:30px;object-fit:contain}.side-menu-brand small{color:#92a6b9;font-size:.62rem;font-weight:750}
     @media(min-width:1001px){
-      nav{min-height:64px!important;padding:0 22px 0 205px!important;justify-content:flex-end!important;background:linear-gradient(90deg,#f8fafc 0%,#f1f4f7 55%,#e9eef3 100%)!important;border-bottom:1px solid #dce3ea!important;box-shadow:0 2px 8px rgba(51,65,85,.06)!important;backdrop-filter:none!important}
-      nav>.brand-title{position:absolute;left:0;top:0;width:184px;height:64px;display:flex!important;align-items:center;justify-content:center;background:#fbfcfd;border-right:1px solid #dce3ea;color:#526176!important}
+      nav{min-height:64px!important;padding:0 22px 0 226px!important;justify-content:flex-end!important;background:linear-gradient(90deg,#f8fafc 0%,#f1f4f7 55%,#e9eef3 100%)!important;border-bottom:0!important;box-shadow:0 2px 8px rgba(51,65,85,.045)!important;backdrop-filter:none!important}
+      nav>.brand-title{position:absolute;left:0;top:0;width:205px;height:64px;display:flex!important;align-items:center;justify-content:center;background:#fbfcfd;border:0!important;color:#526176!important}
       .nav-account{margin-left:auto!important}
-      .app-layout{display:block!important;max-width:none!important;margin:0!important;padding:22px 22px 38px 205px!important}
-      .side-menu{position:fixed!important;z-index:1100;left:0!important;top:64px!important;width:184px!important;height:calc(100vh - 64px)!important;min-height:calc(100vh - 64px)!important;padding:10px!important;border:0!important;border-radius:0!important;background:#071f31!important;box-shadow:4px 0 16px rgba(30,41,59,.08)!important;overflow-y:auto!important;scrollbar-width:none}
+      .app-layout{display:block!important;max-width:none!important;margin:0!important;padding:22px 22px 38px 226px!important}
+      .side-menu{position:fixed!important;z-index:1100;left:0!important;top:64px!important;width:205px!important;height:calc(100vh - 64px)!important;min-height:calc(100vh - 64px)!important;padding:10px 12px!important;border:0!important;border-radius:0!important;background:#071f31!important;box-shadow:none!important;overflow-y:auto!important;scrollbar-width:none}
       .side-menu::-webkit-scrollbar{display:none}
       .side-menu::before{display:none!important}.side-menu-title{display:none!important}
       .side-submenu{gap:3px!important}
@@ -1885,7 +1885,7 @@
       .side-menu-btn:hover{transform:none!important;background:#0d3047!important;color:#fff!important}
       .side-menu-btn.active{background:#2468e8!important;color:#fff!important;border:0!important;box-shadow:none!important}
       .side-menu-btn.active i{background:transparent!important;color:#fff!important}
-      .side-nested-menu{padding:2px 0 5px 27px!important;gap:2px!important}
+      .side-nested-menu{padding:2px 0 5px 22px!important;gap:2px!important}
       .side-nested-btn{min-height:34px!important;padding:7px 10px!important;border:0!important;border-radius:4px!important;background:transparent!important;color:#9eb2c3!important;font-size:.67rem!important;text-align:left!important}
       .side-nested-btn:hover{background:#0d3047!important;color:#fff!important}.side-nested-btn.active{background:#1e5cc8!important;color:#fff!important}
       .side-menu-btn .dev-badge{padding:2px 5px!important;font-size:.5rem!important}
@@ -1894,6 +1894,7 @@
     }
     @media(max-width:1000px){.side-menu-brand{display:none}nav>.brand-title{display:flex!important}}
     body{font-family:Arial,"PingFang SC","Microsoft YaHei",sans-serif!important;color:#3f4c5d!important}
+    body :not(i):not(.fa):not(.fas):not(.far):not(.fab){font-weight:400!important}
     #finance{font-family:Arial,"PingFang SC","Microsoft YaHei",sans-serif;color:#3f4c5d}
     #finance .finance-kpi-label,#finance .finance-kpi-sub,#finance .filter-group label,#finance .finance-readable-desc,#finance .finance-scroll-hint{font-weight:500!important;color:#8190a3!important;letter-spacing:0!important}
     #finance .finance-kpi-value{font-size:1.16rem!important;font-weight:700!important;color:#334155!important}
@@ -1905,6 +1906,7 @@
     #finance .channel-data-table td{padding:9px 8px!important;font-size:.68rem!important;font-weight:500!important;color:#465568!important;line-height:1.35!important}
     #finance .channel-data-table td:nth-child(3){font-weight:600!important;color:#344257!important}
     #finance .channel-platform-pill,#finance .channel-type-pill{font-size:.61rem!important;font-weight:600!important}
+    html body #finance *:not(i):not(.fa):not(.fas):not(.far):not(.fab),html body #financeAnalytics *:not(i):not(.fa):not(.fas):not(.far):not(.fab),html body nav *:not(i):not(.fa):not(.fas):not(.far):not(.fab),html body .side-menu *:not(i):not(.fa):not(.fas):not(.far):not(.fab){font-weight:400!important}
   </style>
 </head>
 
