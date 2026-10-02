@@ -2700,6 +2700,9 @@
     let dbPerf = [];
     let dbFinance = [];
     let dbFinanceAnalytics = [];
+    let dbFinanceAnalyticsTrend = [];
+    let financeAnalyticsTrendDate = '';
+    let financeAnalyticsTrendLoadingDate = '';
     let dbTrend = [];
     let dbPayoutDaily = [];
     let dbPayoutPlatformTiming = [];
@@ -3783,6 +3786,7 @@
         activeRecordModule='finance';
         ensureRecordModuleData('finance');
         renderFinanceAnalytics();
+        loadFinanceAnalyticsTrend(document.getElementById('financeFeeDate')?.value||getRelativeISODate(activeGlobalDate,0));
         return;
       }
 
@@ -5041,12 +5045,30 @@
       try {
         dbFinanceAnalytics=mapFinanceDailyRows(await fetchFinanceDateRange(targetDate,targetDate));
         renderFinanceAnalytics();
+        loadFinanceAnalyticsTrend(targetDate);
       } catch(error) {
         console.error('Supabase 财务费用搜索失败',error.message||error);
         const empty=document.getElementById('financeAnalyticsEmpty');
         if(empty){empty.classList.add('show');empty.innerHTML=`<i class="fas fa-triangle-exclamation"></i><span>搜索失败：${esc(error.message||error)}</span>`;}
       } finally {
         if(button){button.disabled=false;button.innerHTML='<i class="fas fa-magnifying-glass"></i> 搜索';}
+      }
+    }
+
+    async function loadFinanceAnalyticsTrend(targetDate) {
+      if(!targetDate||financeAnalyticsTrendDate===targetDate||financeAnalyticsTrendLoadingDate===targetDate)return;
+      financeAnalyticsTrendLoadingDate=targetDate;
+      try {
+        const startDate=getRelativeISODate(targetDate,-6);
+        const rows=mapFinanceDailyRows(await fetchFinanceDateRange(startDate,targetDate));
+        if(financeAnalyticsTrendLoadingDate!==targetDate)return;
+        dbFinanceAnalyticsTrend=rows;
+        financeAnalyticsTrendDate=targetDate;
+        if(document.getElementById('financeFeeDate')?.value===targetDate)renderFinanceAnalytics();
+      } catch(error) {
+        console.warn('Supabase 近7日费用趋势读取失败',error.message||error);
+      } finally {
+        if(financeAnalyticsTrendLoadingDate===targetDate)financeAnalyticsTrendLoadingDate='';
       }
     }
 
@@ -5196,16 +5218,20 @@
     function renderFinanceAnalytics() {
       const summary=document.getElementById('financeAnalyticsSummary'),empty=document.getElementById('financeAnalyticsEmpty'),grid=document.getElementById('financeAnalyticsGrid');
       if(!summary||typeof Chart==='undefined')return;
-      const source=[];
-      (dbFinanceAnalytics||[]).forEach(row=>{
+      const mapRows=rows=>{
+        const result=[];
+        (rows||[]).forEach(row=>{
         const parts=String(row['渠道']||'').split('|');
         if(parts.length<3||!['RECHARGE','WITHDRAW'].includes(parts[0]))return;
         const merchant=canonicalChannelName(parts[1]);
         if(merchant==='通道未填写'||merchant.includes('未分配通道'))return;
         const fee=channelFeeRule(merchant);if(!fee)return;
         const date=canonicalPayoutDate(getFinanceDate(row)),platform=getFinancePlatform(row),orders=getFinanceOrders(row),success=getFinanceSuccess(row),amount=getFinanceAmount(row);
-        source.push({date,platform,merchant,kind:parts[0],orders,success,amount,depositRate:fee[0],withdrawRate:fee[1],fixedFee:fee[2]});
-      });
+          result.push({date,platform,merchant,kind:parts[0],orders,success,amount,depositRate:fee[0],withdrawRate:fee[1],fixedFee:fee[2]});
+        });
+        return result;
+      };
+      const source=mapRows(dbFinanceAnalytics);
       const latest=[...new Set(source.map(row=>row.date).filter(Boolean))].sort((a,b)=>(financeDateToObj(a)?.getTime()||0)-(financeDateToObj(b)?.getTime()||0)).pop()||'';
       const selector=document.getElementById('financeFeePlatform');
       const platformOptions=[...new Set(source.map(row=>row.platform).filter(value=>value&&value!=='-'))].sort();
@@ -5234,11 +5260,16 @@
       const base={responsive:true,maintainAspectRatio:false,animation:false,plugins:{legend:{labels:{color:'#526176',usePointStyle:true}}},scales:{x:{ticks:{color:'#718096'},grid:{color:'#edf1f5'}},y:{ticks:{color:'#718096'},grid:{color:'#edf1f5'}}}};
       const targetObj=financeDateToObj(targetDate),dates=targetObj?Array.from({length:7},(_,i)=>{const d=new Date(targetObj);d.setDate(d.getDate()+i-6);return canonicalPayoutDate(financeDateFromObj(d))}):[];
       const feeFor=row=>row.kind==='RECHARGE'?row.amount*row.depositRate/100:row.amount*row.withdrawRate/100+row.orders*row.fixedFee;
-      const daily=dates.map(date=>{const list=source.filter(row=>row.date===date&&(selected==='ALL'||row.platform===selected));return{deposit:list.filter(row=>row.kind==='RECHARGE').reduce((sum,row)=>sum+feeFor(row),0),withdraw:list.filter(row=>row.kind==='WITHDRAW').reduce((sum,row)=>sum+feeFor(row),0)}});
-      const platformFees=platformOptions.map(platform=>({platform,fee:source.filter(row=>row.date===targetDate&&row.platform===platform).reduce((sum,row)=>sum+feeFor(row),0)})).filter(item=>item.fee>0);
-      const merchantFees=rows.reduce((map,row)=>map.set(row.merchant,(map.get(row.merchant)||0)+row.depositFee+row.withdrawFee),new Map());const merchants=[...merchantFees.entries()].sort((a,b)=>b[1]-a[1]).slice(0,12);
+      const trendSource=financeAnalyticsTrendDate===targetDate?mapRows(dbFinanceAnalyticsTrend):source;
+      const weeklySource=trendSource.filter(row=>dates.includes(row.date)&&(selected==='ALL'||row.platform===selected));
+      const daily=dates.map(date=>{const list=weeklySource.filter(row=>row.date===date);return{deposit:list.filter(row=>row.kind==='RECHARGE').reduce((sum,row)=>sum+feeFor(row),0),withdraw:list.filter(row=>row.kind==='WITHDRAW').reduce((sum,row)=>sum+feeFor(row),0)}});
+      const weeklyDepositFee=weeklySource.filter(row=>row.kind==='RECHARGE').reduce((sum,row)=>sum+feeFor(row),0);
+      const weeklyWithdrawFee=weeklySource.filter(row=>row.kind==='WITHDRAW').reduce((sum,row)=>sum+feeFor(row),0);
+      const trendPlatforms=[...new Set(trendSource.map(row=>row.platform).filter(value=>value&&value!=='-'))].sort();
+      const platformFees=trendPlatforms.map(platform=>({platform,fee:trendSource.filter(row=>dates.includes(row.date)&&row.platform===platform).reduce((sum,row)=>sum+feeFor(row),0)})).filter(item=>item.fee>0);
+      const merchantFees=weeklySource.reduce((map,row)=>map.set(row.merchant,(map.get(row.merchant)||0)+feeFor(row)),new Map());const merchants=[...merchantFees.entries()].sort((a,b)=>b[1]-a[1]).slice(0,12);
       make('financeAnalyticsRate',{type:'line',data:{labels:dates.map(d=>d.slice(5)),datasets:[{label:'代收费用',data:daily.map(x=>x.deposit),borderColor:'#2563eb',backgroundColor:'rgba(37,99,235,.10)',fill:true,tension:.32},{label:'代付费用',data:daily.map(x=>x.withdraw),borderColor:'#f59e0b',backgroundColor:'rgba(245,158,11,.10)',fill:true,tension:.32}]},options:base});
-      make('financeAnalyticsOrders',{type:'doughnut',data:{labels:['代收费用','代付费用'],datasets:[{label:'费用',data:[totals.depositFee,totals.withdrawFee],backgroundColor:['#2563eb','#f59e0b']}]},options:{responsive:true,maintainAspectRatio:false,animation:false,plugins:{legend:{position:'right',labels:{color:'#526176',usePointStyle:true}}}}});
+      make('financeAnalyticsOrders',{type:'doughnut',data:{labels:['代收费用','代付费用'],datasets:[{label:'近7日费用',data:[weeklyDepositFee,weeklyWithdrawFee],backgroundColor:['#2563eb','#f59e0b']}]},options:{responsive:true,maintainAspectRatio:false,animation:false,plugins:{legend:{position:'right',labels:{color:'#526176',usePointStyle:true}}}}});
       make('financeAnalyticsPlatforms',{type:'bar',data:{labels:platformFees.map(x=>x.platform),datasets:[{label:'三方总费用',data:platformFees.map(x=>x.fee),backgroundColor:platformFees.map((_,i)=>colors[i%colors.length])}]},options:base});
       make('financeAnalyticsAmounts',{type:'doughnut',data:{labels:merchants.map(x=>x[0]),datasets:[{label:'三方费用',data:merchants.map(x=>x[1]),backgroundColor:merchants.map((_,i)=>colors[i%colors.length])}]},options:{responsive:true,maintainAspectRatio:false,animation:false,plugins:{legend:{position:'right',labels:{color:'#526176',usePointStyle:true}}}}});
     }
