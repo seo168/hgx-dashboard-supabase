@@ -6137,24 +6137,32 @@
       ];
     }
 
+    async function loadStaffMasterData() {
+      try {
+        const {data,error}=await supabaseClient.from('staff_master').select('*').order('staff_id',{ascending:true});
+        if(error)throw error;
+        if(data?.length)return data.map(staffObjectToRow);
+        throw new Error('staff_master is empty');
+      } catch(error) {
+        console.warn('Supabase 员工数据暂不可用，改用 Google Sheet',error.message||error);
+        const response=await fetch(`${URL_MASTER}&t=${Date.now()}`);
+        if(!response.ok)throw new Error(`Google Sheet HTTP ${response.status}`);
+        const text=await response.text();
+        if(/^\s*</.test(text))throw new Error('Google Sheet 返回了 HTML，而不是 CSV');
+        return smartParse(text).slice(1).filter(row=>row[2]);
+      }
+    }
+
     async function loadData() {
       updateClock();
       if (!window.__hgxClockTimer) window.__hgxClockTimer = setInterval(updateClock, 1000);
-      const [staffResponse] = await Promise.all([
-        fetch(`${URL_MASTER}&t=${Date.now()}`),
+      const [staffRows] = await Promise.all([
+        loadStaffMasterData().catch(error=>{console.error('员工数据读取失败',error.message||error);return[];}),
         loadFinanceData(false),
         loadPayoutData(false),
         loadServiceData(false)
       ]);
-      try {
-        if (!staffResponse.ok) throw new Error(`HTTP ${staffResponse.status}`);
-        const text=await staffResponse.text();
-        if (/^\s*</.test(text)) throw new Error('Google Sheet 返回了 HTML，而不是 CSV');
-        dbMaster=smartParse(text).slice(1).filter(row=>row[2]);
-      } catch(error) {
-        console.error('Google Sheet 员工数据读取失败',error.message||error);
-        dbMaster = [];
-      }
+      dbMaster=staffRows;
       dbPerf = [];
       initFilters();
       updateWorkModeCounts();
