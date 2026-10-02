@@ -2153,6 +2153,7 @@
             <div class="filter-group"><label>组别</label><select id="fGroup"></select></div>
             <div class="filter-group"><label>国家</label><select id="fCountry"></select></div>
             <div class="filter-group"><label>平台</label><select id="fPlatform"></select></div>
+            <div class="filter-group"><label>入职时长</label><select id="fJoinTenure"><option value="">全部</option><option value="1">新入职 1 个月</option><option value="2">新入职 2 个月</option><option value="3">新入职 3 个月</option></select></div>
           </div>
         </div>
 
@@ -4245,8 +4246,10 @@
       fill('fTeam', getU(9));
       fill('fShift', getU(5));
       fill('fCountry', getU(8));
+      const joinTenure=document.getElementById('fJoinTenure');
+      if(joinTenure){const selected=joinTenure.value,counts={1:0,2:0,3:0};dbMaster.forEach(row=>{const bucket=getStaffJoinMonthBucket(row[6]);if(bucket)counts[bucket]++});joinTenure.innerHTML=`<option value="">全部</option><option value="1">新入职 1 个月 (${counts[1]} 人)</option><option value="2">新入职 2 个月 (${counts[2]} 人)</option><option value="3">新入职 3 个月 (${counts[3]} 人)</option>`;joinTenure.value=selected;}
 
-      ['searchName','fShift','fTeam','fGroup','fCountry','fPlatform'].forEach(id => {
+      ['searchName','fShift','fTeam','fGroup','fCountry','fPlatform','fJoinTenure'].forEach(id => {
         const el = document.getElementById(id);
         if (!el) return;
         el.addEventListener('input', () => {
@@ -4256,6 +4259,22 @@
       });
     }
 
+    function getStaffJoinMonthBucket(value) {
+      const raw=String(value||'').trim();if(!raw||raw==='-')return '';
+      const today=new Date();today.setHours(0,0,0,0);
+      let joined=null;
+      const fullDate=raw.match(/(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})/);
+      if(fullDate)joined=new Date(Number(fullDate[1]),Number(fullDate[2])-1,Number(fullDate[3]));
+      if(!joined||Number.isNaN(joined.getTime())){
+        const monthNames={january:0,february:1,march:2,april:3,may:4,june:5,july:6,august:7,september:8,october:9,november:10,december:11};
+        const monthDay=raw.toLowerCase().match(/([a-z]+)\s+(\d{1,2})/);
+        if(monthDay&&monthNames[monthDay[1]]!==undefined){joined=new Date(today.getFullYear(),monthNames[monthDay[1]],Number(monthDay[2]));if(joined>today)joined.setFullYear(joined.getFullYear()-1);}
+      }
+      if(!joined||Number.isNaN(joined.getTime())||joined>today)return '';
+      const days=Math.floor((today-joined)/86400000);
+      if(days<=31)return '1';if(days<=62)return '2';if(days<=93)return '3';return '';
+    }
+
     function runFilters() {
       const sn = document.getElementById('searchName')?.value.toLowerCase() || '';
       const sf = document.getElementById('fShift')?.value || '';
@@ -4263,6 +4282,7 @@
       const sg = document.getElementById('fGroup')?.value || '';
       const sc = document.getElementById('fCountry')?.value || '';
       const sp = document.getElementById('fPlatform')?.value || '';
+      const sj = document.getElementById('fJoinTenure')?.value || '';
 
       filtered = dbMaster.filter(r => {
         const mode = detectWorkMode(r);
@@ -4282,7 +4302,8 @@
           (!sg || r[1] === sg) &&
           (!st || r[9] === st) &&
           (!sc || r[8] === sc) &&
-          (!sp || r[0] === sp);
+          (!sp || r[0] === sp) &&
+          (!sj || getStaffJoinMonthBucket(r[6]) === sj);
 
         return modeOk && onsiteRoleOk && formOk;
       });
