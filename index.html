@@ -2225,7 +2225,7 @@
           <section class="finance-analytics-card"><h4>各平台三方总费用</h4><div class="finance-analytics-canvas"><canvas id="financeAnalyticsPlatforms"></canvas></div></section>
           <section class="finance-analytics-card"><h4>三方通道费用占比</h4><div class="finance-analytics-canvas"><canvas id="financeAnalyticsAmounts"></canvas></div></section>
         </div>
-        <div class="finance-fee-toolbar"><label>数据日期<input id="financeFeeDate" type="date" onclick="this.showPicker?.()" onkeydown="event.preventDefault()"></label><label>平台类别<select id="financeFeePlatform"><option value="ALL">全部平台</option></select></label><button class="finance-fee-search" type="button" onclick="renderFinanceAnalytics()"><i class="fas fa-magnifying-glass"></i> 搜索</button><span id="financeFeeDateLabel"></span></div>
+        <div class="finance-fee-toolbar"><label>数据日期<input id="financeFeeDate" type="date" onclick="this.showPicker?.()" onkeydown="event.preventDefault()"></label><label>平台类别<select id="financeFeePlatform"><option value="ALL">全部平台</option></select></label><button class="finance-fee-search" type="button" onclick="searchFinanceAnalytics(event)"><i class="fas fa-magnifying-glass"></i> 搜索</button><span id="financeFeeDateLabel"></span></div>
         <div class="finance-analytics-summary" id="financeAnalyticsSummary"></div>
         <div class="finance-fee-table-wrap"><table class="finance-fee-table"><thead><tr><th>平台</th><th>三方通道</th><th>代收订单</th><th>代收成功</th><th>代收成功金额</th><th>代收费率</th><th>代收费用</th><th>代付订单</th><th>代付成功</th><th>代付成功金额</th><th>代付费率</th><th>代付费用</th><th>费用合计</th></tr></thead><tbody id="financeFeeTableBody"></tbody><tfoot id="financeFeeTableFoot"></tfoot></table></div>
       </div>
@@ -5021,7 +5021,7 @@
       if(button){button.disabled=true;button.innerHTML='<i class="fas fa-spinner fa-spin"></i> 搜索中';}
       toggleFinanceTableLoading(true);
       try {
-        dbFinance=mapFinanceDailyRows(await fetchFinanceDateRange(FINANCE_HISTORY_START,end));
+        dbFinance=mapFinanceDailyRows(await fetchFinanceDateRange(start,end));
         initFinanceFilters();
         renderFinanceReport();
       } catch(error) {
@@ -5029,6 +5029,22 @@
         const notice=document.getElementById('financeSheetNotice');if(notice){notice.style.display='flex';notice.innerHTML=`<i class="fas fa-triangle-exclamation"></i><span>搜索失败：${esc(error.message||error)}</span>`;}
       } finally {
         toggleFinanceTableLoading(false);
+        if(button){button.disabled=false;button.innerHTML='<i class="fas fa-magnifying-glass"></i> 搜索';}
+      }
+    }
+
+    async function searchFinanceAnalytics(event) {
+      const targetDate=document.getElementById('financeFeeDate')?.value||getRelativeISODate(activeGlobalDate,0);
+      const button=event?.currentTarget||null;
+      if(button){button.disabled=true;button.innerHTML='<i class="fas fa-spinner fa-spin"></i> 搜索中';}
+      try {
+        dbFinance=mapFinanceDailyRows(await fetchFinanceDateRange(targetDate,targetDate));
+        renderFinanceAnalytics();
+      } catch(error) {
+        console.error('Supabase 财务费用搜索失败',error.message||error);
+        const empty=document.getElementById('financeAnalyticsEmpty');
+        if(empty){empty.classList.add('show');empty.innerHTML=`<i class="fas fa-triangle-exclamation"></i><span>搜索失败：${esc(error.message||error)}</span>`;}
+      } finally {
         if(button){button.disabled=false;button.innerHTML='<i class="fas fa-magnifying-glass"></i> 搜索';}
       }
     }
@@ -5194,8 +5210,8 @@
       const platformOptions=[...new Set(source.map(row=>row.platform).filter(value=>value&&value!=='-'))].sort();
       const previous=selector?.value||'ALL';
       if(selector){selector.innerHTML='<option value="ALL">全部平台</option>'+platformOptions.map(value=>`<option value="${esc(value)}">${esc(value)}</option>`).join('');selector.value=platformOptions.includes(previous)?previous:'ALL'}
-      const dateInput=document.getElementById('financeFeeDate');if(dateInput&&!dateInput.value)dateInput.value=latest;
-      const targetDate=dateInput?.value||latest;
+      const dateInput=document.getElementById('financeFeeDate');if(dateInput&&!dateInput.value)dateInput.value=getRelativeISODate(activeGlobalDate,0);
+      const targetDate=dateInput?.value||getRelativeISODate(activeGlobalDate,0);
       const selected=selector?.value||'ALL';
       const dateLabel=document.getElementById('financeFeeDateLabel');if(dateLabel)dateLabel.innerText=`当前结果：${targetDate||'-'} · ${selected==='ALL'?'全部平台':selected}`;
       const selectedRows=source.filter(row=>row.date===targetDate&&(selected==='ALL'||row.platform===selected));
@@ -6043,7 +6059,7 @@
       try {
         const hourlyStartDate = getRelativeISODate(reportDate,-2);
         const [data, { data:hourlyData, error:hourlyError }] = await Promise.all([
-          fetchFinanceDailyPages(reportDate,Math.max(0,Math.round((parseLocalISODate(reportDate)-parseLocalISODate(FINANCE_HISTORY_START))/86400000))),
+          fetchFinanceDateRange(reportDate,reportDate),
           supabaseClient.from('finance_hourly').select('*')
             .gte('report_date',hourlyStartDate)
             .lte('report_date',reportDate)
