@@ -1130,6 +1130,16 @@
     .channel-view-btn.active{background:#e5e7eb;color:#111827;border-color:#e5e7eb}
     .channel-search-grid{display:grid;grid-template-columns:1.05fr 1fr 1fr 1.35fr 1.15fr auto;gap:10px;align-items:end}
     .channel-search-grid .filter-group input,.channel-search-grid .filter-group select{height:43px}
+    .channel-search-actions{display:flex;align-items:center;gap:6px}
+    .channel-search-actions .finance-action-btn{height:43px;min-height:43px}
+    .channel-search-actions .channel-reset-btn{width:38px;min-width:38px;padding:0!important;background:#f4f6f9!important;color:#718096!important;border:1px solid #dce3eb!important;box-shadow:none!important}
+    .channel-search-actions .channel-reset-btn span{display:none}
+    .channel-search-panel .channel-view-switcher{margin:15px 0 0!important}
+    .channel-sort-control{display:inline-flex;flex-direction:column;margin-left:5px;vertical-align:middle;transform:translateY(1px)}
+    .channel-sort-arrow{width:13px;height:10px;padding:0;border:0;background:transparent;color:#b5c0cc;font-size:8px;line-height:8px;cursor:pointer}
+    .channel-sort-arrow:hover{color:#5b7fba}
+    .channel-sort-arrow.active{color:#2563eb}
+    .channel-data-table th.channel-sort-active{background:#edf4ff!important;color:#355d91!important}
     .channel-summary-strip{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;padding:16px 16px 0}
     .channel-summary-card{padding:13px 15px;border:1px solid rgba(148,163,184,.18);border-radius:16px;background:#151e2d}
     .channel-summary-card span{display:block;color:#94a3b8;font-size:.65rem;font-weight:900;margin-bottom:5px}
@@ -2291,18 +2301,17 @@
         </div>
 
         <div class="filter-wrapper channel-search-panel">
-          <div class="channel-view-switcher">
-            <button class="channel-view-btn active" id="channelView-platform" onclick="setChannelAggregateView('platform')"><i class="fas fa-layer-group"></i> 按平台查看</button>
-            <button class="channel-view-btn" id="channelView-merchant" onclick="setChannelAggregateView('merchant')"><i class="fas fa-object-group"></i> 全部通道汇总</button>
-          </div>
           <div class="channel-search-grid">
             <div class="filter-group finance-date-range"><label>日期范围</label><button type="button" class="finance-date-trigger" id="financeDateTrigger" onclick="toggleFinanceDatePopover(event)"><span id="financeDateLabel">-</span><i class="fas fa-calendar-days"></i></button><input type="hidden" id="financeDateFilter"><input type="hidden" id="financeStartDateFilter"><div class="finance-date-popover" id="financeDatePopover" onclick="event.stopPropagation()"><div class="finance-date-inputs"><label>开始日期<input type="date" lang="zh-CN" id="financeDraftStart" onclick="openNativeDatePicker(this,event)" onkeydown="event.preventDefault()" onpaste="event.preventDefault()"></label><span>→</span><label>结束日期<input type="date" lang="zh-CN" id="financeDraftEnd" onclick="openNativeDatePicker(this,event)" onkeydown="event.preventDefault()" onpaste="event.preventDefault()"></label></div><div class="finance-date-presets"><div class="finance-date-quick"><button type="button" onclick="setFinanceDatePreset(0)">今天</button><button type="button" onclick="setFinanceDatePreset(-1)">昨天</button></div><button type="button" class="finance-date-confirm" onclick="confirmFinanceDateRange()">确认</button></div></div></div>
             <div class="filter-group soft-multi" id="financePlatformMulti"><label>平台</label><button type="button" class="soft-multi-trigger" onclick="toggleSoftMulti('financePlatformMulti',event)"><span id="financePlatformLabel">全部平台</span><i class="fas fa-chevron-down"></i></button><input type="hidden" id="financePlatformFilter"><div class="soft-multi-panel" id="financePlatformOptions" onclick="event.stopPropagation()"></div></div>
             <div class="filter-group soft-multi" id="financeChannelMulti"><label>通道类型</label><button type="button" class="soft-multi-trigger" onclick="toggleSoftMulti('financeChannelMulti',event)"><span id="financeChannelLabel">全部类型</span><i class="fas fa-chevron-down"></i></button><input type="hidden" id="financeChannelFilter"><div class="soft-multi-panel" id="financeChannelOptions" onclick="event.stopPropagation()"></div></div>
             <div class="filter-group"><label>搜索商户</label><input type="search" id="channelMerchantSearch" placeholder="输入商户名称"></div>
-            <div class="filter-group"><label>排序</label><select id="channelSortFilter"><option value="depositAmount">代收金额从高到低</option><option value="depositRate">代收成功率从高到低</option><option value="withdrawAmount">代付金额从高到低</option><option value="withdrawRate">代付成功率从高到低</option><option value="merchant">商户名称 A–Z</option></select></div>
-            <button class="finance-action-btn" onclick="searchFinanceReport(event)"><i class="fas fa-magnifying-glass"></i> 搜索</button>
-            <button class="finance-action-btn" onclick="resetFinanceFilters()"><i class="fas fa-filter-circle-xmark"></i> 重置</button>
+            <div class="filter-group"><label>排序</label><select id="channelSortFilter" onchange="channelColumnSort=null"><option value="depositAmount">代收金额从高到低</option><option value="depositRate">代收成功率从高到低</option><option value="withdrawAmount">代付金额从高到低</option><option value="withdrawRate">代付成功率从高到低</option><option value="merchant">商户名称 A–Z</option></select></div>
+            <div class="channel-search-actions"><button class="finance-action-btn" onclick="searchFinanceReport(event)"><i class="fas fa-magnifying-glass"></i> 搜索</button><button class="finance-action-btn channel-reset-btn" onclick="resetFinanceFilters()" title="重置筛选" aria-label="重置筛选"><i class="fas fa-rotate-left"></i><span>重置</span></button></div>
+          </div>
+          <div class="channel-view-switcher">
+            <button class="channel-view-btn active" id="channelView-platform" onclick="setChannelAggregateView('platform')"><i class="fas fa-layer-group"></i> 按平台查看</button>
+            <button class="channel-view-btn" id="channelView-merchant" onclick="setChannelAggregateView('merchant')"><i class="fas fa-object-group"></i> 全部通道汇总</button>
           </div>
         </div>
 
@@ -2330,7 +2339,7 @@
           <div class="channel-summary-strip" id="channelSummaryStrip"></div>
           <div class="channel-data-wrap" id="channelWorkbookWrap">
             <table class="channel-data-table">
-              <thead><tr><th>排名</th><th>平台</th><th>商户名称</th><th>通道类型</th><th>代收比例</th><th>代付比例</th><th>代收金额</th><th>代收订单</th><th>代收成功订单</th><th>代收成功率</th><th>代付金额</th><th>代付订单</th><th>代付成功订单</th><th>代付成功率</th><th>预估通道费</th></tr></thead>
+              <thead><tr id="channelWorkbookHead"></tr></thead>
               <tbody id="channelWorkbookBody"><tr><td colspan="15">正在读取通道数据</td></tr></tbody>
             </table>
           </div>
@@ -6454,6 +6463,28 @@
       return value>=80?'channel-rate-good':value>=50?'channel-rate-mid':'channel-rate-low';
     }
 
+    const CHANNEL_TABLE_COLUMNS=[
+      ['rank','排名'],['platform','平台'],['merchant','商户名称'],['type','通道类型'],['depositShare','代收比例'],['withdrawShare','代付比例'],['depositAmount','代收金额'],['depositOrders','代收订单'],['depositSuccess','代收成功订单'],['depositRate','代收成功率'],['withdrawAmount','代付金额'],['withdrawOrders','代付订单'],['withdrawSuccess','代付成功订单'],['withdrawRate','代付成功率'],['fee','预估通道费']
+    ];
+    let channelColumnSort=null;
+    function setChannelColumnSort(key,direction,event){
+      event?.stopPropagation();
+      channelColumnSort={key,direction};
+      renderChannelWorkbookTable();
+    }
+    function renderChannelSortHeaders(){
+      const head=document.getElementById('channelWorkbookHead');if(!head)return;
+      head.innerHTML=CHANNEL_TABLE_COLUMNS.map(([key,label])=>{
+        const active=channelColumnSort?.key===key;
+        return `<th class="${active?'channel-sort-active':''}">${label}<span class="channel-sort-control"><button type="button" class="channel-sort-arrow ${active&&channelColumnSort.direction==='asc'?'active':''}" onclick="setChannelColumnSort('${key}','asc',event)" title="从小到大" aria-label="${label} 从小到大"><i class="fas fa-caret-up"></i></button><button type="button" class="channel-sort-arrow ${active&&channelColumnSort.direction==='desc'?'active':''}" onclick="setChannelColumnSort('${key}','desc',event)" title="从大到小" aria-label="${label} 从大到小"><i class="fas fa-caret-down"></i></button></span></th>`;
+      }).join('');
+    }
+    function channelColumnValue(row,key,shareTotals){
+      const shareBase=shareTotals.get(channelAggregateView==='merchant'?row[0]:`${row[0]}|${row[1]}`)||{deposit:0,withdraw:0};
+      const fee=channelFeeRule(row[2]);
+      return {platform:row[1],merchant:row[2],type:row[3],depositShare:shareBase.deposit?Number(row[4]||0)/shareBase.deposit:0,withdrawShare:shareBase.withdraw?Number(row[5]||0)/shareBase.withdraw:0,depositAmount:Number(row[4]||0),depositOrders:Number(row[6]||0),depositSuccess:Number(row[7]||0),depositRate:Number(row[8]||0),withdrawAmount:Number(row[5]||0),withdrawOrders:Number(row[9]||0),withdrawSuccess:Number(row[10]||0),withdrawRate:Number(row[11]||0),fee:fee?Number(row[4]||0)*fee[0]/100+Number(row[5]||0)*fee[1]/100+Number(row[9]||0)*fee[2]:-1}[key];
+    }
+
     function closeChannelPlatformModal(event) {
       if(event&&event.target!==event.currentTarget)return;
       document.getElementById('channelPlatformModal')?.classList.remove('show');
@@ -6489,6 +6520,7 @@
 
     function renderChannelWorkbookTable() {
       ensureChannelFilterOptions();
+      renderChannelSortHeaders();
       const body=document.getElementById('channelWorkbookBody'); if(!body)return;
       const legacyBoard=document.getElementById('financeReportBody');if(legacyBoard)legacyBoard.style.display='none';
       const workbookWrap=document.getElementById('channelWorkbookWrap');if(workbookWrap)workbookWrap.style.display='block';
@@ -6525,6 +6557,10 @@
       });
       const sorters={depositAmount:(a,b)=>b[4]-a[4],depositRate:(a,b)=>b[8]-a[8],withdrawAmount:(a,b)=>b[5]-a[5],withdrawRate:(a,b)=>b[11]-a[11],merchant:(a,b)=>String(a[2]).localeCompare(String(b[2]))};
       rows=rows.slice().sort(sorters[sort]||sorters.depositAmount);
+      if(channelColumnSort){
+        if(channelColumnSort.key==='rank'){if(channelColumnSort.direction==='desc')rows.reverse()}
+        else rows.sort((a,b)=>{const av=channelColumnValue(a,channelColumnSort.key,shareTotals),bv=channelColumnValue(b,channelColumnSort.key,shareTotals);const result=typeof av==='string'?String(av).localeCompare(String(bv),undefined,{numeric:true,sensitivity:'base'}):Number(av||0)-Number(bv||0);return channelColumnSort.direction==='asc'?result:-result});
+      }
       const totalDeposit=rows.reduce((sum,row)=>sum+Number(row[4]||0),0);
       const depositOrders=rows.reduce((sum,row)=>sum+Number(row[6]||0),0),depositSuccess=rows.reduce((sum,row)=>sum+Number(row[7]||0),0);
       const withdrawOrders=rows.reduce((sum,row)=>sum+Number(row[9]||0),0),withdrawSuccess=rows.reduce((sum,row)=>sum+Number(row[10]||0),0);
@@ -6548,6 +6584,7 @@
       clearSoftMulti('financePlatform','全部平台');clearSoftMulti('financeChannel','全部类型');
       const merchant=document.getElementById('channelMerchantSearch');if(merchant)merchant.value='';
       const sort=document.getElementById('channelSortFilter');if(sort)sort.value='depositAmount';
+      channelColumnSort=null;
       const today=getRelativeISODate(activeGlobalDate,0);setFinanceDateFields(today,today);
       searchFinanceReport();
     };
