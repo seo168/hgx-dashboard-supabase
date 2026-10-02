@@ -1838,6 +1838,18 @@
     .side-menu .menu-btn.active,.side-menu .sub-menu-btn.active,.menu-btn.active,.sub-menu-btn.active{background:#5b7fba!important;border-color:#5b7fba!important}
     .glass-shell,.finance-readable-board,.finance-panel,.top-highlight-panel,.home-chart-card,.home-kpi,.home-hero,.filter-wrapper,.table-container,.modal-content,.stat-modal-content,.kpi-detail-modal,.order-summary-card,.finance-platform-card,.finance-report-card,.finance-kpi-card,.sub-page-title,.module-context{border-color:#e8edf3!important;box-shadow:0 1px 5px rgba(51,65,85,.035)!important}
     .finance-action-btn,.login-submit,.kpi-range-apply,.kpi-time-confirm,.channel-view-btn.active,.record-view-btn.active,.payout-stat-btn.active,.home-chart-btn.active,.kpi-date-btn.active{background:#5b7fba!important;border-color:#5b7fba!important}
+    /* Visually connect the selected channel view with the result board. */
+    .channel-view-switcher{position:relative;display:inline-flex!important;width:auto;padding:5px!important;margin-bottom:16px!important;border:1px solid #d8e1ed!important;border-radius:10px!important;background:#eef3f8!important;box-shadow:inset 0 1px 2px rgba(51,65,85,.06)}
+    .channel-view-btn{position:relative;min-width:132px;padding:10px 16px!important;border-color:transparent!important;background:transparent!important;border-radius:7px!important;transition:background .18s ease,color .18s ease,box-shadow .18s ease!important}
+    .channel-view-btn.active{background:#5b7fba!important;color:#fff!important;border-color:#5b7fba!important;box-shadow:0 4px 12px rgba(59,93,145,.22)!important}
+    .channel-view-btn.active::after{content:"";position:absolute;left:50%;bottom:-17px;width:2px;height:12px;background:#5b7fba;transform:translateX(-50%)}
+    #financeDetailBoard.channel-mode-platform,#financeDetailBoard.channel-mode-merchant{position:relative;overflow:visible;border:2px solid #b8c9e1!important;box-shadow:0 8px 22px rgba(59,93,145,.09)!important}
+    #financeDetailBoard.channel-mode-platform::before,#financeDetailBoard.channel-mode-merchant::before{content:"";position:absolute;inset:-2px -2px auto;height:5px;border-radius:9px 9px 0 0;background:#5b7fba;z-index:2}
+    #financeDetailBoard.channel-mode-merchant{border-color:#c6b8df!important;box-shadow:0 8px 22px rgba(105,79,145,.09)!important}
+    #financeDetailBoard.channel-mode-merchant::before{background:#7563a6}
+    #financeDetailBoard.channel-mode-merchant .finance-readable-head{background:#f5f1fa!important}
+    .channel-active-mode{display:inline-flex;align-items:center;margin-left:9px;padding:4px 9px;border-radius:999px;background:#e8f0fb;color:#42699d;font-size:.64rem;font-style:normal;font-weight:900;vertical-align:middle}
+    #financeDetailBoard.channel-mode-merchant .channel-active-mode{background:#eee8f7;color:#67528f}
     .home-kpi-label,.home-chart-title,.home-chart-head,.home-staff-title,.work-mode-title,.onsite-role-title{color:#69788b!important}
     .home-kpi-value,.home-chart-value,.finance-kpi-value,.finance-summary-value,.channel-summary-card strong,.finance-platform-name{color:#39475a!important}
     table th,.channel-data-table th,.kpi-popup-table th,.shift-list-table th{background:#f7f9fc!important;color:#657489!important;border-color:#e8edf3!important}
@@ -2309,7 +2321,7 @@
           <div class="finance-table-loading" id="financeTableLoading"><div class="finance-loading-inner"><img class="finance-loading-logo" src="assets/168-logo.png" alt="168"><span>正在加载数据…</span><div class="finance-loading-dots"><i></i><i></i><i></i></div></div></div>
           <div class="table-head-bar finance-readable-head">
             <div>
-              <span><i class="fas fa-table-cells-large"></i> <b id="recordDetailTitle">印度三方通道明细</b></span>
+              <span><i class="fas fa-table-cells-large"></i> <b id="recordDetailTitle">印度三方通道明细</b><em class="channel-active-mode" id="channelActiveMode">按平台查看</em></span>
               <div class="finance-readable-desc" id="recordDetailDesc">按日期、平台、通道类型和商户名称筛选代收及代付表现。</div>
             </div>
             <span id="financeTableInfo" style="font-size:.76rem;font-weight:900;color:#9fb0cf;">0 条数据</span>
@@ -6407,7 +6419,10 @@
     }
     function setChannelAggregateView(view){
       channelAggregateView=view==='merchant'?'merchant':'platform';
-      document.querySelectorAll('.channel-view-btn').forEach(button=>button.classList.toggle('active',button.id===`channelView-${channelAggregateView}`));
+      document.querySelectorAll('.channel-view-btn').forEach(button=>{const active=button.id===`channelView-${channelAggregateView}`;button.classList.toggle('active',active);button.setAttribute('aria-pressed',String(active))});
+      const detailBoard=document.getElementById('financeDetailBoard');
+      if(detailBoard){detailBoard.classList.remove('channel-mode-platform','channel-mode-merchant');detailBoard.classList.add(`channel-mode-${channelAggregateView}`)}
+      const modeBadge=document.getElementById('channelActiveMode');if(modeBadge)modeBadge.innerText=channelAggregateView==='merchant'?'全部通道汇总':'按平台查看';
       const platformFilter=document.getElementById('financePlatformFilter');
       const platformTrigger=document.querySelector('#financePlatformMulti .soft-multi-trigger');
       if(platformFilter){platformFilter.disabled=channelAggregateView==='merchant';if(channelAggregateView==='merchant')clearSoftMulti('financePlatform','全部平台')}
@@ -6522,6 +6537,8 @@
       const note=document.getElementById('channelTableNote');if(note)note.innerText=(rows.length>renderLimit?`当前显示前 ${renderLimit} 条，共 ${fmtNumber(rows.length)} 条。可使用上方搜索工具缩小范围。`:`共 ${fmtNumber(rows.length)} 条记录。`)+` 已排除待审核、待审查及未分配三方通道的订单。`;
       const title=document.getElementById('recordDetailTitle');if(title)title.innerText=channelAggregateView==='merchant'?'全部平台三方通道汇总':'印度三方通道明细';
       const desc=document.getElementById('recordDetailDesc');if(desc)desc.innerText=channelAggregateView==='merchant'?'已合并全部平台，并按标准化后的三方名称汇总。':'按日期、平台、通道类型和商户名称筛选代收及代付表现。';
+      const detailBoard=document.getElementById('financeDetailBoard');if(detailBoard){detailBoard.classList.remove('channel-mode-platform','channel-mode-merchant');detailBoard.classList.add(`channel-mode-${channelAggregateView}`)}
+      const modeBadge=document.getElementById('channelActiveMode');if(modeBadge)modeBadge.innerText=channelAggregateView==='merchant'?'全部通道汇总':'按平台查看';
     }
 
     const originalRenderFinanceTable=renderFinanceTable;
