@@ -1852,11 +1852,10 @@
     .channel-view-switcher{position:relative;display:inline-flex!important;width:auto;padding:5px!important;margin-bottom:16px!important;border:1px solid #d8e1ed!important;border-radius:10px!important;background:#eef3f8!important;box-shadow:inset 0 1px 2px rgba(51,65,85,.06)}
     .channel-view-btn{position:relative;min-width:132px;padding:10px 16px!important;border-color:transparent!important;background:transparent!important;border-radius:7px!important;transition:background .18s ease,color .18s ease,box-shadow .18s ease!important}
     .channel-view-btn.active{background:#5b7fba!important;color:#fff!important;border-color:#5b7fba!important;box-shadow:0 4px 12px rgba(59,93,145,.22)!important}
-    .channel-view-btn.active::after{content:"";position:absolute;left:50%;bottom:-17px;width:2px;height:12px;background:#5b7fba;transform:translateX(-50%)}
+    .channel-view-btn.active::after{display:none}
     #financeDetailBoard.channel-mode-platform,#financeDetailBoard.channel-mode-merchant{position:relative;overflow:visible;border:2px solid #b8c9e1!important;box-shadow:0 8px 22px rgba(59,93,145,.09)!important}
-    #financeDetailBoard.channel-mode-platform::before,#financeDetailBoard.channel-mode-merchant::before{content:"";position:absolute;inset:-2px -2px auto;height:5px;border-radius:9px 9px 0 0;background:#5b7fba;z-index:2}
+    #financeDetailBoard.channel-mode-platform::before,#financeDetailBoard.channel-mode-merchant::before{display:none}
     #financeDetailBoard.channel-mode-merchant{border-color:#c6b8df!important;box-shadow:0 8px 22px rgba(105,79,145,.09)!important}
-    #financeDetailBoard.channel-mode-merchant::before{background:#7563a6}
     #financeDetailBoard.channel-mode-merchant .finance-readable-head{background:#f5f1fa!important}
     .channel-active-mode{display:inline-flex;align-items:center;margin-left:9px;padding:4px 9px;border-radius:999px;background:#e8f0fb;color:#42699d;font-size:.64rem;font-style:normal;font-weight:900;vertical-align:middle}
     #financeDetailBoard.channel-mode-merchant .channel-active-mode{background:#eee8f7;color:#67528f}
@@ -6436,7 +6435,9 @@
       const platformTrigger=document.querySelector('#financePlatformMulti .soft-multi-trigger');
       if(platformFilter){platformFilter.disabled=channelAggregateView==='merchant';if(channelAggregateView==='merchant')clearSoftMulti('financePlatform','全部平台')}
       if(platformTrigger)platformTrigger.disabled=channelAggregateView==='merchant';
-      renderFinanceReport();
+      // Switching the table view must not run the full finance renderer because
+      // that renderer can synchronize the date back to the global/today value.
+      renderChannelWorkbookTable();
     }
 
     function channelExportRows(){
@@ -6464,7 +6465,7 @@
     }
 
     const CHANNEL_TABLE_COLUMNS=[
-      ['rank','排名'],['platform','平台'],['merchant','商户名称'],['type','通道类型'],['depositShare','代收比例'],['withdrawShare','代付比例'],['depositAmount','代收金额'],['depositOrders','代收订单'],['depositSuccess','代收成功订单'],['depositRate','代收成功率'],['withdrawAmount','代付金额'],['withdrawOrders','代付订单'],['withdrawSuccess','代付成功订单'],['withdrawRate','代付成功率'],['fee','预估通道费']
+      ['rank','排名',false],['platform','平台',true],['merchant','商户名称',false],['type','通道类型',true],['depositShare','代收比例',true],['withdrawShare','代付比例',true],['depositAmount','代收金额',true],['depositOrders','代收订单',true],['depositSuccess','代收成功订单',true],['depositRate','代收成功率',true],['withdrawAmount','代付金额',true],['withdrawOrders','代付订单',true],['withdrawSuccess','代付成功订单',true],['withdrawRate','代付成功率',true],['fee','预估通道费',true]
     ];
     let channelColumnSort=null;
     function setChannelColumnSort(key,direction,event){
@@ -6474,9 +6475,10 @@
     }
     function renderChannelSortHeaders(){
       const head=document.getElementById('channelWorkbookHead');if(!head)return;
-      head.innerHTML=CHANNEL_TABLE_COLUMNS.map(([key,label])=>{
+      head.innerHTML=CHANNEL_TABLE_COLUMNS.map(([key,label,sortable])=>{
         const active=channelColumnSort?.key===key;
-        return `<th class="${active?'channel-sort-active':''}">${label}<span class="channel-sort-control"><button type="button" class="channel-sort-arrow ${active&&channelColumnSort.direction==='asc'?'active':''}" onclick="setChannelColumnSort('${key}','asc',event)" title="从小到大" aria-label="${label} 从小到大"><i class="fas fa-caret-up"></i></button><button type="button" class="channel-sort-arrow ${active&&channelColumnSort.direction==='desc'?'active':''}" onclick="setChannelColumnSort('${key}','desc',event)" title="从大到小" aria-label="${label} 从大到小"><i class="fas fa-caret-down"></i></button></span></th>`;
+        const arrows=sortable?`<span class="channel-sort-control"><button type="button" class="channel-sort-arrow ${active&&channelColumnSort.direction==='desc'?'active':''}" onclick="setChannelColumnSort('${key}','desc',event)" title="从高到低" aria-label="${label} 从高到低"><i class="fas fa-caret-up"></i></button><button type="button" class="channel-sort-arrow ${active&&channelColumnSort.direction==='asc'?'active':''}" onclick="setChannelColumnSort('${key}','asc',event)" title="从低到高" aria-label="${label} 从低到高"><i class="fas fa-caret-down"></i></button></span>`:'';
+        return `<th class="${active?'channel-sort-active':''}">${label}${arrows}</th>`;
       }).join('');
     }
     function channelColumnValue(row,key,shareTotals){
