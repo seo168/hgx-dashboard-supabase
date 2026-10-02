@@ -6422,7 +6422,9 @@
         if(parts.length<3||!['RECHARGE','WITHDRAW'].includes(parts[0]))return;
         const date=String(row['日期']||'').replace(/\//g,'-'),platform=String(row['平台']||'-'),merchant=canonicalChannelName(parts[1]),type=parts[2]||'其他';
         if(merchant==='通道未填写'||merchant.includes('未分配通道'))return;
-        const key=channelAggregateView==='merchant'?merchant:`${date}|${platform}|${merchant}|${type}`;
+        // Keep the date in the aggregate key. The selected date/range must be
+        // applied before different platforms are merged by merchant.
+        const key=channelAggregateView==='merchant'?`${date}|${merchant}`:`${date}|${platform}|${merchant}|${type}`;
         if(!grouped.has(key))grouped.set(key,{date,platform:channelAggregateView==='merchant'?'全部平台':platform,merchant,types:new Set(),depositAmount:0,withdrawAmount:0,depositOrders:0,depositSuccess:0,withdrawOrders:0,withdrawSuccess:0});
         const item=grouped.get(key),orders=Number(row['总订单']||0),success=Number(row['成功']||0),amount=Number(row['金额']||0);
         item.types.add(type);
@@ -6485,13 +6487,27 @@
       const query=(document.getElementById('channelMerchantSearch')?.value||'').trim().toLowerCase();
       const sort=document.getElementById('channelSortFilter')?.value||'depositAmount';
       const sourceRows=channelExportRows();
+      let rows=sourceRows.filter(row=>(!startDate||row[0]>=startDate)&&(!endDate||row[0]<=endDate)&&(channelAggregateView==='merchant'||!platforms.length||platforms.includes(row[1]))&&(!types.length||types.some(type=>String(row[3]).split(' / ').includes(type)))&&(!query||String(row[2]).toLowerCase().includes(query)));
+      if(channelAggregateView==='merchant'){
+        const merged=new Map();
+        rows.forEach(row=>{
+          const merchant=String(row[2]);
+          if(!merged.has(merchant))merged.set(merchant,{merchant,types:new Set(),depositAmount:0,withdrawAmount:0,depositOrders:0,depositSuccess:0,withdrawOrders:0,withdrawSuccess:0});
+          const item=merged.get(merchant);
+          String(row[3]).split(' / ').filter(Boolean).forEach(type=>item.types.add(type));
+          item.depositAmount+=Number(row[4]||0);item.withdrawAmount+=Number(row[5]||0);
+          item.depositOrders+=Number(row[6]||0);item.depositSuccess+=Number(row[7]||0);
+          item.withdrawOrders+=Number(row[9]||0);item.withdrawSuccess+=Number(row[10]||0);
+        });
+        const rangeLabel=startDate===endDate?startDate:`${startDate} → ${endDate}`;
+        rows=[...merged.values()].map(item=>[rangeLabel,'全部平台',item.merchant,[...item.types].sort().join(' / '),item.depositAmount,item.withdrawAmount,item.depositOrders,item.depositSuccess,item.depositOrders?item.depositSuccess/item.depositOrders:0,item.withdrawOrders,item.withdrawSuccess,item.withdrawOrders?item.withdrawSuccess/item.withdrawOrders:0,0]);
+      }
       const shareTotals=new Map();
-      sourceRows.forEach(row=>{
+      rows.forEach(row=>{
         const key=channelAggregateView==='merchant'?row[0]:`${row[0]}|${row[1]}`;
         if(!shareTotals.has(key))shareTotals.set(key,{deposit:0,withdraw:0});
         const total=shareTotals.get(key);total.deposit+=Number(row[4]||0);total.withdraw+=Number(row[5]||0);
       });
-      let rows=sourceRows.filter(row=>(!startDate||row[0]>=startDate)&&(!endDate||row[0]<=endDate)&&(channelAggregateView==='merchant'||!platforms.length||platforms.includes(row[1]))&&(!types.length||types.some(type=>String(row[3]).split(' / ').includes(type)))&&(!query||String(row[2]).toLowerCase().includes(query)));
       const sorters={depositAmount:(a,b)=>b[4]-a[4],depositRate:(a,b)=>b[8]-a[8],withdrawAmount:(a,b)=>b[5]-a[5],withdrawRate:(a,b)=>b[11]-a[11],merchant:(a,b)=>String(a[2]).localeCompare(String(b[2]))};
       rows=rows.slice().sort(sorters[sort]||sorters.depositAmount);
       const totalDeposit=rows.reduce((sum,row)=>sum+Number(row[4]||0),0);
