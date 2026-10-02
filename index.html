@@ -728,6 +728,7 @@
     #finance .sub-page-title .global-date-bar{margin:0;padding:0;border:0;background:transparent;box-shadow:none;border-radius:0;justify-content:flex-end;gap:12px;min-width:0}
     #finance .sub-page-title .global-date-info{white-space:nowrap}
     #finance .sub-page-title .global-date-actions{flex-wrap:nowrap}
+    #finance .sub-page-title .global-date-bar{display:none!important}
     #finance .module-context{gap:12px}
     #finance .sub-page-title .header-inline-stats,#finance .module-context .header-inline-stats{margin-left:auto}
     #finance .finance-trend-full{display:none!important}
@@ -2921,10 +2922,8 @@
       if (input) input.value = activeGlobalDate;
       if (label) label.innerText = formatGlobalDate(activeGlobalDate);
 
-      if (activeRecordModule === 'finance') {
-        const selectedFinanceDate=getRelativeISODate(activeGlobalDate,0);
-        setFinanceDateFields(selectedFinanceDate,selectedFinanceDate);
-      }
+      // Finance Data 2 owns its date through the lower search filter. Global
+      // navigation changes must not overwrite that selected date/range.
       if (document.getElementById('finance')?.classList.contains('active')) renderFinanceReport();
       updateExtraPages();
       if (activeMistakeModule === 'noDeduction') renderMistakeData();
@@ -6021,6 +6020,8 @@
       financeLoading = true;
       const notice = document.getElementById('financeSheetNotice');
       const reportDate = getRelativeISODate(activeGlobalDate,0);
+      const selectedStartDate=document.getElementById('financeStartDateFilter')?.value||'';
+      const selectedEndDate=document.getElementById('financeDateFilter')?.value||'';
       toggleFinanceTableLoading(true);
       try {
         const hourlyStartDate = getRelativeISODate(reportDate,-2);
@@ -6056,7 +6057,7 @@
         financeLoading = false;
       }
       initFinanceFilters();
-      setFinanceDateFields(reportDate,reportDate);
+      setFinanceDateFields(selectedStartDate||reportDate,selectedEndDate||selectedStartDate||reportDate);
       syncFinanceDateToLatestComplete();
       if (activeRecordModule === 'finance') renderFinanceReport();
       renderFinanceAnalytics();
