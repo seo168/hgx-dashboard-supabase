@@ -1868,6 +1868,7 @@
     .finance-analytics-head{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:14px}.finance-analytics-head h3{margin:0;color:#26384e}.finance-analytics-head span{color:#718096;font-size:.75rem;font-weight:750}.finance-fee-toolbar{display:flex;align-items:end;gap:12px;margin-bottom:14px;padding:14px;border:1px solid #dce4ed;border-radius:10px;background:#fff}.finance-fee-toolbar label{display:grid;gap:6px;color:#718096;font-size:.68rem;font-weight:800}.finance-fee-toolbar select{min-width:220px;padding:10px 36px 10px 12px;border:1px solid #d5dee8;border-radius:8px;background:#f8fafc;color:#344257;font-weight:750}.finance-analytics-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.finance-analytics-card{min-height:310px;padding:16px;border:1px solid #dce4ed;border-radius:10px;background:#fff}.finance-analytics-card h4{margin:0 0 12px;color:#344257;font-size:.84rem}.finance-analytics-canvas{position:relative;height:245px}.finance-analytics-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:14px 0}.finance-analytics-stat{padding:14px;border:1px solid #dce4ed;border-radius:9px;background:#fff}.finance-analytics-stat span{display:block;color:#8491a2;font-size:.66rem;font-weight:800}.finance-analytics-stat strong{display:block;margin-top:6px;color:#26384e;font-size:1.18rem}.finance-fee-table-wrap{overflow:auto;margin-top:14px;border:1px solid #dce4ed;border-radius:10px;background:#fff}.finance-fee-table{width:100%;min-width:1200px;border-collapse:collapse}.finance-fee-table th,.finance-fee-table td{padding:11px 12px;border-bottom:1px solid #edf1f5;text-align:right;font-size:.72rem}.finance-fee-table th{position:sticky;top:0;background:#f5f7fa;color:#657489}.finance-fee-table th:nth-child(-n+2),.finance-fee-table td:nth-child(-n+2){text-align:left}.finance-fee-table tfoot td{background:#f8fafc;font-weight:900}.finance-analytics-empty{display:none;padding:46px;text-align:center;color:#8491a2;border:1px dashed #ccd6e2;border-radius:10px;background:#fff}.finance-analytics-empty.show{display:block}@media(max-width:900px){.finance-analytics-grid{grid-template-columns:1fr}.finance-analytics-summary{grid-template-columns:repeat(2,1fr)}.finance-fee-toolbar{align-items:stretch;flex-direction:column}.finance-fee-toolbar select{width:100%}}
     .finance-fee-toolbar{margin-top:14px}.finance-fee-toolbar select,.finance-fee-toolbar input{min-width:220px;padding:10px 36px 10px 12px;border:1px solid #d5dee8;border-radius:8px;background:#f8fafc;color:#344257;font-weight:750}.finance-fee-search{height:39px;padding:0 18px;border:0;border-radius:8px;background:#5b7fba;color:#fff;font-weight:850;cursor:pointer}.finance-fee-toolbar>span{margin-left:auto;padding:10px 12px;border-radius:8px;background:#f5f7fa;color:#657489;font-size:.72rem;font-weight:800}
     .finance-system-tabs{display:inline-flex;align-items:center;gap:4px;margin:0 0 14px;padding:4px;border:1px solid #dce4ed;border-radius:9px;background:#f3f6fa}.finance-system-tab{min-width:72px;padding:8px 18px;border:0;border-radius:6px;background:transparent;color:#6b7b90;cursor:pointer}.finance-system-tab.active{background:#5b7fba;color:#fff;box-shadow:0 2px 7px rgba(59,92,145,.18)}.finance-system-empty{display:none;min-height:360px;align-items:center;justify-content:center;gap:10px;border:1px dashed #ccd6e2;border-radius:12px;background:#fff;color:#8491a2}.finance-panel-empty>.finance-system-empty{display:flex}.finance-panel-empty>*:not(.finance-system-tabs):not(.finance-system-empty){display:none!important}
+    .finance-analytics-loading{display:none;min-height:638px;align-items:center;justify-content:center;border:1px solid #dce4ed;border-radius:10px;background:#fff}.finance-analytics-loading.show{display:flex}
     /* Compact full-height navigation rail, following the supplied admin reference. */
     .side-menu-brand{display:none}
     .side-menu-brand img{width:30px;height:30px;object-fit:contain}.side-menu-brand small{color:#92a6b9;font-size:.62rem;font-weight:750}
@@ -2223,6 +2224,7 @@
         <div class="finance-system-empty"><i class="fas fa-database"></i><span>AR 系统数据暂未连接</span></div>
         <div class="finance-analytics-head"><div><h3><i class="fas fa-coins"></i> 三方通道费用统计</h3><span>数据1 · 按平台与三方通道自动计算代收、代付费用</span></div><button class="refresh-btn" type="button" onclick="loadFinanceData(true)"><i class="fas fa-rotate"></i> 刷新数据</button></div>
         <div class="finance-analytics-empty" id="financeAnalyticsEmpty"><i class="fas fa-database"></i> 当前日期范围暂无统计数据</div>
+        <div class="finance-analytics-loading" id="financeAnalyticsLoading"><div class="finance-loading-inner"><img class="finance-loading-logo" src="assets/168-logo.png" alt="168"><span>正在加载近7日统计图表…</span><div class="finance-loading-dots"><i></i><i></i><i></i></div></div></div>
         <div class="finance-analytics-grid" id="financeAnalyticsGrid">
           <section class="finance-analytics-card"><h4>近7日三方费用趋势</h4><div class="finance-analytics-canvas"><canvas id="financeAnalyticsRate"></canvas></div></section>
           <section class="finance-analytics-card"><h4>代收费用与代付费用</h4><div class="finance-analytics-canvas"><canvas id="financeAnalyticsOrders"></canvas></div></section>
@@ -3793,8 +3795,8 @@
         document.getElementById('btn-finance')?.classList.add('active');
         activeRecordModule='finance';
         ensureRecordModuleData('finance');
-        renderFinanceAnalytics();
         loadFinanceAnalyticsTrend(document.getElementById('financeFeeDate')?.value||getRelativeISODate(activeGlobalDate,0));
+        renderFinanceAnalytics();
         return;
       }
 
@@ -5072,8 +5074,8 @@
       if(button){button.disabled=true;button.innerHTML='<i class="fas fa-spinner fa-spin"></i> 搜索中';}
       try {
         dbFinanceAnalytics=mapFinanceDailyRows(await fetchFinanceDateRange(targetDate,targetDate));
-        renderFinanceAnalytics();
         loadFinanceAnalyticsTrend(targetDate);
+        renderFinanceAnalytics();
       } catch(error) {
         console.error('Supabase 财务费用搜索失败',error.message||error);
         const empty=document.getElementById('financeAnalyticsEmpty');
@@ -5095,6 +5097,7 @@
         if(document.getElementById('financeFeeDate')?.value===targetDate)renderFinanceAnalytics();
       } catch(error) {
         console.warn('Supabase 近7日费用趋势读取失败',error.message||error);
+        if(financeAnalyticsTrendLoadingDate===targetDate){dbFinanceAnalyticsTrend=[];financeAnalyticsTrendDate=targetDate;renderFinanceAnalytics();}
       } finally {
         if(financeAnalyticsTrendLoadingDate===targetDate)financeAnalyticsTrendLoadingDate='';
       }
@@ -5244,7 +5247,7 @@
     }
 
     function renderFinanceAnalytics() {
-      const summary=document.getElementById('financeAnalyticsSummary'),empty=document.getElementById('financeAnalyticsEmpty'),grid=document.getElementById('financeAnalyticsGrid');
+      const summary=document.getElementById('financeAnalyticsSummary'),empty=document.getElementById('financeAnalyticsEmpty'),grid=document.getElementById('financeAnalyticsGrid'),loading=document.getElementById('financeAnalyticsLoading');
       if(!summary||typeof Chart==='undefined')return;
       const mapRows=rows=>{
         const result=[];
@@ -5274,12 +5277,13 @@
       const rows=[...grouped.values()].sort((a,b)=>(b.depositFee+b.withdrawFee)-(a.depositFee+a.withdrawFee));
       const totals=rows.reduce((sum,row)=>{Object.keys(sum).forEach(key=>sum[key]+=Number(row[key]||0));return sum},{depositOrders:0,depositSuccess:0,depositAmount:0,depositFee:0,withdrawOrders:0,withdrawSuccess:0,withdrawAmount:0,withdrawFee:0});
       totals.totalFee=totals.depositFee+totals.withdrawFee;
-      const hasData=Boolean(targetDate&&rows.length);empty?.classList.toggle('show',!hasData);if(grid)grid.style.display=hasData?'grid':'none';
+      const hasData=Boolean(targetDate&&rows.length),trendReady=financeAnalyticsTrendDate===targetDate;
+      empty?.classList.toggle('show',!hasData);loading?.classList.toggle('show',hasData&&!trendReady);if(grid)grid.style.display=hasData&&trendReady?'grid':'none';
       summary.innerHTML=[['数据日期',targetDate||'-'],['代收成功金额',fmtMoney(totals.depositAmount)],['代收费用',fmtMoney(totals.depositFee)],['代收费用比例',fmtRate(totals.depositAmount?totals.depositFee/totals.depositAmount*100:0)],['代付成功金额',fmtMoney(totals.withdrawAmount)],['代付费用',fmtMoney(totals.withdrawFee)],['代付费用比例',fmtRate(totals.withdrawAmount?totals.withdrawFee/totals.withdrawAmount*100:0)],['全部费用合计',fmtMoney(totals.totalFee)]].map(([k,v])=>`<div class="finance-analytics-stat"><span>${k}</span><strong>${v}</strong></div>`).join('');
       const body=document.getElementById('financeFeeTableBody'),foot=document.getElementById('financeFeeTableFoot');
       if(body)body.innerHTML=rows.length?rows.map(row=>`<tr><td>${esc(row.platform)}</td><td>${esc(row.merchant)}</td><td>${fmtNumber(row.depositOrders)}</td><td>${fmtNumber(row.depositSuccess)}</td><td>${fmtMoney(row.depositAmount)}</td><td>${fmtRate(row.depositRate)}</td><td>${fmtMoney(row.depositFee)}</td><td>${fmtNumber(row.withdrawOrders)}</td><td>${fmtNumber(row.withdrawSuccess)}</td><td>${fmtMoney(row.withdrawAmount)}</td><td>${fmtRate(row.withdrawRate)} + ${fmtMoney(row.fixedFee)}/单</td><td>${fmtMoney(row.withdrawFee)}</td><td>${fmtMoney(row.depositFee+row.withdrawFee)}</td></tr>`).join(''):'<tr><td colspan="13">当前平台暂无已配置费率的三方数据</td></tr>';
       if(foot)foot.innerHTML=`<tr><td colspan="2">全部合计</td><td>${fmtNumber(totals.depositOrders)}</td><td>${fmtNumber(totals.depositSuccess)}</td><td>${fmtMoney(totals.depositAmount)}</td><td>${fmtRate(totals.depositAmount?totals.depositFee/totals.depositAmount*100:0)}</td><td>${fmtMoney(totals.depositFee)}</td><td>${fmtNumber(totals.withdrawOrders)}</td><td>${fmtNumber(totals.withdrawSuccess)}</td><td>${fmtMoney(totals.withdrawAmount)}</td><td>${fmtRate(totals.withdrawAmount?totals.withdrawFee/totals.withdrawAmount*100:0)}</td><td>${fmtMoney(totals.withdrawFee)}</td><td>${fmtMoney(totals.totalFee)}</td></tr>`;
-      financeAnalyticsCharts.forEach(chart=>chart?.destroy());financeAnalyticsCharts=[];if(!hasData)return;
+      financeAnalyticsCharts.forEach(chart=>chart?.destroy());financeAnalyticsCharts=[];if(!hasData||!trendReady)return;
       const colors=['#2563eb','#16a34a','#f59e0b','#7c3aed','#0891b2','#dc2626','#db2777','#0f766e'];
       const make=(id,config)=>{const c=document.getElementById(id);if(c)financeAnalyticsCharts.push(new Chart(c.getContext('2d'),config))};
       // Render the complete dataset immediately.  With Chart.js' default animation,
