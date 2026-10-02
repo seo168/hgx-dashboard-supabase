@@ -1869,6 +1869,7 @@
     .finance-fee-toolbar{margin-top:14px}.finance-fee-toolbar select,.finance-fee-toolbar input{min-width:220px;padding:10px 36px 10px 12px;border:1px solid #d5dee8;border-radius:8px;background:#f8fafc;color:#344257;font-weight:750}.finance-fee-search{height:39px;padding:0 18px;border:0;border-radius:8px;background:#5b7fba;color:#fff;font-weight:850;cursor:pointer}.finance-fee-toolbar>span{margin-left:auto;padding:10px 12px;border-radius:8px;background:#f5f7fa;color:#657489;font-size:.72rem;font-weight:800}
     .finance-system-tabs{display:inline-flex;align-items:center;gap:4px;margin:0 0 14px;padding:4px;border:1px solid #dce4ed;border-radius:9px;background:#f3f6fa}.finance-system-tab{min-width:72px;padding:8px 18px;border:0;border-radius:6px;background:transparent;color:#6b7b90;cursor:pointer}.finance-system-tab.active{background:#5b7fba;color:#fff;box-shadow:0 2px 7px rgba(59,92,145,.18)}.finance-system-empty{display:none;min-height:360px;align-items:center;justify-content:center;gap:10px;border:1px dashed #ccd6e2;border-radius:12px;background:#fff;color:#8491a2}.finance-panel-empty>.finance-system-empty{display:flex}.finance-panel-empty>*:not(.finance-system-tabs):not(.finance-system-empty){display:none!important}
     .finance-analytics-loading{display:none;min-height:638px;align-items:center;justify-content:center;border:1px solid #dce4ed;border-radius:10px;background:#fff}.finance-analytics-loading.show{display:flex}
+    .finance-kpi-loading{display:none;min-height:208px;align-items:center;justify-content:center;border:1px solid #dce4ed;border-radius:10px;background:#fff}.finance-kpi-loading.show{display:flex}#finance.finance-kpi-waiting .header-inline-stats{display:none!important}
     /* Compact full-height navigation rail, following the supplied admin reference. */
     .side-menu-brand{display:none}
     .side-menu-brand img{width:30px;height:30px;object-fit:contain}.side-menu-brand small{color:#92a6b9;font-size:.62rem;font-weight:750}
@@ -2249,6 +2250,7 @@
               <button type="button" class="date-today-btn" onclick="resetGlobalDate()"><i class="fas fa-calendar-check"></i> 今天</button>
             </div>
           </div>
+          <div class="finance-kpi-loading" id="financeKpiLoading"><div class="finance-loading-inner"><img class="finance-loading-logo" src="assets/168-logo.png" alt="168"><span>正在加载近7日趋势…</span><div class="finance-loading-dots"><i></i><i></i><i></i></div></div></div>
           <div class="header-inline-stats">
             <div class="finance-kpi-card">
               <div class="finance-kpi-label" id="recordKpiLabel1"><i class="fas fa-percent"></i> 总成功率</div>
@@ -2711,6 +2713,9 @@
     let dbFinanceAnalyticsTrend = [];
     let financeAnalyticsTrendDate = '';
     let financeAnalyticsTrendLoadingDate = '';
+    let dbFinanceKpiTrend = [];
+    let financeKpiTrendDate = '';
+    let financeKpiTrendLoadingDate = '';
     let dbTrend = [];
     let dbPayoutDaily = [];
     let dbPayoutPlatformTiming = [];
@@ -3225,6 +3230,8 @@
     }
 
     function clearRecordDashboard(label) {
+      document.getElementById('finance')?.classList.remove('finance-kpi-waiting');
+      document.getElementById('financeKpiLoading')?.classList.remove('show');
       const reportDate = getRelativeISODate(activeGlobalDate, -1);
       const isService = activeRecordModule === 'service';
       const serviceScope = `${activeServiceRegion}平台`;
@@ -3303,14 +3310,15 @@
     const kpiSparkCharts = [null,null,null,null,null,null];
     function renderKpiSparklines() {
       if (typeof Chart === 'undefined') return;
-      const financeLatest=activeRecordModule==='finance'?[...new Set(dbFinance.filter(row=>isFinanceRowReliable(row)&&(getFinanceOrders(row)>0||getFinanceAmount(row)>0)).map(getFinanceDate).filter(Boolean))]
+      const financeSparkRows=activeRecordModule==='finance'?dbFinanceKpiTrend:dbFinance;
+      const financeLatest=activeRecordModule==='finance'?[...new Set(financeSparkRows.filter(row=>isFinanceRowReliable(row)&&(getFinanceOrders(row)>0||getFinanceAmount(row)>0)).map(getFinanceDate).filter(Boolean))]
         .map(canonicalPayoutDate).filter(date=>date&&date<=activeGlobalDate).sort().pop():'';
       const endDate=financeLatest||getRelativeISODate(activeGlobalDate,-1);
       const dates=Array.from({length:7},(_,index)=>getRelativeISODate(endDate,index-6));
       let series=[[],[],[],[],[],[]];
       if (activeRecordModule==='finance') {
         dates.forEach(date=>{
-          const rows=getFinanceDepositSummaryRows(dbFinance.filter(row=>isFinanceRowReliable(row)&&getFinanceDate(row)===date));
+          const rows=getFinanceDepositSummaryRows(financeSparkRows.filter(row=>isFinanceRowReliable(row)&&getFinanceDate(row)===date));
           const orders=rows.reduce((sum,row)=>sum+getFinanceOrders(row),0);
           const success=rows.reduce((sum,row)=>sum+getFinanceSuccess(row),0);
           const amount=rows.reduce((sum,row)=>sum+getFinanceAmount(row),0);
@@ -4861,6 +4869,7 @@
 
     async function loadFinanceData(force = false) {
       if (financeLoading) return;
+      if(force)financeKpiTrendDate='';
       financeLoading = true;
       toggleFinanceTableLoading(true);
       const notice = document.getElementById('financeSheetNotice');
@@ -5058,6 +5067,7 @@
       try {
         dbFinance=mapFinanceDailyRows(await fetchFinanceDateRange(start,end));
         initFinanceFilters();
+        loadFinanceKpiTrend(end);
         renderFinanceReport();
       } catch(error) {
         console.error('Supabase 财务搜索失败',error.message||error);
@@ -5100,6 +5110,22 @@
         if(financeAnalyticsTrendLoadingDate===targetDate){dbFinanceAnalyticsTrend=[];financeAnalyticsTrendDate=targetDate;renderFinanceAnalytics();}
       } finally {
         if(financeAnalyticsTrendLoadingDate===targetDate)financeAnalyticsTrendLoadingDate='';
+      }
+    }
+
+    async function loadFinanceKpiTrend(targetDate) {
+      if(!targetDate||financeKpiTrendDate===targetDate||financeKpiTrendLoadingDate===targetDate)return;
+      financeKpiTrendLoadingDate=targetDate;
+      try {
+        dbFinanceKpiTrend=mapFinanceDailyRows(await fetchFinanceDateRange(getRelativeISODate(targetDate,-6),targetDate));
+        if(financeKpiTrendLoadingDate!==targetDate)return;
+        financeKpiTrendDate=targetDate;
+        if(activeRecordModule==='finance'&&document.getElementById('finance')?.classList.contains('active'))renderFinanceReport();
+      } catch(error) {
+        console.warn('Supabase 近7日财务趋势读取失败',error.message||error);
+        if(financeKpiTrendLoadingDate===targetDate){dbFinanceKpiTrend=[];financeKpiTrendDate=targetDate;renderFinanceReport();}
+      } finally {
+        if(financeKpiTrendLoadingDate===targetDate)financeKpiTrendLoadingDate='';
       }
     }
 
@@ -5319,7 +5345,11 @@
       document.getElementById('financeKpiTopPlatform').innerText = depositRows.length ? fmtNumber(success) : '-';
       document.getElementById('financeKpiExtra1').innerText = depositRows.length ? fmtNumber(Math.max(0,totalOrders-success)) : '-';
       document.getElementById('financeKpiExtra2').innerText = depositRows.length ? fmtMoney(totalOrders ? amount/totalOrders : 0) : '-';
-      renderKpiSparklines();
+      const trendDate=document.getElementById('financeDateFilter')?.value||getRelativeISODate(activeGlobalDate,0);
+      const trendReady=financeKpiTrendDate===trendDate;
+      document.getElementById('finance')?.classList.toggle('finance-kpi-waiting',!trendReady);
+      document.getElementById('financeKpiLoading')?.classList.toggle('show',!trendReady);
+      if(trendReady)renderKpiSparklines();
     }
 
     function renderFinancePlatformCards(rows) {
@@ -6157,6 +6187,7 @@
       initFinanceFilters();
       setFinanceDateFields(selectedStartDate||reportDate,selectedEndDate||selectedStartDate||reportDate);
       syncFinanceDateToLatestComplete();
+      loadFinanceKpiTrend(document.getElementById('financeDateFilter')?.value||reportDate);
       if (activeRecordModule === 'finance') renderFinanceReport();
       renderFinanceAnalytics();
       renderHomeDashboard();
