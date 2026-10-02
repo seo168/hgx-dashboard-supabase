@@ -6119,17 +6119,20 @@
     async function loadData() {
       updateClock();
       if (!window.__hgxClockTimer) window.__hgxClockTimer = setInterval(updateClock, 1000);
-      const [{ data, error }] = await Promise.all([
-        supabaseClient.from('staff_master').select('*'),
+      const [staffResponse] = await Promise.all([
+        fetch(`${URL_MASTER}&t=${Date.now()}`),
         loadFinanceData(false),
         loadPayoutData(false),
         loadServiceData(false)
       ]);
-      if (error) {
-        console.error('Supabase 员工数据读取失败', error.message);
+      try {
+        if (!staffResponse.ok) throw new Error(`HTTP ${staffResponse.status}`);
+        const text=await staffResponse.text();
+        if (/^\s*</.test(text)) throw new Error('Google Sheet 返回了 HTML，而不是 CSV');
+        dbMaster=smartParse(text).slice(1).filter(row=>row[2]);
+      } catch(error) {
+        console.error('Google Sheet 员工数据读取失败',error.message||error);
         dbMaster = [];
-      } else {
-        dbMaster = (data || []).map(staffObjectToRow);
       }
       dbPerf = [];
       initFilters();
