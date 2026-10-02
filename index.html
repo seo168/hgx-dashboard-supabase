@@ -2699,6 +2699,7 @@
     let dbMaster = [];
     let dbPerf = [];
     let dbFinance = [];
+    let dbFinanceAnalytics = [];
     let dbTrend = [];
     let dbPayoutDaily = [];
     let dbPayoutPlatformTiming = [];
@@ -5038,7 +5039,7 @@
       const button=event?.currentTarget||null;
       if(button){button.disabled=true;button.innerHTML='<i class="fas fa-spinner fa-spin"></i> 搜索中';}
       try {
-        dbFinance=mapFinanceDailyRows(await fetchFinanceDateRange(targetDate,targetDate));
+        dbFinanceAnalytics=mapFinanceDailyRows(await fetchFinanceDateRange(targetDate,targetDate));
         renderFinanceAnalytics();
       } catch(error) {
         console.error('Supabase 财务费用搜索失败',error.message||error);
@@ -5196,7 +5197,7 @@
       const summary=document.getElementById('financeAnalyticsSummary'),empty=document.getElementById('financeAnalyticsEmpty'),grid=document.getElementById('financeAnalyticsGrid');
       if(!summary||typeof Chart==='undefined')return;
       const source=[];
-      (dbFinance||[]).forEach(row=>{
+      (dbFinanceAnalytics||[]).forEach(row=>{
         const parts=String(row['渠道']||'').split('|');
         if(parts.length<3||!['RECHARGE','WITHDRAW'].includes(parts[0]))return;
         const merchant=canonicalChannelName(parts[1]);
@@ -6068,6 +6069,7 @@
         ]);
         if (hourlyError) console.warn('Supabase 每小时财务读取失败',hourlyError.message);
         dbFinance = mapFinanceDailyRows(data);
+        if (!dbFinanceAnalytics.length) dbFinanceAnalytics = dbFinance.slice();
         const hourlyGroups = new Map();
         (hourlyData || []).forEach(item => {
           const key = `${item.report_date}|${item.platform}`;
