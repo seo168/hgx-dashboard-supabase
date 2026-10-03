@@ -2862,6 +2862,13 @@
       return '';
     }
 
+    function getOnsiteGroup(row) {
+      const text = `${row[1] || ''} ${row[4] || ''} ${row[9] || ''}`.replace(/\s+/g, '');
+      if (/(行政|保姆|厨师)/.test(text)) return 'support';
+      if (/(组长|培训)/.test(text)) return 'leadership';
+      return 'operations';
+    }
+
     function getRoleDisplay(row) {
       const onsiteRole = detectOnsiteRole(row);
       if (onsiteRole) return onsiteRole;
@@ -4488,9 +4495,10 @@
 
     function updateDeptTitles() {
       const cards = document.querySelectorAll('.dept-card .dept-title');
-      if (cards[0]) cards[0].innerText = '出款/风控';
-      if (cards[1]) cards[1].innerText = '客服';
-      if (cards[2]) cards[2].innerText = '财务';
+      const onsite = activeWorkMode === '现场';
+      if (cards[0]) cards[0].innerText = onsite ? '组长与培训' : '出款/风控';
+      if (cards[1]) cards[1].innerText = onsite ? '财务 / 风控 / 客服 / 出款' : '客服';
+      if (cards[2]) cards[2].innerText = onsite ? '行政 / 保姆 / 厨师' : '财务';
     }
 
     function syncCharts() {
@@ -4503,12 +4511,11 @@
         const team = r[9] || "";
         const role = detectOnsiteRole(r);
 
-        if (activeWorkMode === '现场' && role === '行政') {
-          ds.cWD['行政'] = (ds.cWD['行政'] || 0) + 1;
-        } else if (activeWorkMode === '现场' && role === '保姆') {
-          ds.cCS['保姆'] = (ds.cCS['保姆'] || 0) + 1;
-        } else if (activeWorkMode === '现场' && role === '厨师') {
-          ds.cFN['厨师'] = (ds.cFN['厨师'] || 0) + 1;
+        if (activeWorkMode === '现场') {
+          const onsiteGroup = getOnsiteGroup(r);
+          if (onsiteGroup === 'leadership') ds.cWD['组长 / 风控组长 / 客服组长 / 财务培训'] = (ds.cWD['组长 / 风控组长 / 客服组长 / 财务培训'] || 0) + 1;
+          else if (onsiteGroup === 'support') ds.cFN['行政 / 保姆 / 厨师'] = (ds.cFN['行政 / 保姆 / 厨师'] || 0) + 1;
+          else ds.cCS['财务 / 风控 / 客服 / 出款'] = (ds.cCS['财务 / 风控 / 客服 / 出款'] || 0) + 1;
         } else {
           if (group.includes('出款') || team.includes('出款') || group.includes('风控')) {
             const key = group || team || '出款/风控';
@@ -6162,6 +6169,16 @@
     }
 
     function getStatModalSub(chartId) {
+      if (activeWorkMode === '现场') {
+        const onsiteMap = {
+          cWD:'组长与培训成员明细',
+          cCS:'财务 / 风控 / 客服 / 出款成员明细',
+          cFN:'行政 / 保姆 / 厨师成员明细',
+          cGEO:'国家成员明细',
+          cSH:'班次成员明细'
+        };
+        return onsiteMap[chartId] || '成员明细';
+      }
       const map = {
         cWD:'出款/风控成员明细',
         cCS:'客服成员明细',
@@ -6179,6 +6196,15 @@
         const group = r[1] || '';
         const team = r[9] || '';
         const role = detectOnsiteRole(r);
+
+        if (activeWorkMode === '现场') {
+          if (chartId === 'cWD') return getOnsiteGroup(r) === 'leadership';
+          if (chartId === 'cCS') return getOnsiteGroup(r) === 'operations';
+          if (chartId === 'cFN') return getOnsiteGroup(r) === 'support';
+          if (chartId === 'cGEO') return (r[8] || '') === label;
+          if (chartId === 'cSH') return (r[5] || '') === label;
+          return false;
+        }
 
         if (chartId === 'cWD') return label === '行政' ? role === '行政' : (group.includes('出款') || team.includes('出款') || group.includes('风控')) && (group === label || team === label);
         if (chartId === 'cCS') return label === '保姆' ? role === '保姆' : (group.includes('客服') || team.includes('客服')) && (group === label || team === label);
