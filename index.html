@@ -2115,22 +2115,6 @@
           </div>
         </div>
         <div id="overview" class="page-content">
-      <div class="work-mode-wrap">
-        <div class="work-mode-title">工作模式</div>
-        <button class="work-mode-btn active" id="modeBtn-all" onclick="setWorkMode('全部')">
-          <span>全部</span><span class="work-mode-count" id="countModeAll">0</span>
-        </button>
-        <button class="work-mode-btn" id="modeBtn-jvjia" onclick="setWorkMode('居家')">
-          <span>居家</span><span class="work-mode-count" id="countModeJuJia">0</span>
-        </button>
-        <button class="work-mode-btn" id="modeBtn-xianchangjvjia" onclick="setWorkMode('现场居家')">
-          <span>现场居家</span><span class="work-mode-count" id="countModeXianChangJuJia">0</span>
-        </button>
-        <button class="work-mode-btn" id="modeBtn-xianchang" onclick="setWorkMode('现场')">
-          <span>现场</span><span class="work-mode-count" id="countModeXianChang">0</span>
-        </button>
-      </div>
-
       <div class="onsite-role-wrap" id="onsiteRoleWrap">
         <div class="onsite-role-title">现场职业分类</div>
         <button class="onsite-role-btn active" id="roleBtn-xianchang" onclick="setOnsiteRole('现场')">
@@ -2912,10 +2896,8 @@
         counts['全部']++;
       });
 
-      document.getElementById('countModeAll').innerText = counts['全部'] || 0;
-      document.getElementById('countModeXianChang').innerText = counts['现场'] || 0;
-      document.getElementById('countModeXianChangJuJia').innerText = counts['现场居家'] || 0;
-      document.getElementById('countModeJuJia').innerText = counts['居家'] || 0;
+      const countElements={全部:'countModeAll',现场:'countModeXianChang',现场居家:'countModeXianChangJuJia',居家:'countModeJuJia'};
+      Object.entries(countElements).forEach(([mode,id])=>{const el=document.getElementById(id);if(el)el.innerText=counts[mode]||0;});
     }
 
     function updateOnsiteRoleCounts() {
