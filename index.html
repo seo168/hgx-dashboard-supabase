@@ -1947,26 +1947,19 @@
     body.staff-page-active .modal-content,body.staff-page-active .stat-modal-content{background:#fff!important;color:#111827!important;border-color:#dfe5ec!important}
     body.staff-page-active .stat-modal-top{background:#f7f9fc!important;color:#111827!important;border-color:#e5eaf0!important}
     body.staff-page-active .stat-modal-close{background:#edf1f5!important;color:#111827!important}
-    .staff-page-header{display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap;margin-bottom:14px;padding:18px 20px;border:1px solid #e3e9f0;border-radius:8px;background:#fff;box-shadow:0 1px 5px rgba(51,65,85,.035)}
-    .staff-page-heading{display:flex;align-items:center;gap:12px;flex:1 1 340px;min-width:0}.staff-page-heading>i{display:grid;place-items:center;width:38px;height:38px;flex:0 0 38px;border-radius:6px;background:#e7eef8;color:#5b7fba;font-size:1rem}
+    .staff-page-header{display:flex;align-items:center;margin-bottom:12px;padding:14px 16px;border:1px solid #e3e9f0;border-radius:8px;background:#fff;box-shadow:0 1px 5px rgba(51,65,85,.035)}
+    .staff-page-heading{display:flex;align-items:center;gap:10px;min-width:0}.staff-page-heading>i{display:grid;place-items:center;width:34px;height:34px;flex:0 0 34px;border-radius:6px;background:#e7eef8;color:#5b7fba;font-size:.9rem}
     .staff-page-heading h2{margin:0;color:#111827;font-size:1.12rem}.staff-page-heading p{margin:5px 0 0;color:#64748b;font-size:.72rem}
-    .staff-page-metrics{display:grid;grid-template-columns:repeat(4,minmax(90px,1fr));gap:8px;flex:0 1 520px;min-width:min(100%,420px)}
-    .staff-page-metric{min-width:0;padding:9px 12px;border:1px solid #e1e7ee;border-radius:6px;background:#f8fafc}.staff-page-metric span{display:block;color:#64748b;font-size:.62rem;white-space:nowrap}.staff-page-metric strong{display:block;margin-top:4px;color:#111827;font-size:.94rem}
     #overview .overview-panel,#overview .filter-wrapper,#overview .table-container{border-color:#dfe6ee!important}
     #overview .overview-panel{padding:16px!important}
     #overview .filter-wrapper{padding:16px!important}
     #overview .dept-scroll{overflow:visible!important;margin-bottom:0!important;padding-bottom:0!important}
-    #overview .dept-grid{grid-template-columns:repeat(6,minmax(0,1fr))!important;min-width:0!important;gap:12px!important}
-    #overview .dept-card{grid-column:span 2;display:grid!important;grid-template-columns:104px minmax(0,1fr);grid-template-rows:auto 1fr;align-items:start;column-gap:13px;min-height:210px!important;padding:15px!important;border-top:3px solid #d8e4f3!important}
-    #overview .dept-card:nth-last-child(-n+2){grid-column:span 3}
-    #overview .dept-title{grid-column:1/-1;padding-bottom:10px;border-bottom:1px solid #edf1f5!important;font-size:.74rem!important}
-    #overview .chart-box{grid-column:1;width:88px!important;height:88px!important;margin:12px auto!important;align-self:start}
-    #overview .stat-list{grid-column:2;margin-top:10px!important;min-width:0}
-    #overview .stat-row{position:relative;overflow:hidden;padding:9px 10px 12px!important}
-    #overview .stat-progress{position:absolute;left:0;bottom:0;height:3px;width:var(--share);background:var(--bar-color);opacity:.75}
-    #overview .stat-value{display:flex;align-items:center;gap:6px}.stat-share{min-width:38px;text-align:right;color:#64748b!important;font-size:.61rem}
-    .staff-filter-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid #edf1f5}
-    .staff-filter-heading strong{display:flex;align-items:center;gap:8px;font-size:.78rem}.staff-filter-heading span{font-size:.64rem;color:#64748b!important}
+    #overview .dept-grid{grid-template-columns:repeat(auto-fit,minmax(210px,1fr))!important;min-width:0!important;gap:12px!important}
+    #overview .dept-card{display:block!important;min-height:220px!important;padding:14px!important;border-top:2px solid #d8e4f3!important}
+    #overview .dept-title{padding-bottom:9px;border-bottom:1px solid #edf1f5!important;font-size:.72rem!important}
+    #overview .chart-box{width:82px!important;height:82px!important;margin:10px auto!important}
+    #overview .stat-list{margin-top:8px!important}
+    #overview .stat-row{padding:8px 10px!important}
     #overview .filter-grid{grid-template-columns:1.5fr repeat(3,minmax(120px,1fr))!important}
     #overview table th{position:sticky;top:0;z-index:2;background:#eef3f8!important;color:#111827!important}
     #overview table td{color:#111827!important}
@@ -1974,9 +1967,7 @@
     #overview table td:nth-child(4){color:#5b7fba!important;font-variant-numeric:tabular-nums}
     #overview table td:nth-child(7){font-variant-numeric:tabular-nums}
     #overview tbody tr:hover td{background:#edf4fc!important}
-    @media(max-width:1100px){#overview .dept-card{grid-column:span 3}#overview .dept-card:nth-last-child(-n+2){grid-column:span 3}}
-    @media(max-width:900px){.staff-page-header{align-items:flex-start;flex-direction:column}.staff-page-metrics{width:100%;min-width:0;grid-template-columns:repeat(2,minmax(0,1fr))}#overview .filter-grid{grid-template-columns:1fr!important}#overview .dept-card,#overview .dept-card:nth-last-child(-n+2){grid-column:1/-1}}
-    @media(max-width:560px){#overview .dept-card{grid-template-columns:1fr}#overview .chart-box,#overview .stat-list{grid-column:1}}
+    @media(max-width:900px){#overview .filter-grid{grid-template-columns:1fr!important}}
   </style>
 </head>
 
@@ -2152,12 +2143,6 @@
         <div id="overview" class="page-content">
       <div class="staff-page-header">
         <div class="staff-page-heading"><i class="fas fa-users-gear"></i><div><h2 id="staffPageTitle">员工管理</h2><p id="staffPageDescription">Supabase 员工主数据 · 当前筛选结果</p></div></div>
-        <div class="staff-page-metrics">
-          <div class="staff-page-metric"><span>当前员工</span><strong id="staffMetricPeople">0</strong></div>
-          <div class="staff-page-metric"><span>团队数量</span><strong id="staffMetricTeams">0</strong></div>
-          <div class="staff-page-metric"><span>国家数量</span><strong id="staffMetricCountries">0</strong></div>
-          <div class="staff-page-metric"><span>班次数量</span><strong id="staffMetricShifts">0</strong></div>
-        </div>
       </div>
       <div class="onsite-role-wrap" id="onsiteRoleWrap">
         <div class="onsite-role-title">现场职业分类</div>
@@ -2220,7 +2205,6 @@
       <div id="staff-list-section" class="staff-inner-page active">
 
         <div class="filter-wrapper">
-          <div class="staff-filter-heading"><strong><i class="fas fa-filter"></i> 筛选员工数据</strong><span>选择条件后自动更新图表与列表</span></div>
           <div class="filter-grid">
             <div class="filter-group"><label>搜索姓名/ID</label><input type="text" id="searchName" placeholder="请输入姓名或 ID..."></div>
             <div class="filter-group"><label>班次</label><select id="fShift"></select></div>
@@ -4420,11 +4404,6 @@
       const description=document.getElementById('staffPageDescription');
       if(title)title.textContent=`员工管理 · ${dataLabel}`;
       if(description)description.textContent=`Supabase 员工主数据 · ${detail} · 当前筛选结果`;
-      const setMetric=(id,value)=>{const el=document.getElementById(id);if(el)el.textContent=Number(value||0).toLocaleString('en-US');};
-      setMetric('staffMetricPeople',filtered.length);
-      setMetric('staffMetricTeams',new Set(filtered.map(row=>row[9]).filter(Boolean)).size);
-      setMetric('staffMetricCountries',new Set(filtered.map(row=>row[8]).filter(Boolean)).size);
-      setMetric('staffMetricShifts',new Set(filtered.map(row=>row[5]).filter(Boolean)).size);
     }
 
     function runFilters() {
@@ -4592,15 +4571,13 @@
 
         const list = document.getElementById('list_' + id);
         if (list) {
-          const total=vals.reduce((a,b)=>a+b,0);
           list.innerHTML = entries.slice(0,4).map(([n,v],i) => `
-            <div class="stat-row" style="--share:${total?(v/total*100).toFixed(1):0}%;--bar-color:${colors[i] || '#60a5fa'}" onclick="openStatModal('${id}', '${encodeURIComponent(n)}', '${colors[i] || '#60a5fa'}')">
+            <div class="stat-row" onclick="openStatModal('${id}', '${encodeURIComponent(n)}', '${colors[i] || '#60a5fa'}')">
               <div class="indicator">
                 <span class="dot" style="background:${colors[i] || '#60a5fa'}"></span>
                 <span><span class="remark-text">${esc(n)}</span></span>
               </div>
-              <div class="stat-value"><span class="stat-share">${total?(v/total*100).toFixed(1):'0.0'}%</span><span class="count-badge">${v}</span></div>
-              <span class="stat-progress"></span>
+              <span class="count-badge">${v}</span>
             </div>
           `).join('');
         }
