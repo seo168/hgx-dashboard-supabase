@@ -1952,7 +1952,12 @@
     .staff-page-heading h2{margin:0;color:#111827;font-size:1.12rem}.staff-page-heading p{margin:5px 0 0;color:#64748b;font-size:.72rem}
     #overview .overview-panel,#overview .filter-wrapper,#overview .table-container{border-color:#dfe6ee!important}
     #overview .overview-panel{padding:16px!important}
-    #overview .filter-wrapper{padding:16px!important}
+    #overview .filter-wrapper{padding:12px 14px!important}
+    #overview .filter-grid{gap:10px 14px!important;align-items:center}
+    #overview .filter-group{display:grid;grid-template-columns:max-content minmax(0,1fr);align-items:center;gap:8px;min-width:0}
+    #overview .filter-group label{margin:0!important;white-space:nowrap;font-size:.64rem!important;color:#526176!important;text-transform:none!important}
+    #overview .filter-group input,#overview .filter-group select{height:34px!important;min-width:0;padding:0 11px!important;border-radius:5px!important;font-size:.7rem!important;background:#fff!important;border-color:#dce4ed!important}
+    #overview .filter-group input:focus,#overview .filter-group select:focus{border-color:#8ca9cf!important;box-shadow:0 0 0 2px rgba(91,127,186,.10)!important}
     #overview .dept-scroll{overflow:visible!important;margin-bottom:0!important;padding-bottom:0!important}
     #overview .dept-grid{grid-template-columns:repeat(auto-fit,minmax(210px,1fr))!important;min-width:0!important;gap:12px!important}
     #overview .dept-card{display:block!important;min-height:220px!important;padding:14px!important;border-top:2px solid #d8e4f3!important}
@@ -1967,7 +1972,7 @@
     #overview table td:nth-child(4){color:#5b7fba!important;font-variant-numeric:tabular-nums}
     #overview table td:nth-child(7){font-variant-numeric:tabular-nums}
     #overview tbody tr:hover td{background:#edf4fc!important}
-    @media(max-width:900px){#overview .filter-grid{grid-template-columns:1fr!important}}
+    @media(max-width:900px){#overview .filter-grid{grid-template-columns:1fr!important}#overview .filter-group{grid-template-columns:92px minmax(0,1fr)}}
   </style>
 </head>
 
