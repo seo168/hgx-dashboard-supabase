@@ -14,7 +14,7 @@ jobs:
           TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
         run: |
           node - <<'NODE'
-          const fs=require('fs');const query=fs.readFileSync('supabase/live_staff_editor.sql','utf8');
+          const {readFileSync}=await import('node:fs');const query=readFileSync('supabase/live_staff_editor.sql','utf8');
           const r=await fetch('https://api.supabase.com/v1/projects/qsqnxmotgocesnmodmfz/database/query',{method:'POST',headers:{Authorization:`Bearer ${process.env.TOKEN}`,'Content-Type':'application/json'},body:JSON.stringify({query,read_only:false})});
           if(!r.ok)throw new Error(`${r.status} ${await r.text()}`);
           NODE
