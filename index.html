@@ -2062,7 +2062,7 @@
             <button onclick="openStaffData(2)" id="sideStaff-2" class="side-nested-btn"><i class="fas fa-chart-simple"></i> 数据2</button>
             <button onclick="openStaffData(3)" id="sideStaff-3" class="side-nested-btn"><i class="fas fa-chart-simple"></i> 数据3</button>
             <button onclick="openStaffData(4)" id="sideStaff-4" class="side-nested-btn"><i class="fas fa-chart-simple"></i> 数据4</button>
-            <button onclick="openStaffData(5)" id="sideStaff-5" class="side-nested-btn"><i class="fas fa-chart-simple"></i> 数据5</button>
+            <button onclick="openStaffData(5)" id="sideStaff-5" class="side-nested-btn"><i class="fas fa-pen-to-square"></i> 编辑中心</button>
           </div>
         </div>
         <div class="side-menu-group department-menu-group" id="group-dept-finance">
@@ -2162,6 +2162,20 @@
       </div>
       <div class="staff-page-header">
         <div class="staff-page-heading"><i class="fas fa-users-gear"></i><div><h2 id="staffPageTitle">员工管理</h2><p id="staffPageDescription">Supabase 员工主数据 · 当前筛选结果</p></div></div>
+      </div>
+      <div id="staffEditor" class="overview-panel" style="display:none">
+        <div class="overview-head"><div class="section-title"><i class="fas fa-pen-to-square"></i> 员工资料编辑中心</div></div>
+        <form class="filter-grid" id="staffEditForm" onsubmit="submitStaffEdit(event)">
+          <div class="filter-group"><label>员工 ID</label><input id="editEmployeeId" list="staffIdOptions" required placeholder="输入员工 ID"><datalist id="staffIdOptions"></datalist></div>
+          <div class="filter-group"><label>编辑项目</label><select id="editAction" onchange="syncStaffEditFields()"><option value="join_date">入职日期</option><option value="resign">离职登记</option><option value="mistake">失误登记</option><option value="deduct">扣款登记</option><option value="bank">银行信息</option><option value="employee_id">修改员工 ID</option><option value="employee_name">修改姓名</option><option value="exam">考试成绩</option><option value="offday">休假申请</option></select></div>
+          <div class="filter-group"><label>日期</label><input id="editDate" type="date"></div>
+          <div class="filter-group"><label id="editValueLabel">新内容</label><input id="editValue" placeholder="输入新内容"></div>
+          <div class="filter-group"><label>金额 / 分数</label><input id="editAmount" type="number" step="0.01" placeholder="可选"></div>
+          <div class="filter-group"><label>备注</label><input id="editNotes" placeholder="可选"></div>
+          <div class="filter-group"><label>照片 / 视频</label><input id="editMedia" type="file" accept="image/jpeg,image/png,image/webp,video/mp4,video/quicktime,video/webm"></div>
+          <div class="filter-group"><label>&nbsp;</label><button class="menu-btn active" id="staffEditSubmit" type="submit"><i class="fas fa-floppy-disk"></i> 保存到 Supabase</button></div>
+        </form>
+        <div id="staffEditMessage" style="margin-top:12px;color:#526176"></div>
       </div>
       <div class="overview-panel">
         <div class="overview-head">
@@ -3856,8 +3870,32 @@
       document.getElementById('btn-overview')?.classList.add('active');
       const tabs=document.getElementById('staffSystemTabs');
       if(tabs)tabs.style.display=dataIndex===1?'inline-flex':'none';
+      const editor=dataIndex===5;
+      document.getElementById('staffEditor').style.display=editor?'block':'none';
+      document.querySelectorAll('#overview > .overview-panel:not(#staffEditor),#overview > .staff-inner-nav,#staff-list-section,#shift-section').forEach(el=>el.style.display=editor?'none':'');
+      if(editor){populateStaffEditor();updateStaffPageSummary();return;}
       if(dataIndex===1){updateStaffSystemTabs();setWorkMode(activeStaffSystem);}
       else setWorkMode('全部');
+    }
+
+    function populateStaffEditor(){const list=document.getElementById('staffIdOptions');if(list)list.innerHTML=dbMaster.map(r=>`<option value="${esc(r[2])}">${esc(r[3])}</option>`).join('');syncStaffEditFields();}
+    function syncStaffEditFields(){const action=document.getElementById('editAction')?.value;const labels={join_date:'入职日期（YYYY-MM-DD）',resign:'离职原因',mistake:'失误内容',deduct:'扣款原因',bank:'银行｜账号｜户名',employee_id:'新员工 ID',employee_name:'新姓名',exam:'考试项目',offday:'休假原因'};const label=document.getElementById('editValueLabel');if(label)label.textContent=labels[action]||'新内容';}
+    async function submitStaffEdit(event){
+      event.preventDefault();const id=document.getElementById('editEmployeeId').value.trim(),action=document.getElementById('editAction').value,date=document.getElementById('editDate').value||null,value=document.getElementById('editValue').value.trim(),amountRaw=document.getElementById('editAmount').value,notes=document.getElementById('editNotes').value.trim(),file=document.getElementById('editMedia').files[0],message=document.getElementById('staffEditMessage'),button=document.getElementById('staffEditSubmit');
+      if(!dbMaster.some(r=>r[2]===id)){message.textContent='未找到员工 ID';return;}button.disabled=true;message.style.color='#526176';message.textContent='正在保存…';
+      try{
+        let eventId=null;
+        if(['join_date','bank','employee_id','employee_name'].includes(action)){
+          let changes={};if(action==='join_date')changes.join_date=value||date;if(action==='employee_id')changes.employee_id=value;if(action==='employee_name')changes.employee_name=value;if(action==='bank'){const parts=value.split('|').map(x=>x.trim());changes={bank_name:parts[0]||'',bank_account:parts[1]||'',bank_holder:parts[2]||''};}
+          const {error}=await supabaseClient.from('staff_master').update(changes).eq('employee_id',id);if(error)throw error;
+        }else{
+          const payload={employee_id:id,staff_name:dbMaster.find(r=>r[2]===id)?.[3]||'',event_type:action,event_date:date,details:value||null,notes:notes||null,status:'submitted'};if(action==='deduct')payload.amount=amountRaw===''?null:Number(amountRaw);if(action==='exam')payload.exam_score=amountRaw===''?null:Number(amountRaw);
+          const {data,error}=await supabaseClient.from('staff_events').insert(payload).select('id').single();if(error)throw error;eventId=data.id;
+          if(action==='resign'){const {error:updateError}=await supabaseClient.from('staff_master').update({status:'离职',resign_date:date}).eq('employee_id',id);if(updateError)throw updateError;}
+        }
+        if(file){const path=`${id}/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9._-]/g,'_')}`;const {error:uploadError}=await supabaseClient.storage.from('staff-media').upload(path,file);if(uploadError)throw uploadError;const {error:attachmentError}=await supabaseClient.from('staff_attachments').insert({event_id:eventId,employee_id:id,file_path:path,media_type:file.type,original_name:file.name});if(attachmentError)throw attachmentError;}
+        message.style.color='#059669';message.textContent='保存成功';event.target.reset();syncStaffEditFields();await loadData();openStaffData(5);
+      }catch(error){message.style.color='#dc2626';message.textContent=`保存失败：${error.message||error}`;}finally{button.disabled=false;}
     }
 
     function openDepartmentMenu(module) {
@@ -4413,7 +4451,7 @@
     }
 
     function updateStaffPageSummary() {
-      const dataLabel=activeStaffData===1?'员工信息':`数据${activeStaffData}`;
+      const dataLabel=activeStaffData===1?'员工信息':activeStaffData===5?'编辑中心':`数据${activeStaffData}`;
       const detail=activeWorkMode==='现场'?'现场员工':activeWorkMode==='居家'?'居家员工':activeWorkMode==='现场居家'?'现场转居家员工':'全部工作模式';
       const title=document.getElementById('staffPageTitle');
       const description=document.getElementById('staffPageDescription');
