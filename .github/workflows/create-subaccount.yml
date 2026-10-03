@@ -1,0 +1,48 @@
+name: Create dashboard subaccount
+
+on:
+  workflow_dispatch:
+    inputs:
+      username:
+        description: Dashboard username
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  create-account:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Create confirmed Supabase Auth user
+        env:
+          USERNAME: ${{ inputs.username }}
+          PASSWORD: ${{ secrets.NEW_SUBACCOUNT_PASSWORD }}
+          SUPABASE_URL: https://qsqnxmotgocesnmodmfz.supabase.co
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          node <<'NODE'
+          const username=String(process.env.USERNAME||'').trim().toLowerCase();
+          const password=String(process.env.PASSWORD||'');
+          if(!/^[a-z0-9._-]{3,40}$/.test(username))throw new Error('Invalid username');
+          if(password.length<6)throw new Error('Missing or invalid NEW_SUBACCOUNT_PASSWORD secret');
+          const response=await fetch(`${process.env.SUPABASE_URL}/auth/v1/admin/users`,{
+            method:'POST',
+            headers:{
+              apikey:process.env.SUPABASE_SERVICE_ROLE_KEY,
+              Authorization:`Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
+              'Content-Type':'application/json'
+            },
+            body:JSON.stringify({
+              email:`${username}@hgx.internal`,
+              password,
+              email_confirm:true,
+              user_metadata:{username,account_type:'subaccount'}
+            })
+          });
+          if(!response.ok)throw new Error(`Supabase user creation failed: ${response.status} ${await response.text()}`);
+          const user=await response.json();
+          console.log(`Created dashboard subaccount ${username} (${user.id}).`);
+          NODE
