@@ -1847,9 +1847,11 @@
     .profile-trigger{background:#fff!important;border-color:#e1e7ee!important;color:#607086!important;border-radius:18px!important;height:38px!important;padding:0 13px 0 5px!important;box-shadow:0 1px 4px rgba(31,45,61,.04)!important}.profile-trigger:hover,.profile-trigger.open{background:#f4f8ff!important;border-color:#bfd2fa!important;color:#2468e8!important}
     .profile-avatar{width:28px!important;height:28px!important;background:transparent!important}.login-brand{gap:13px!important}
     .staff-form-modal{position:fixed;inset:0;z-index:5200;display:none;align-items:center;justify-content:center;padding:22px;background:rgba(15,23,42,.38)}
-    .staff-form-modal.show{display:flex}.staff-form-card{width:min(980px,96vw);max-height:88vh;overflow:auto;padding:22px;background:#fff;border:1px solid #dfe5ec;border-radius:9px;box-shadow:0 22px 60px rgba(31,45,61,.22)}
+    .staff-form-modal.show{display:flex}.staff-form-card{width:min(520px,96vw);max-height:88vh;overflow:auto;padding:22px;background:#fff;border:1px solid #dfe5ec;border-radius:9px;box-shadow:0 22px 60px rgba(31,45,61,.22)}
     .staff-form-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;color:#253247}.staff-form-head button{width:32px;height:32px;border:0;border-radius:5px;background:#edf1f5;color:#526176;cursor:pointer}
+    #newStaffForm,#staffEditForm{display:grid!important;grid-template-columns:1fr!important;gap:13px!important}#newStaffForm .filter-group,#staffEditForm .filter-group{width:100%!important;min-width:0!important}#newStaffForm input,#newStaffForm select,#staffEditForm input,#staffEditForm select{width:100%!important}
     #staffEditor input::placeholder{color:#9ca3af;opacity:1}
+    .language-picker{height:38px;display:flex;align-items:center;gap:7px;padding:0 11px;border:1px solid #e1e7ee;border-radius:18px;background:#fff;color:#607086}.language-picker i{color:#5b7fba}.language-picker select{border:0;outline:0;background:transparent;color:#607086;font:inherit;cursor:pointer;max-width:112px}.goog-te-banner-frame,.skiptranslate>iframe{display:none!important}body{top:0!important}#google_translate_element{display:none!important}
     /* Softer low-contrast admin surface */
     html,body,body::before{background:#f6f8fb!important;color:#435164!important}
     nav{background:#fcfdff!important;border-bottom-color:#edf1f5!important;box-shadow:0 1px 4px rgba(51,65,85,.035)!important}
@@ -2018,6 +2020,8 @@
     <div class="brand-title"><img class="brand-logo" src="assets/168-logo.png" alt="A168"><strong>A168</strong><span>数据中心</span></div>
     <div class="nav-account">
       <div class="amt-clock" id="clock">00:00:00 AMT</div>
+      <label class="language-picker" title="选择语言"><i class="fas fa-globe"></i><select id="languageSelect" onchange="changeDashboardLanguage(this.value)" aria-label="选择语言"><option value="zh-CN">中文</option><option value="id">Indonesia</option><option value="en">English</option></select></label>
+      <div id="google_translate_element" aria-hidden="true"></div>
       <div class="profile-wrap" id="profileWrap">
         <button class="profile-trigger" id="profileTrigger" type="button" onclick="toggleProfileMenu(event)">
           <span class="profile-avatar"><img class="profile-logo" src="assets/168-logo.png" alt="168"></span>
@@ -7017,16 +7021,32 @@
 
     document.addEventListener('click',()=>{document.getElementById('financeDatePopover')?.classList.remove('show');document.querySelectorAll('.soft-multi.open').forEach(node=>node.classList.remove('open'))});
 
+    function googleTranslateElementInit(){
+      new google.translate.TranslateElement({pageLanguage:'zh-CN',includedLanguages:'zh-CN,id,en',autoDisplay:false},'google_translate_element');
+    }
+    function changeDashboardLanguage(language){
+      localStorage.setItem('dashboardLanguage',language);
+      const paths=['/','/hgx-dashboard-supabase/'];
+      if(language==='zh-CN')paths.forEach(path=>{document.cookie=`googtrans=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=${path}`;});
+      else paths.forEach(path=>{document.cookie=`googtrans=/zh-CN/${language};path=${path};max-age=31536000`;});
+      location.reload();
+    }
+    const savedDashboardLanguage=localStorage.getItem('dashboardLanguage')||'zh-CN';
+    const languageSelect=document.getElementById('languageSelect');if(languageSelect)languageSelect.value=savedDashboardLanguage;
+
     document.addEventListener('keydown', e => {
       if (e.key === "Escape") {
         closeModal();
         closeStatModal();
         closeKpiDetailModal();
         closeChannelPlatformModal();
+        closeStaffFormModal('newStaffModal');
+        closeStaffFormModal('staffEditModal');
       }
     });
 
     initializeAuthentication();
   </script>
+  <script src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit" async></script>
 </body>
 </html>
