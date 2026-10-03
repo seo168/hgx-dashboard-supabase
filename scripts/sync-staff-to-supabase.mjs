@@ -26,7 +26,15 @@ if(!sheetResponse.ok)throw new Error(`Google Sheet returned HTTP ${sheetResponse
 const csv=await sheetResponse.text();
 if(/^\s*</.test(csv))throw new Error('Google Sheet returned HTML instead of CSV');
 
-const rows=parseCsv(csv).slice(1).filter(row=>String(row[2]||'').trim());
+const parsedRows=parseCsv(csv);
+const sheetHeaders=parsedRows[0]||[];
+const remarkIndex=sheetHeaders.findIndex(cell=>String(cell||'').trim()==='备注');
+const isResignedRemark=value=>/(?:resign(?:ed)?|辞职|离职|已离职)/i.test(String(value||'').trim());
+const rows=parsedRows.slice(1).filter(row=>{
+  const employeeId=String(row[2]||'').trim();
+  const remark=remarkIndex>=0?row[remarkIndex]:row[14];
+  return employeeId&&!isResignedRemark(remark);
+});
 const monthNames={january:0,february:1,march:2,april:3,may:4,june:5,july:6,august:7,september:8,october:9,november:10,december:11};
 function normalizeJoinDate(value){
   const raw=String(value||'').trim();if(!raw)return null;

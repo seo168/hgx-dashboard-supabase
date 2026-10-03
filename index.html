@@ -2166,11 +2166,6 @@
       <div class="overview-panel">
         <div class="overview-head">
           <div class="section-title"><i class="fas fa-layer-group"></i> 汇总概览</div>
-          <div class="onsite-role-wrap" id="onsiteRoleWrap">
-            <div class="onsite-role-title">现场职业分类</div>
-            <button class="onsite-role-btn active" id="roleBtn-xianchang" onclick="setOnsiteRole('现场')"><span>现场</span><span class="onsite-role-count" id="countRoleXianChang">0</span></button>
-            <button class="onsite-role-btn" id="roleBtn-other" onclick="setOnsiteRole('其他')"><span>其他</span><span class="onsite-role-count" id="countRoleOther">0</span></button>
-          </div>
           <div class="join-tenure-summary" aria-label="入职时长分类">
             <button type="button" class="join-tenure-chip" data-join-bucket="all" onclick="setJoinTenureFilter('')"><span>总汇</span><b id="joinSummaryAll">0</b></button>
             <button type="button" class="join-tenure-chip" data-join-bucket="1" onclick="setJoinTenureFilter('1')"><span>入职 1 个月</span><b id="joinSummary1">0</b></button>
@@ -2813,7 +2808,6 @@
     let mainPage = 1;
     const mainRows = 10;
     let activeWorkMode = '全部';
-    let activeOnsiteRole = '现场';
     let activeShiftView = 'card';
     let activePayoutStatView = 'overview';
     let activePayoutTimeMetric = 0;
@@ -2839,6 +2833,7 @@
 
     const cleanID = s => String(s || "").replace(/\D/g, '');
     const clean = s => String(s || "").trim().toUpperCase();
+    const isResignedStaffRemark = value => /(?:resign(?:ed)?|辞职|离职|已离职)/i.test(String(value || '').trim());
     const esc = s => String(s || "")
       .replace(/&/g, "&amp;")
       .replace(/</g, "&lt;")
@@ -2919,22 +2914,6 @@
       if (activeBtn) activeBtn.classList.add('active');
     }
 
-    function updateOnsiteRoleButtons() {
-      document.querySelectorAll('.onsite-role-btn').forEach(btn => btn.classList.remove('active'));
-
-      if (activeOnsiteRole === '现场') {
-        document.getElementById('roleBtn-xianchang')?.classList.add('active');
-      } else {
-        document.getElementById('roleBtn-other')?.classList.add('active');
-      }
-    }
-
-    function toggleOnsiteRoleWrap() {
-      const wrap = document.getElementById('onsiteRoleWrap');
-      if (!wrap) return;
-      wrap.style.display = activeWorkMode === '现场' ? 'flex' : 'none';
-    }
-
     function updateWorkModeCounts() {
       const counts = {'全部':0,'现场':0,'现场居家':0,'居家':0};
 
@@ -2948,38 +2927,12 @@
       Object.entries(countElements).forEach(([mode,id])=>{const el=document.getElementById(id);if(el)el.innerText=counts[mode]||0;});
     }
 
-    function updateOnsiteRoleCounts() {
-      let onsiteCount = 0;
-      let otherCount = 0;
-
-      dbMaster.forEach(r => {
-        if (detectWorkMode(r) !== '现场') return;
-        const role = detectOnsiteRole(r);
-        if (role === '') onsiteCount++;
-        else otherCount++;
-      });
-
-      document.getElementById('countRoleXianChang').innerText = onsiteCount;
-      document.getElementById('countRoleOther').innerText = otherCount;
-    }
-
     function setWorkMode(mode) {
       activeWorkMode = mode;
-      if (mode !== '现场') activeOnsiteRole = '现场';
       mainPage = 1;
 
       toggleJoinTenureVisibility();
       updateWorkModeButtons();
-      updateOnsiteRoleButtons();
-      toggleOnsiteRoleWrap();
-      runFilters();
-    }
-
-    function setOnsiteRole(role) {
-      activeOnsiteRole = role;
-      mainPage = 1;
-
-      updateOnsiteRoleButtons();
       runFilters();
     }
 
@@ -4312,15 +4265,12 @@
           fetch(`${URL_PERF}&t=${Date.now()}`)
         ]);
 
-        dbMaster = smartParse(await resM.text()).slice(1).filter(r => r[2]);
+        dbMaster = smartParse(await resM.text()).slice(1).filter(r => r[2] && !isResignedStaffRemark(r[14]));
         dbPerf = smartParse(await resP.text()).slice(1);
 
         initFilters();
         updateWorkModeCounts();
-        updateOnsiteRoleCounts();
         updateWorkModeButtons();
-        updateOnsiteRoleButtons();
-        toggleOnsiteRoleWrap();
         runFilters();
         renderHomeDashboard();
         if (!financeLoaded && !financeLoading) loadFinanceData(false);
@@ -4441,7 +4391,7 @@
 
     function updateStaffPageSummary() {
       const dataLabel=activeStaffData===1?'员工信息':`数据${activeStaffData}`;
-      const detail=activeWorkMode==='现场'?(activeOnsiteRole==='其他'?'行政 / 保姆 / 厨师':'现场员工'):activeWorkMode==='居家'?'居家员工':activeWorkMode==='现场居家'?'现场转居家员工':'全部工作模式';
+      const detail=activeWorkMode==='现场'?'现场员工':activeWorkMode==='居家'?'居家员工':activeWorkMode==='现场居家'?'现场转居家员工':'全部工作模式';
       const title=document.getElementById('staffPageTitle');
       const description=document.getElementById('staffPageDescription');
       if(title)title.textContent=`员工管理 · ${dataLabel}`;
@@ -4461,15 +4411,8 @@
 
       filtered = dbMaster.filter(r => {
         const mode = detectWorkMode(r);
-        const role = detectOnsiteRole(r);
 
         const modeOk = activeWorkMode === '全部' ? true : mode === activeWorkMode;
-
-        const onsiteRoleOk = activeWorkMode !== '现场'
-          ? true
-          : activeOnsiteRole === '现场'
-            ? role === ''
-            : ['行政','保姆','厨师'].includes(role);
 
         const formOk =
           (!sn || String(r[3]||'').toLowerCase().includes(sn)) &&
@@ -4482,7 +4425,7 @@
           (!sp || r[0] === sp) &&
           (!sj || matchesStaffJoinTenure(r[6],sj));
 
-        return modeOk && onsiteRoleOk && formOk;
+        return modeOk && formOk;
       });
 
       updateStaffPageSummary();
@@ -4508,7 +4451,7 @@
         let cls = 'tag-fn';
         let groupText = group || '-';
 
-        if (activeWorkMode === '现场' && activeOnsiteRole === '其他' && role) {
+        if (activeWorkMode === '现场' && role) {
           groupText = role;
           cls = role === '行政' ? 'tag-wd' : role === '保姆' ? 'tag-cs' : 'tag-fn';
         } else {
@@ -4545,28 +4488,27 @@
 
     function updateDeptTitles() {
       const cards = document.querySelectorAll('.dept-card .dept-title');
-      const isOther = activeWorkMode === '现场' && activeOnsiteRole === '其他';
-
-      if (cards[0]) cards[0].innerText = isOther ? '行政' : '出款/风控';
-      if (cards[1]) cards[1].innerText = isOther ? '保姆' : '客服';
-      if (cards[2]) cards[2].innerText = isOther ? '厨师' : '财务';
+      if (cards[0]) cards[0].innerText = '出款/风控';
+      if (cards[1]) cards[1].innerText = '客服';
+      if (cards[2]) cards[2].innerText = '财务';
     }
 
     function syncCharts() {
       updateDeptTitles();
 
       let ds = { cWD:{}, cCS:{}, cFN:{}, cMT:{}, cGEO:{}, cSH:{} };
-      const isOther = activeWorkMode === '现场' && activeOnsiteRole === '其他';
 
       filtered.forEach(r => {
         const group = r[1] || "";
         const team = r[9] || "";
         const role = detectOnsiteRole(r);
 
-        if (isOther) {
-          if (role === '行政') ds.cWD['行政'] = (ds.cWD['行政'] || 0) + 1;
-          if (role === '保姆') ds.cCS['保姆'] = (ds.cCS['保姆'] || 0) + 1;
-          if (role === '厨师') ds.cFN['厨师'] = (ds.cFN['厨师'] || 0) + 1;
+        if (activeWorkMode === '现场' && role === '行政') {
+          ds.cWD['行政'] = (ds.cWD['行政'] || 0) + 1;
+        } else if (activeWorkMode === '现场' && role === '保姆') {
+          ds.cCS['保姆'] = (ds.cCS['保姆'] || 0) + 1;
+        } else if (activeWorkMode === '现场' && role === '厨师') {
+          ds.cFN['厨师'] = (ds.cFN['厨师'] || 0) + 1;
         } else {
           if (group.includes('出款') || team.includes('出款') || group.includes('风控')) {
             const key = group || team || '出款/风控';
@@ -4770,9 +4712,7 @@
 
       const titleText = activeWorkMode === '全部'
         ? '全部排班'
-        : activeWorkMode === '现场' && activeOnsiteRole === '其他'
-          ? '现场其他排班'
-          : `${activeWorkMode}排班`;
+        : `${activeWorkMode}排班`;
 
       title.innerHTML = `<i class="fas fa-table-list"></i> ${titleText}`;
 
@@ -4825,9 +4765,7 @@
 
       const modeName = activeWorkMode === '全部'
         ? '全部'
-        : activeWorkMode === '现场' && activeOnsiteRole === '其他'
-          ? '现场其他'
-          : activeWorkMode;
+        : activeWorkMode;
 
       const blob = new Blob(["\uFEFF" + csv], { type:"text/csv;charset=utf-8;" });
       const url = URL.createObjectURL(blob);
@@ -6224,20 +6162,6 @@
     }
 
     function getStatModalSub(chartId) {
-      const isOther = activeWorkMode === '现场' && activeOnsiteRole === '其他';
-
-      if (isOther) {
-        const mapOther = {
-          cWD:'行政成员明细',
-          cCS:'保姆成员明细',
-          cFN:'厨师成员明细',
-          cMT:'维护成员明细',
-          cGEO:'国家成员明细',
-          cSH:'班次成员明细'
-        };
-        return mapOther[chartId] || '成员明细';
-      }
-
       const map = {
         cWD:'出款/风控成员明细',
         cCS:'客服成员明细',
@@ -6251,26 +6175,14 @@
     }
 
     function getStatMembers(chartId, label) {
-      const isOther = activeWorkMode === '现场' && activeOnsiteRole === '其他';
-
       return filtered.filter(r => {
         const group = r[1] || '';
         const team = r[9] || '';
         const role = detectOnsiteRole(r);
 
-        if (isOther) {
-          if (chartId === 'cWD') return role === '行政';
-          if (chartId === 'cCS') return role === '保姆';
-          if (chartId === 'cFN') return role === '厨师';
-          if (chartId === 'cMT') return false;
-          if (chartId === 'cGEO') return (r[8] || '') === label;
-          if (chartId === 'cSH') return (r[5] || '') === label;
-          return false;
-        }
-
-        if (chartId === 'cWD') return (group.includes('出款') || team.includes('出款') || group.includes('风控')) && (group === label || team === label);
-        if (chartId === 'cCS') return (group.includes('客服') || team.includes('客服')) && (group === label || team === label);
-        if (chartId === 'cFN') return (group.includes('财务') || team.includes('财务')) && (group === label || team === label);
+        if (chartId === 'cWD') return label === '行政' ? role === '行政' : (group.includes('出款') || team.includes('出款') || group.includes('风控')) && (group === label || team === label);
+        if (chartId === 'cCS') return label === '保姆' ? role === '保姆' : (group.includes('客服') || team.includes('客服')) && (group === label || team === label);
+        if (chartId === 'cFN') return label === '厨师' ? role === '厨师' : (group.includes('财务') || team.includes('财务')) && (group === label || team === label);
         if (chartId === 'cMT') return (group.includes('维护') || team.includes('维护')) && (group === label || team === label);
         if (chartId === 'cGEO') return (r[8] || '') === label;
         if (chartId === 'cSH') return (r[5] || '') === label;
@@ -6329,7 +6241,7 @@
         if(!response.ok)throw new Error(`Google Sheet HTTP ${response.status}`);
         const text=await response.text();
         if(/^\s*</.test(text))throw new Error('Google Sheet 返回了 HTML，而不是 CSV');
-        return smartParse(text).slice(1).filter(row=>row[2]);
+        return smartParse(text).slice(1).filter(row=>row[2] && !isResignedStaffRemark(row[14]));
       }
     }
 
@@ -6346,10 +6258,7 @@
       dbPerf = [];
       initFilters();
       updateWorkModeCounts();
-      updateOnsiteRoleCounts();
       updateWorkModeButtons();
-      updateOnsiteRoleButtons();
-      toggleOnsiteRoleWrap();
       runFilters();
       renderHomeDashboard();
     }
