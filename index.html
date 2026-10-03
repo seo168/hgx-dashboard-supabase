@@ -4495,10 +4495,9 @@
 
     function updateDeptTitles() {
       const cards = document.querySelectorAll('.dept-card .dept-title');
-      const onsite = activeWorkMode === '现场';
-      if (cards[0]) cards[0].innerText = onsite ? '组长与培训' : '出款/风控';
-      if (cards[1]) cards[1].innerText = onsite ? '财务 / 风控 / 客服 / 出款' : '客服';
-      if (cards[2]) cards[2].innerText = onsite ? '行政 / 保姆 / 厨师' : '财务';
+      if (cards[0]) cards[0].innerText = '出款/风控';
+      if (cards[1]) cards[1].innerText = '客服';
+      if (cards[2]) cards[2].innerText = '财务';
     }
 
     function syncCharts() {
