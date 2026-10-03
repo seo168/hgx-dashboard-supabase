@@ -49,3 +49,4 @@ drop policy if exists "Authenticated staff media update" on storage.objects;
 create policy "Authenticated staff media update" on storage.objects for update to authenticated using(bucket_id='staff-media') with check(bucket_id='staff-media');
 drop policy if exists "Authenticated staff media delete" on storage.objects;
 create policy "Authenticated staff media delete" on storage.objects for delete to authenticated using(bucket_id='staff-media');
+notify pgrst, 'reload schema';

@@ -18,6 +18,7 @@ jobs:
           const r=await fetch('https://api.supabase.com/v1/projects/qsqnxmotgocesnmodmfz/database/query',{method:'POST',headers:{Authorization:`Bearer ${process.env.TOKEN}`,'Content-Type':'application/json'},body:JSON.stringify({query,read_only:false})});
           if(!r.ok)throw new Error(`${r.status} ${await r.text()}`);
           NODE
+          sleep 3
       - name: Import workbook snapshot
         env:
           STAFF_IMPORT_DATA_B64: ${{ secrets.STAFF_IMPORT_DATA_B64 }}
