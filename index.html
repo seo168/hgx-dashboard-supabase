@@ -261,7 +261,7 @@
       z-index:1;
     }
     .section-title i{color:#93c5fd}
-    .overview-head{display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;margin-bottom:1.05rem;position:relative;z-index:1}
+    .overview-head{display:flex;align-items:center;justify-content:flex-start;gap:1rem;flex-wrap:wrap;margin-bottom:1.05rem;position:relative;z-index:1}
     .overview-head .section-title{margin-bottom:0}
     .join-tenure-summary{display:flex;align-items:center;gap:.55rem;flex-wrap:wrap}
     .join-tenure-chip{display:flex;align-items:center;gap:.5rem;padding:.48rem .72rem;border-radius:12px;border:1px solid rgba(147,197,253,.22);background:rgba(15,23,42,.48);color:#dbeafe;cursor:pointer;transition:.2s ease}
@@ -2130,8 +2130,10 @@
           <div class="section-title"><i class="fas fa-layer-group"></i> 汇总概览</div>
           <div class="join-tenure-summary" aria-label="入职时长分类">
             <button type="button" class="join-tenure-chip" data-join-bucket="1" onclick="setJoinTenureFilter('1')"><span>入职 1 个月</span><b id="joinSummary1">0</b></button>
-            <button type="button" class="join-tenure-chip" data-join-bucket="2" onclick="setJoinTenureFilter('2')"><span>入职 2 个月</span><b id="joinSummary2">0</b></button>
-            <button type="button" class="join-tenure-chip" data-join-bucket="3" onclick="setJoinTenureFilter('3')"><span>入职 3 个月以上</span><b id="joinSummary3">0</b></button>
+            <button type="button" class="join-tenure-chip" data-join-bucket="2plus" onclick="setJoinTenureFilter('2plus')"><span>入职 2 个月以上</span><b id="joinSummary2plus">0</b></button>
+            <button type="button" class="join-tenure-chip" data-join-bucket="3plus" onclick="setJoinTenureFilter('3plus')"><span>入职 3 个月以上</span><b id="joinSummary3plus">0</b></button>
+            <button type="button" class="join-tenure-chip" data-join-bucket="6plus" onclick="setJoinTenureFilter('6plus')"><span>入职 6 个月以上</span><b id="joinSummary6plus">0</b></button>
+            <button type="button" class="join-tenure-chip" data-join-bucket="12plus" onclick="setJoinTenureFilter('12plus')"><span>入职 1 年以上</span><b id="joinSummary12plus">0</b></button>
           </div>
         </div>
         <div class="dept-scroll">
@@ -2180,7 +2182,7 @@
             <div class="filter-group"><label>组别</label><select id="fGroup"></select></div>
             <div class="filter-group"><label>国家</label><select id="fCountry"></select></div>
             <div class="filter-group"><label>平台</label><select id="fPlatform"></select></div>
-            <div class="filter-group"><label>入职时长</label><select id="fJoinTenure"><option value="">全部</option><option value="1">新入职 1 个月</option><option value="2">新入职 2 个月</option><option value="3">新入职 3 个月</option></select></div>
+            <div class="filter-group"><label>入职时长</label><select id="fJoinTenure"><option value="">全部</option></select></div>
           </div>
         </div>
 
@@ -4294,7 +4296,7 @@
       fill('fShift', getU(5));
       fill('fCountry', getU(8));
       const joinTenure=document.getElementById('fJoinTenure');
-      if(joinTenure){const selected=joinTenure.value,counts={1:0,2:0,3:0};dbMaster.forEach(row=>{const bucket=getStaffJoinMonthBucket(row[6]);if(bucket)counts[bucket]++});joinTenure.innerHTML=`<option value="">全部</option><option value="1">入职 1 个月 (${counts[1]} 人)</option><option value="2">入职 2 个月 (${counts[2]} 人)</option><option value="3">入职 3 个月以上 (${counts[3]} 人)</option>`;joinTenure.value=selected;}
+      if(joinTenure){const selected=joinTenure.value;const options=[['1','入职 1 个月'],['2plus','入职 2 个月以上'],['3plus','入职 3 个月以上'],['6plus','入职 6 个月以上'],['12plus','入职 1 年以上']];joinTenure.innerHTML=`<option value="">全部</option>`+options.map(([key,label])=>`<option value="${key}">${label} (${dbMaster.filter(row=>matchesStaffJoinTenure(row[6],key)).length} 人)</option>`).join('');joinTenure.value=options.some(([key])=>key===selected)?selected:'';}
       updateJoinTenureSummary();
 
       ['searchName','fShift','fTeam','fGroup','fCountry','fPlatform','fJoinTenure'].forEach(id => {
@@ -4307,7 +4309,7 @@
       });
     }
 
-    function getStaffJoinMonthBucket(value) {
+    function getStaffJoinDays(value) {
       const raw=String(value||'').trim();if(!raw||raw==='-')return '';
       const today=new Date();today.setHours(0,0,0,0);
       let joined=null;
@@ -4318,17 +4320,27 @@
         const monthDay=raw.toLowerCase().match(/([a-z]+)\s+(\d{1,2})/);
         if(monthDay&&monthNames[monthDay[1]]!==undefined){joined=new Date(today.getFullYear(),monthNames[monthDay[1]],Number(monthDay[2]));if(joined>today)joined.setFullYear(joined.getFullYear()-1);}
       }
-      if(!joined||Number.isNaN(joined.getTime())||joined>today)return '';
-      const days=Math.floor((today-joined)/86400000);
-      if(days<=31)return '1';if(days<=62)return '2';return '3';
+      if(!joined||Number.isNaN(joined.getTime())||joined>today)return null;
+      return Math.floor((today-joined)/86400000);
+    }
+
+    function matchesStaffJoinTenure(value,bucket) {
+      const days=getStaffJoinDays(value);
+      if(days===null||days==='')return false;
+      if(bucket==='1')return days<=31;
+      if(bucket==='2plus')return days>62;
+      if(bucket==='3plus')return days>93;
+      if(bucket==='6plus')return days>183;
+      if(bucket==='12plus')return days>365;
+      return true;
     }
 
     function updateJoinTenureSummary() {
-      const counts={1:0,2:0,3:0};
-      dbMaster.forEach(row=>{const bucket=getStaffJoinMonthBucket(row[6]);if(bucket)counts[bucket]++});
-      ['1','2','3'].forEach(bucket=>{
+      const buckets=['1','2plus','3plus','6plus','12plus'];
+      buckets.forEach(bucket=>{
+        const count=dbMaster.filter(row=>matchesStaffJoinTenure(row[6],bucket)).length;
         const value=document.getElementById(`joinSummary${bucket}`);
-        if(value)value.textContent=counts[bucket].toLocaleString('en-US');
+        if(value)value.textContent=count.toLocaleString('en-US');
         document.querySelector(`[data-join-bucket="${bucket}"]`)?.classList.toggle('active',document.getElementById('fJoinTenure')?.value===bucket);
       });
     }
@@ -4369,7 +4381,7 @@
           (!st || r[9] === st) &&
           (!sc || r[8] === sc) &&
           (!sp || r[0] === sp) &&
-          (!sj || getStaffJoinMonthBucket(r[6]) === sj);
+          (!sj || matchesStaffJoinTenure(r[6],sj));
 
         return modeOk && onsiteRoleOk && formOk;
       });
