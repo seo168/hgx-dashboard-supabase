@@ -1942,6 +1942,11 @@
     #overview .count-badge{background:#e8f0fa!important;color:#111827!important;border-color:#d5e0ee!important}
     #overview .dept-scroll::-webkit-scrollbar-thumb{background:#d6dee8!important}
     html body #overview *:not(i):not(.fa):not(.fas):not(.far):not(.fab){font-weight:700!important}
+    html body #overview *:not(i):not(.fa):not(.fas):not(.far):not(.fab){color:#111827!important}
+    body.staff-page-active .modal-content *,body.staff-page-active .stat-modal-content *{color:#111827!important}
+    body.staff-page-active .modal-content,body.staff-page-active .stat-modal-content{background:#fff!important;color:#111827!important;border-color:#dfe5ec!important}
+    body.staff-page-active .stat-modal-top{background:#f7f9fc!important;color:#111827!important;border-color:#e5eaf0!important}
+    body.staff-page-active .stat-modal-close{background:#edf1f5!important;color:#111827!important}
   </style>
 </head>
 
@@ -2182,7 +2187,7 @@
             <div class="filter-group"><label>组别</label><select id="fGroup"></select></div>
             <div class="filter-group"><label>国家</label><select id="fCountry"></select></div>
             <div class="filter-group"><label>平台</label><select id="fPlatform"></select></div>
-            <div class="filter-group"><label>入职时长</label><select id="fJoinTenure"><option value="">全部</option></select></div>
+            <div class="filter-group" id="joinTenureFilterGroup"><label>入职时长</label><select id="fJoinTenure"><option value="">全部</option></select></div>
           </div>
         </div>
 
@@ -2922,6 +2927,7 @@
       if (mode !== '现场') activeOnsiteRole = '现场';
       mainPage = 1;
 
+      toggleJoinTenureVisibility();
       updateWorkModeButtons();
       updateOnsiteRoleButtons();
       toggleOnsiteRoleWrap();
@@ -4201,6 +4207,7 @@
 
       const page = document.getElementById(pageId);
       const btn = document.getElementById('btn-' + pageId);
+      document.body.classList.toggle('staff-page-active',pageId==='overview');
 
       if (page) page.classList.add('active');
       if (btn) btn.classList.add('active');
@@ -4296,7 +4303,7 @@
       fill('fShift', getU(5));
       fill('fCountry', getU(8));
       const joinTenure=document.getElementById('fJoinTenure');
-      if(joinTenure){const selected=joinTenure.value;const options=[['1','入职 1 个月'],['2plus','入职 2 个月以上'],['3plus','入职 3 个月以上'],['6plus','入职 6 个月以上'],['12plus','入职 1 年以上']];joinTenure.innerHTML=`<option value="">全部</option>`+options.map(([key,label])=>`<option value="${key}">${label} (${dbMaster.filter(row=>matchesStaffJoinTenure(row[6],key)).length} 人)</option>`).join('');joinTenure.value=options.some(([key])=>key===selected)?selected:'';}
+      if(joinTenure){const selected=joinTenure.value;const homeStaff=dbMaster.filter(row=>detectWorkMode(row)==='居家');const options=[['1','入职 1 个月'],['2plus','入职 2 个月以上'],['3plus','入职 3 个月以上'],['6plus','入职 6 个月以上'],['12plus','入职 1 年以上']];joinTenure.innerHTML=`<option value="">全部</option>`+options.map(([key,label])=>`<option value="${key}">${label} (${homeStaff.filter(row=>matchesStaffJoinTenure(row[6],key)).length} 人)</option>`).join('');joinTenure.value=options.some(([key])=>key===selected)?selected:'';}
       updateJoinTenureSummary();
 
       ['searchName','fShift','fTeam','fGroup','fCountry','fPlatform','fJoinTenure'].forEach(id => {
@@ -4309,7 +4316,7 @@
       });
     }
 
-    function getStaffJoinDays(value) {
+    function getStaffJoinDate(value) {
       const raw=String(value||'').trim();if(!raw||raw==='-')return '';
       const today=new Date();today.setHours(0,0,0,0);
       let joined=null;
@@ -4321,24 +4328,36 @@
         if(monthDay&&monthNames[monthDay[1]]!==undefined){joined=new Date(today.getFullYear(),monthNames[monthDay[1]],Number(monthDay[2]));if(joined>today)joined.setFullYear(joined.getFullYear()-1);}
       }
       if(!joined||Number.isNaN(joined.getTime())||joined>today)return null;
-      return Math.floor((today-joined)/86400000);
+      joined.setHours(0,0,0,0);
+      return joined;
     }
 
     function matchesStaffJoinTenure(value,bucket) {
-      const days=getStaffJoinDays(value);
-      if(days===null||days==='')return false;
-      if(bucket==='1')return days<=31;
-      if(bucket==='2plus')return days>62;
-      if(bucket==='3plus')return days>93;
-      if(bucket==='6plus')return days>183;
-      if(bucket==='12plus')return days>365;
+      const joined=getStaffJoinDate(value);
+      if(!joined)return false;
+      const today=new Date();today.setHours(0,0,0,0);
+      const monthsAgo=months=>{const cutoff=new Date(today);cutoff.setMonth(cutoff.getMonth()-months);return cutoff;};
+      if(bucket==='1')return joined>=monthsAgo(1);
+      if(bucket==='2plus')return joined<monthsAgo(2);
+      if(bucket==='3plus')return joined<monthsAgo(3);
+      if(bucket==='6plus')return joined<monthsAgo(6);
+      if(bucket==='12plus'){const cutoff=new Date(today);cutoff.setFullYear(cutoff.getFullYear()-1);return joined<cutoff;}
       return true;
+    }
+
+    function toggleJoinTenureVisibility() {
+      const visible=activeWorkMode==='居家';
+      const summary=document.querySelector('.join-tenure-summary');
+      const filter=document.getElementById('joinTenureFilterGroup');
+      if(summary)summary.style.display=visible?'flex':'none';
+      if(filter)filter.style.display=visible?'flex':'none';
+      if(!visible){const select=document.getElementById('fJoinTenure');if(select)select.value='';}
     }
 
     function updateJoinTenureSummary() {
       const buckets=['1','2plus','3plus','6plus','12plus'];
       buckets.forEach(bucket=>{
-        const count=dbMaster.filter(row=>matchesStaffJoinTenure(row[6],bucket)).length;
+        const count=dbMaster.filter(row=>detectWorkMode(row)==='居家'&&matchesStaffJoinTenure(row[6],bucket)).length;
         const value=document.getElementById(`joinSummary${bucket}`);
         if(value)value.textContent=count.toLocaleString('en-US');
         document.querySelector(`[data-join-bucket="${bucket}"]`)?.classList.toggle('active',document.getElementById('fJoinTenure')?.value===bucket);
