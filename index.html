@@ -1987,6 +1987,14 @@
     @media(max-width:1400px){#overview .filter-grid{grid-template-columns:repeat(4,minmax(0,1fr))!important}}
     @media(max-width:1050px){#overview .filter-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
     @media(max-width:900px){#overview .filter-grid{grid-template-columns:1fr!important}#overview .filter-group{grid-template-columns:92px minmax(0,1fr)}}
+    /* Staff popup layout must stay independent from the overview filter grid. */
+    html body #overview .staff-form-card{width:min(570px,calc(100vw - 32px))!important;max-width:570px!important;overflow-x:hidden!important;padding:20px 22px 16px!important;border-radius:12px!important}
+    html body #overview #newStaffForm,html body #overview #staffEditForm{display:flex!important;flex-direction:column!important;gap:11px!important;width:100%!important}
+    html body #overview #newStaffForm>.filter-group,html body #overview #staffEditForm>.filter-group{display:grid!important;grid-template-columns:112px minmax(0,1fr)!important;align-items:center!important;gap:12px!important;width:100%!important;min-width:0!important;margin:0!important}
+    html body #overview #newStaffForm>.filter-group>label,html body #overview #staffEditForm>.filter-group>label{width:auto!important;margin:0!important;text-align:right!important;white-space:normal!important;font-size:.72rem!important;color:#687789!important}
+    html body #overview #newStaffForm>.filter-group>input,html body #overview #newStaffForm>.filter-group>select,html body #overview #staffEditForm>.filter-group>input,html body #overview #staffEditForm>.filter-group>select{display:block!important;width:100%!important;min-width:0!important;max-width:none!important;height:36px!important;box-sizing:border-box!important;background:#fafbfd!important}
+    html body #overview #newStaffForm>.filter-group:last-child button,html body #overview #staffEditForm>.filter-group:last-child button{grid-column:2!important;justify-self:end!important;width:auto!important;min-width:92px!important}
+    @media(max-width:620px){html body #overview #newStaffForm>.filter-group,html body #overview #staffEditForm>.filter-group{grid-template-columns:1fr!important;gap:6px!important}html body #overview #newStaffForm>.filter-group>label,html body #overview #staffEditForm>.filter-group>label{text-align:left!important}html body #overview #newStaffForm>.filter-group:last-child button,html body #overview #staffEditForm>.filter-group:last-child button{grid-column:1!important}}
   </style>
 </head>
 
