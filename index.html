@@ -2165,6 +2165,16 @@
       </div>
       <div id="staffEditor" class="overview-panel" style="display:none">
         <div class="overview-head"><div class="section-title"><i class="fas fa-pen-to-square"></i> 员工资料编辑中心</div></div>
+        <div class="filter-grid" style="margin-bottom:14px">
+          <div class="filter-group"><label>搜索 ID</label><input id="editorSearchId" oninput="renderStaffEditorTable()" placeholder="输入员工 ID"></div>
+          <div class="filter-group"><label>搜索姓名</label><input id="editorSearchName" oninput="renderStaffEditorTable()" placeholder="输入姓名"></div>
+          <div class="filter-group"><label>搜索入职日期</label><input id="editorSearchJoin" type="date" oninput="renderStaffEditorTable()"></div>
+          <div class="filter-group"><label>搜索银行账号</label><input id="editorSearchBank" oninput="renderStaffEditorTable()" placeholder="输入银行账号"></div>
+        </div>
+        <div class="table-container" style="margin-bottom:18px;max-height:430px;overflow:auto">
+          <div class="table-head-bar"><span><i class="fas fa-users"></i> 员工搜索结果</span><span id="staffEditorCount">0 条数据</span></div>
+          <table><thead><tr><th>ID</th><th>姓名</th><th>入职日期</th><th>银行账号</th><th>银行</th><th>状态</th><th>操作</th></tr></thead><tbody id="staffEditorBody"></tbody></table>
+        </div>
         <form class="filter-grid" id="staffEditForm" onsubmit="submitStaffEdit(event)">
           <div class="filter-group"><label>员工 ID</label><input id="editEmployeeId" list="staffIdOptions" required placeholder="输入员工 ID"><datalist id="staffIdOptions"></datalist></div>
           <div class="filter-group"><label>编辑项目</label><select id="editAction" onchange="syncStaffEditFields()"><option value="join_date">入职日期</option><option value="resign">离职登记</option><option value="mistake">失误登记</option><option value="deduct">扣款登记</option><option value="bank">银行信息</option><option value="employee_id">修改员工 ID</option><option value="employee_name">修改姓名</option><option value="exam">考试成绩</option><option value="offday">休假申请</option></select></div>
@@ -3841,6 +3851,7 @@
     const departmentLastData = { finance:1, payout:1, service:1, risk:1 };
     let activeStaffData = 1;
     let activeStaffSystem = '居家';
+    let dbEditorStaff = [];
 
     function updateStaffSystemTabs() {
       document.querySelectorAll('.staff-system-tab').forEach(btn=>btn.classList.toggle('active',btn.dataset.staffSystem===activeStaffSystem));
@@ -3878,18 +3889,31 @@
       else setWorkMode('全部');
     }
 
-    function populateStaffEditor(){const list=document.getElementById('staffIdOptions');if(list)list.innerHTML=dbMaster.map(r=>`<option value="${esc(r[2])}">${esc(r[3])}</option>`).join('');syncStaffEditFields();}
+    async function populateStaffEditor(){
+      const {data,error}=await supabaseClient.from('staff_master').select('employee_id,employee_name,join_date,bank_account,bank_name,bank_holder,status').order('employee_name',{ascending:true});
+      if(error){document.getElementById('staffEditMessage').textContent=`读取失败：${error.message}`;return;}
+      dbEditorStaff=data||[];
+      const list=document.getElementById('staffIdOptions');if(list)list.innerHTML=dbEditorStaff.map(r=>`<option value="${esc(r.employee_id)}">${esc(r.employee_name)}</option>`).join('');
+      renderStaffEditorTable();syncStaffEditFields();
+    }
+    function renderStaffEditorTable(){
+      const id=(document.getElementById('editorSearchId')?.value||'').trim().toLowerCase(),name=(document.getElementById('editorSearchName')?.value||'').trim().toLowerCase(),join=document.getElementById('editorSearchJoin')?.value||'',bank=(document.getElementById('editorSearchBank')?.value||'').trim().toLowerCase();
+      const rows=dbEditorStaff.filter(r=>(!id||String(r.employee_id||'').toLowerCase().includes(id))&&(!name||String(r.employee_name||'').toLowerCase().includes(name))&&(!join||r.join_date===join)&&(!bank||String(r.bank_account||'').toLowerCase().includes(bank)));
+      const count=document.getElementById('staffEditorCount');if(count)count.textContent=`${rows.length} 条数据`;
+      const body=document.getElementById('staffEditorBody');if(body)body.innerHTML=rows.map(r=>`<tr><td><span class="id-link">#${esc(r.employee_id)}</span></td><td>${esc(r.employee_name||'')}</td><td>${esc(r.join_date||'')}</td><td>${esc(r.bank_account||'')}</td><td>${esc(r.bank_name||'')}</td><td>${esc(r.status||'')}</td><td><button type="button" class="menu-btn" style="min-width:auto;padding:6px 12px" onclick="selectStaffForEdit('${esc(r.employee_id)}')"><i class="fas fa-pen"></i> 编辑</button></td></tr>`).join('');
+    }
+    function selectStaffForEdit(id){document.getElementById('editEmployeeId').value=id;document.getElementById('staffEditForm').scrollIntoView({behavior:'smooth',block:'center'});}
     function syncStaffEditFields(){const action=document.getElementById('editAction')?.value;const labels={join_date:'入职日期（YYYY-MM-DD）',resign:'离职原因',mistake:'失误内容',deduct:'扣款原因',bank:'银行｜账号｜户名',employee_id:'新员工 ID',employee_name:'新姓名',exam:'考试项目',offday:'休假原因'};const label=document.getElementById('editValueLabel');if(label)label.textContent=labels[action]||'新内容';}
     async function submitStaffEdit(event){
       event.preventDefault();const id=document.getElementById('editEmployeeId').value.trim(),action=document.getElementById('editAction').value,date=document.getElementById('editDate').value||null,value=document.getElementById('editValue').value.trim(),amountRaw=document.getElementById('editAmount').value,notes=document.getElementById('editNotes').value.trim(),file=document.getElementById('editMedia').files[0],message=document.getElementById('staffEditMessage'),button=document.getElementById('staffEditSubmit');
-      if(!dbMaster.some(r=>r[2]===id)){message.textContent='未找到员工 ID';return;}button.disabled=true;message.style.color='#526176';message.textContent='正在保存…';
+      if(!dbEditorStaff.some(r=>r.employee_id===id)){message.textContent='未找到员工 ID';return;}button.disabled=true;message.style.color='#526176';message.textContent='正在保存…';
       try{
         let eventId=null;
         if(['join_date','bank','employee_id','employee_name'].includes(action)){
           let changes={};if(action==='join_date')changes.join_date=value||date;if(action==='employee_id')changes.employee_id=value;if(action==='employee_name')changes.employee_name=value;if(action==='bank'){const parts=value.split('|').map(x=>x.trim());changes={bank_name:parts[0]||'',bank_account:parts[1]||'',bank_holder:parts[2]||''};}
           const {error}=await supabaseClient.from('staff_master').update(changes).eq('employee_id',id);if(error)throw error;
         }else{
-          const payload={employee_id:id,staff_name:dbMaster.find(r=>r[2]===id)?.[3]||'',event_type:action,event_date:date,details:value||null,notes:notes||null,status:'submitted'};if(action==='deduct')payload.amount=amountRaw===''?null:Number(amountRaw);if(action==='exam')payload.exam_score=amountRaw===''?null:Number(amountRaw);
+          const payload={employee_id:id,staff_name:dbEditorStaff.find(r=>r.employee_id===id)?.employee_name||'',event_type:action,event_date:date,details:value||null,notes:notes||null,status:'submitted'};if(action==='deduct')payload.amount=amountRaw===''?null:Number(amountRaw);if(action==='exam')payload.exam_score=amountRaw===''?null:Number(amountRaw);
           const {data,error}=await supabaseClient.from('staff_events').insert(payload).select('id').single();if(error)throw error;eventId=data.id;
           if(action==='resign'){const {error:updateError}=await supabaseClient.from('staff_master').update({status:'离职',resign_date:date}).eq('employee_id',id);if(updateError)throw updateError;}
         }
