@@ -2165,6 +2165,21 @@
       </div>
       <div id="staffEditor" class="overview-panel" style="display:none">
         <div class="overview-head"><div class="section-title"><i class="fas fa-pen-to-square"></i> 员工资料编辑中心</div></div>
+        <form class="filter-grid" id="newStaffForm" onsubmit="submitNewStaff(event)" style="margin-bottom:18px;padding-bottom:18px;border-bottom:1px solid #dfe5ec">
+          <div class="filter-group"><label>新员工 ID *</label><input id="newStaffId" required placeholder="输入唯一员工 ID"></div>
+          <div class="filter-group"><label>姓名 *</label><input id="newStaffName" required placeholder="输入员工姓名"></div>
+          <div class="filter-group"><label>入职日期 *</label><input id="newStaffJoin" type="date" required></div>
+          <div class="filter-group"><label>岗位 *</label><input id="newStaffRole" required placeholder="例如：客服"></div>
+          <div class="filter-group"><label>平台</label><input id="newStaffPlatform" placeholder="可选"></div>
+          <div class="filter-group"><label>员工国家 *</label><input id="newStaffCountry" required placeholder="例如：菲律宾"></div>
+          <div class="filter-group"><label>工作模式 *</label><select id="newStaffMode" required><option value="居家">居家</option><option value="现场居家">现场转居家</option><option value="现场">现场</option></select></div>
+          <div class="filter-group"><label>班次</label><input id="newStaffShift" placeholder="可选"></div>
+          <div class="filter-group"><label>银行｜账号｜户名</label><input id="newStaffBank" placeholder="可选，用 | 分隔"></div>
+          <div class="filter-group"><label>工作 Telegram</label><input id="newStaffTelegram" placeholder="可选"></div>
+          <div class="filter-group"><label>后台账号</label><input id="newStaffBackend" placeholder="可选"></div>
+          <div class="filter-group"><label>照片 / 视频</label><input id="newStaffMedia" type="file" accept="image/jpeg,image/png,image/webp,video/mp4,video/quicktime,video/webm"></div>
+          <div class="filter-group"><label>&nbsp;</label><button class="menu-btn active" id="newStaffSubmit" type="submit"><i class="fas fa-user-plus"></i> 登记新员工</button></div>
+        </form>
         <div class="filter-grid" style="margin-bottom:14px">
           <div class="filter-group"><label>搜索 ID</label><input id="editorSearchId" oninput="renderStaffEditorTable()" placeholder="输入员工 ID"></div>
           <div class="filter-group"><label>搜索姓名</label><input id="editorSearchName" oninput="renderStaffEditorTable()" placeholder="输入姓名"></div>
@@ -3895,6 +3910,17 @@
       dbEditorStaff=data||[];
       const list=document.getElementById('staffIdOptions');if(list)list.innerHTML=dbEditorStaff.map(r=>`<option value="${esc(r.employee_id)}">${esc(r.employee_name)}</option>`).join('');
       renderStaffEditorTable();syncStaffEditFields();
+    }
+    async function submitNewStaff(event){
+      event.preventDefault();const button=document.getElementById('newStaffSubmit'),message=document.getElementById('staffEditMessage');button.disabled=true;message.style.color='#526176';message.textContent='正在登记新员工…';
+      try{
+        const employeeId=document.getElementById('newStaffId').value.trim(),employeeName=document.getElementById('newStaffName').value.trim(),role=document.getElementById('newStaffRole').value.trim(),bankParts=document.getElementById('newStaffBank').value.split('|').map(x=>x.trim()),file=document.getElementById('newStaffMedia').files[0];
+        if(dbEditorStaff.some(r=>r.employee_id.toLowerCase()===employeeId.toLowerCase()))throw new Error('员工 ID 已存在');
+        const record={employee_id:employeeId,employee_name:employeeName,join_date:document.getElementById('newStaffJoin').value,role,group_name:role,department:role,platform:document.getElementById('newStaffPlatform').value.trim(),country:document.getElementById('newStaffCountry').value.trim(),work_mode:document.getElementById('newStaffMode').value,shift:document.getElementById('newStaffShift').value.trim(),bank_name:bankParts[0]||'',bank_account:bankParts[1]||'',bank_holder:bankParts[2]||'',work_telegram:document.getElementById('newStaffTelegram').value.trim(),backend_account:document.getElementById('newStaffBackend').value.trim(),account_name:document.getElementById('newStaffBackend').value.trim(),status:'在职',updated_at:new Date().toISOString()};
+        const {error}=await supabaseClient.from('staff_master').insert(record);if(error)throw error;
+        if(file){const path=`${employeeId}/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9._-]/g,'_')}`;const {error:uploadError}=await supabaseClient.storage.from('staff-media').upload(path,file);if(uploadError)throw uploadError;const {error:attachmentError}=await supabaseClient.from('staff_attachments').insert({employee_id:employeeId,file_path:path,media_type:file.type,original_name:file.name});if(attachmentError)throw attachmentError;}
+        event.target.reset();message.style.color='#059669';message.textContent='新员工登记成功';await loadData();openStaffData(5);
+      }catch(error){message.style.color='#dc2626';message.textContent=`登记失败：${error.message||error}`;}finally{button.disabled=false;}
     }
     function renderStaffEditorTable(){
       const id=(document.getElementById('editorSearchId')?.value||'').trim().toLowerCase(),name=(document.getElementById('editorSearchName')?.value||'').trim().toLowerCase(),join=document.getElementById('editorSearchJoin')?.value||'',bank=(document.getElementById('editorSearchBank')?.value||'').trim().toLowerCase();
