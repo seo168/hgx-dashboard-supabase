@@ -1920,6 +1920,9 @@
     #overview .work-mode-wrap,#overview .onsite-role-wrap,#overview .overview-panel,#overview .nav-menu{
       background:#fff!important;color:#435164!important;border:1px solid #e8edf3!important;border-radius:8px!important;box-shadow:0 1px 5px rgba(51,65,85,.035)!important;backdrop-filter:none!important;
     }
+    #overview .overview-head .onsite-role-wrap{width:auto!important;margin:0!important;padding:0!important;gap:6px!important;background:transparent!important;border:0!important;border-radius:0!important;box-shadow:none!important}
+    #overview .overview-head .onsite-role-title{padding:0 4px!important;font-size:.66rem!important}
+    #overview .overview-head .onsite-role-btn{min-width:82px!important;padding:8px 12px!important}
     #overview .work-mode-title,#overview .onsite-role-title,#overview .section-title{color:#526176!important}
     #overview .section-title i{color:#5b7fba!important}
     #overview .work-mode-btn,#overview .onsite-role-btn,#overview .menu-btn{
@@ -2153,26 +2156,21 @@
         <div id="overview" class="page-content">
       <div class="staff-system-tabs" id="staffSystemTabs">
         <button type="button" class="staff-system-tab active" data-staff-system="居家" onclick="setStaffSystemMode('居家')">居家</button>
-        <button type="button" class="staff-system-tab" data-staff-system="现场" onclick="setStaffSystemMode('现场')">现场</button>
         <button type="button" class="staff-system-tab" data-staff-system="现场居家" onclick="setStaffSystemMode('现场居家')">现场转居家</button>
+        <button type="button" class="staff-system-tab" data-staff-system="现场" onclick="setStaffSystemMode('现场')">现场</button>
         <button type="button" class="staff-system-tab" data-staff-system="全部" onclick="setStaffSystemMode('全部')">总汇</button>
       </div>
       <div class="staff-page-header">
         <div class="staff-page-heading"><i class="fas fa-users-gear"></i><div><h2 id="staffPageTitle">员工管理</h2><p id="staffPageDescription">Supabase 员工主数据 · 当前筛选结果</p></div></div>
       </div>
-      <div class="onsite-role-wrap" id="onsiteRoleWrap">
-        <div class="onsite-role-title">现场职业分类</div>
-        <button class="onsite-role-btn active" id="roleBtn-xianchang" onclick="setOnsiteRole('现场')">
-          <span>现场</span><span class="onsite-role-count" id="countRoleXianChang">0</span>
-        </button>
-        <button class="onsite-role-btn" id="roleBtn-other" onclick="setOnsiteRole('其他')">
-          <span>其他</span><span class="onsite-role-count" id="countRoleOther">0</span>
-        </button>
-      </div>
-
       <div class="overview-panel">
         <div class="overview-head">
           <div class="section-title"><i class="fas fa-layer-group"></i> 汇总概览</div>
+          <div class="onsite-role-wrap" id="onsiteRoleWrap">
+            <div class="onsite-role-title">现场职业分类</div>
+            <button class="onsite-role-btn active" id="roleBtn-xianchang" onclick="setOnsiteRole('现场')"><span>现场</span><span class="onsite-role-count" id="countRoleXianChang">0</span></button>
+            <button class="onsite-role-btn" id="roleBtn-other" onclick="setOnsiteRole('其他')"><span>其他</span><span class="onsite-role-count" id="countRoleOther">0</span></button>
+          </div>
           <div class="join-tenure-summary" aria-label="入职时长分类">
             <button type="button" class="join-tenure-chip" data-join-bucket="all" onclick="setJoinTenureFilter('')"><span>总汇</span><b id="joinSummaryAll">0</b></button>
             <button type="button" class="join-tenure-chip" data-join-bucket="1" onclick="setJoinTenureFilter('1')"><span>入职 1 个月</span><b id="joinSummary1">0</b></button>
@@ -4359,7 +4357,7 @@
       fill('fShift', getU(5));
       fill('fCountry', getU(8));
       const joinTenure=document.getElementById('fJoinTenure');
-      if(joinTenure){const selected=joinTenure.value;const homeStaff=dbMaster.filter(row=>detectWorkMode(row)==='居家');const options=[['1','入职 1 个月'],['2plus','入职 2 个月以上'],['3plus','入职 3 个月以上'],['6plus','入职 6 个月以上'],['12plus','入职 1 年以上']];joinTenure.innerHTML=`<option value="">全部</option>`+options.map(([key,label])=>`<option value="${key}">${label} (${homeStaff.filter(row=>matchesStaffJoinTenure(row[6],key)).length} 人)</option>`).join('');joinTenure.value=options.some(([key])=>key===selected)?selected:'';}
+      if(joinTenure)refreshJoinTenureOptions();
       updateJoinTenureSummary();
 
       ['searchName','searchId','fPosition','fShift','fTeam','fGroup','fCountry','fPlatform','fJoinTenure'].forEach(id => {
@@ -4398,17 +4396,30 @@
     }
 
     function toggleJoinTenureVisibility() {
-      const visible=activeWorkMode==='居家';
+      const visible=activeStaffData===1;
       const summary=document.querySelector('.join-tenure-summary');
       const filter=document.getElementById('joinTenureFilterGroup');
       if(summary)summary.style.display=visible?'flex':'none';
       if(filter)filter.style.display=visible?'flex':'none';
-      if(!visible){const select=document.getElementById('fJoinTenure');if(select)select.value='';}
+    }
+
+    function activeStaffTenureRows() {
+      return activeWorkMode==='全部'?dbMaster:dbMaster.filter(row=>detectWorkMode(row)===activeWorkMode);
+    }
+
+    function refreshJoinTenureOptions() {
+      const select=document.getElementById('fJoinTenure');if(!select)return;
+      const selected=select.value;
+      const rows=activeStaffTenureRows();
+      const options=[['1','入职 1 个月'],['2plus','入职 2 个月以上'],['3plus','入职 3 个月以上'],['6plus','入职 6 个月以上'],['12plus','入职 1 年以上']];
+      select.innerHTML=`<option value="">全部</option>`+options.map(([key,label])=>`<option value="${key}">${label} (${rows.filter(row=>matchesStaffJoinTenure(row[6],key)).length} 人)</option>`).join('');
+      select.value=options.some(([key])=>key===selected)?selected:'';
     }
 
     function updateJoinTenureSummary() {
       const buckets=['1','2plus','3plus','6plus','12plus'];
-      const homeStaff=dbMaster.filter(row=>detectWorkMode(row)==='居家');
+      const homeStaff=activeStaffTenureRows();
+      refreshJoinTenureOptions();
       const total=document.getElementById('joinSummaryAll');
       if(total)total.textContent=homeStaff.length.toLocaleString('en-US');
       document.querySelector('[data-join-bucket="all"]')?.classList.toggle('active',!document.getElementById('fJoinTenure')?.value);
