@@ -6139,7 +6139,7 @@
 
     async function loadStaffMasterData() {
       try {
-        const {data,error}=await supabaseClient.from('staff_master').select('*').order('staff_id',{ascending:true});
+        const {data,error}=await supabaseClient.from('staff_master').select('*').order('employee_id',{ascending:true});
         if(error)throw error;
         if(data?.length)return data.map(staffObjectToRow);
         throw new Error('staff_master is empty');
