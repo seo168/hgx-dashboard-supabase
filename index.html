@@ -2154,6 +2154,7 @@
       <div class="staff-system-tabs" id="staffSystemTabs">
         <button type="button" class="staff-system-tab active" data-staff-system="居家" onclick="setStaffSystemMode('居家')">居家</button>
         <button type="button" class="staff-system-tab" data-staff-system="现场" onclick="setStaffSystemMode('现场')">现场</button>
+        <button type="button" class="staff-system-tab" data-staff-system="现场居家" onclick="setStaffSystemMode('现场居家')">现场转居家</button>
         <button type="button" class="staff-system-tab" data-staff-system="全部" onclick="setStaffSystemMode('全部')">总汇</button>
       </div>
       <div class="staff-page-header">
@@ -4429,7 +4430,7 @@
 
     function updateStaffPageSummary() {
       const dataLabel=activeStaffData===1?'员工信息':`数据${activeStaffData}`;
-      const detail=activeWorkMode==='现场'?(activeOnsiteRole==='其他'?'行政 / 保姆 / 厨师':'现场员工'):activeWorkMode==='居家'?'居家员工':'全部工作模式';
+      const detail=activeWorkMode==='现场'?(activeOnsiteRole==='其他'?'行政 / 保姆 / 厨师':'现场员工'):activeWorkMode==='居家'?'居家员工':activeWorkMode==='现场居家'?'现场转居家员工':'全部工作模式';
       const title=document.getElementById('staffPageTitle');
       const description=document.getElementById('staffPageDescription');
       if(title)title.textContent=`员工管理 · ${dataLabel}`;
