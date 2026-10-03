@@ -1955,10 +1955,24 @@
     #overview .overview-panel,#overview .filter-wrapper,#overview .table-container{border-color:#dfe6ee!important}
     #overview .overview-panel{padding:16px!important}
     #overview .filter-wrapper{padding:16px!important}
+    #overview .dept-scroll{overflow:visible!important;margin-bottom:0!important;padding-bottom:0!important}
+    #overview .dept-grid{grid-template-columns:repeat(auto-fit,minmax(220px,1fr))!important;min-width:0!important;gap:12px!important}
+    #overview .dept-card{min-height:260px!important;padding:15px!important;border-top:3px solid #d8e4f3!important}
+    #overview .dept-title{padding-bottom:10px;border-bottom:1px solid #edf1f5!important;font-size:.74rem!important}
+    #overview .chart-box{width:88px!important;height:88px!important;margin:8px auto 14px!important}
+    #overview .stat-row{position:relative;overflow:hidden;padding:9px 10px 12px!important}
+    #overview .stat-progress{position:absolute;left:0;bottom:0;height:3px;width:var(--share);background:var(--bar-color);opacity:.75}
+    #overview .stat-value{display:flex;align-items:center;gap:6px}.stat-share{min-width:38px;text-align:right;color:#64748b!important;font-size:.61rem}
+    .staff-filter-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid #edf1f5}
+    .staff-filter-heading strong{display:flex;align-items:center;gap:8px;font-size:.78rem}.staff-filter-heading span{font-size:.64rem;color:#64748b!important}
+    #overview .filter-grid{grid-template-columns:1.5fr repeat(3,minmax(120px,1fr))!important}
     #overview table th{position:sticky;top:0;z-index:2;background:#eef3f8!important;color:#111827!important}
     #overview table td{color:#111827!important}
+    #overview table th:nth-child(-n+5),#overview table td:nth-child(-n+5){text-align:left!important}
+    #overview table td:nth-child(4){color:#5b7fba!important;font-variant-numeric:tabular-nums}
+    #overview table td:nth-child(7){font-variant-numeric:tabular-nums}
     #overview tbody tr:hover td{background:#edf4fc!important}
-    @media(max-width:900px){.staff-page-header{align-items:flex-start;flex-direction:column}.staff-page-metrics{width:100%;grid-template-columns:repeat(2,minmax(0,1fr))}}
+    @media(max-width:900px){.staff-page-header{align-items:flex-start;flex-direction:column}.staff-page-metrics{width:100%;grid-template-columns:repeat(2,minmax(0,1fr))}#overview .filter-grid{grid-template-columns:1fr!important}}
   </style>
 </head>
 
@@ -2202,6 +2216,7 @@
       <div id="staff-list-section" class="staff-inner-page active">
 
         <div class="filter-wrapper">
+          <div class="staff-filter-heading"><strong><i class="fas fa-filter"></i> 筛选员工数据</strong><span>选择条件后自动更新图表与列表</span></div>
           <div class="filter-grid">
             <div class="filter-group"><label>搜索姓名/ID</label><input type="text" id="searchName" placeholder="请输入姓名或 ID..."></div>
             <div class="filter-group"><label>班次</label><select id="fShift"></select></div>
@@ -4573,13 +4588,15 @@
 
         const list = document.getElementById('list_' + id);
         if (list) {
+          const total=vals.reduce((a,b)=>a+b,0);
           list.innerHTML = entries.slice(0,4).map(([n,v],i) => `
-            <div class="stat-row" onclick="openStatModal('${id}', '${encodeURIComponent(n)}', '${colors[i] || '#60a5fa'}')">
+            <div class="stat-row" style="--share:${total?(v/total*100).toFixed(1):0}%;--bar-color:${colors[i] || '#60a5fa'}" onclick="openStatModal('${id}', '${encodeURIComponent(n)}', '${colors[i] || '#60a5fa'}')">
               <div class="indicator">
                 <span class="dot" style="background:${colors[i] || '#60a5fa'}"></span>
                 <span><span class="remark-text">${esc(n)}</span></span>
               </div>
-              <span class="count-badge">${v}</span>
+              <div class="stat-value"><span class="stat-share">${total?(v/total*100).toFixed(1):'0.0'}%</span><span class="count-badge">${v}</span></div>
+              <span class="stat-progress"></span>
             </div>
           `).join('');
         }
