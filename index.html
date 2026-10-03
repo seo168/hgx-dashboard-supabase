@@ -1947,6 +1947,9 @@
     body.staff-page-active .modal-content,body.staff-page-active .stat-modal-content{background:#fff!important;color:#111827!important;border-color:#dfe5ec!important}
     body.staff-page-active .stat-modal-top{background:#f7f9fc!important;color:#111827!important;border-color:#e5eaf0!important}
     body.staff-page-active .stat-modal-close{background:#edf1f5!important;color:#111827!important}
+    .staff-system-tabs{display:inline-flex;align-items:center;gap:4px;margin:0 0 12px;padding:4px;border:1px solid #dce4ed;border-radius:8px;background:#f3f6fa}
+    .staff-system-tab{min-width:82px;height:32px;padding:0 16px;border:0;border-radius:5px;background:transparent;color:#64748b;cursor:pointer;font-size:.72rem}
+    .staff-system-tab:hover{background:#e9eff7;color:#405774}.staff-system-tab.active{background:#5b7fba;color:#fff;box-shadow:0 2px 7px rgba(59,92,145,.18)}
     .staff-page-header{display:flex;align-items:center;margin-bottom:12px;padding:14px 16px;border:1px solid #e3e9f0;border-radius:8px;background:#fff;box-shadow:0 1px 5px rgba(51,65,85,.035)}
     .staff-page-heading{display:flex;align-items:center;gap:10px;min-width:0}.staff-page-heading>i{display:grid;place-items:center;width:34px;height:34px;flex:0 0 34px;border-radius:6px;background:#e7eef8;color:#5b7fba;font-size:.9rem}
     .staff-page-heading h2{margin:0;color:#111827;font-size:1.12rem}.staff-page-heading p{margin:5px 0 0;color:#64748b;font-size:.72rem}
@@ -2052,8 +2055,8 @@
         <div class="side-menu-group" id="group-staff">
           <button onclick="openStaffMenu()" id="btn-overview" class="side-menu-btn side-menu-parent"><i class="fas fa-users-gear"></i><span>员工管理</span><i class="fas fa-chevron-down side-chevron"></i></button>
           <div class="side-nested-menu">
-            <button onclick="openStaffData(1)" id="sideStaff-1" class="side-nested-btn"><i class="fas fa-building-user"></i> 现场管理</button>
-            <button onclick="openStaffData(2)" id="sideStaff-2" class="side-nested-btn"><i class="fas fa-house-laptop"></i> 居家管理</button>
+            <button onclick="openStaffData(1)" id="sideStaff-1" class="side-nested-btn"><i class="fas fa-address-card"></i> 员工信息</button>
+            <button onclick="openStaffData(2)" id="sideStaff-2" class="side-nested-btn"><i class="fas fa-chart-simple"></i> 数据2</button>
             <button onclick="openStaffData(3)" id="sideStaff-3" class="side-nested-btn"><i class="fas fa-chart-simple"></i> 数据3</button>
             <button onclick="openStaffData(4)" id="sideStaff-4" class="side-nested-btn"><i class="fas fa-chart-simple"></i> 数据4</button>
             <button onclick="openStaffData(5)" id="sideStaff-5" class="side-nested-btn"><i class="fas fa-chart-simple"></i> 数据5</button>
@@ -2148,6 +2151,11 @@
           </div>
         </div>
         <div id="overview" class="page-content">
+      <div class="staff-system-tabs" id="staffSystemTabs">
+        <button type="button" class="staff-system-tab active" data-staff-system="居家" onclick="setStaffSystemMode('居家')">居家</button>
+        <button type="button" class="staff-system-tab" data-staff-system="现场" onclick="setStaffSystemMode('现场')">现场</button>
+        <button type="button" class="staff-system-tab" data-staff-system="全部" onclick="setStaffSystemMode('全部')">总汇</button>
+      </div>
       <div class="staff-page-header">
         <div class="staff-page-heading"><i class="fas fa-users-gear"></i><div><h2 id="staffPageTitle">员工管理</h2><p id="staffPageDescription">Supabase 员工主数据 · 当前筛选结果</p></div></div>
       </div>
@@ -3843,6 +3851,17 @@
     };
     const departmentLastData = { finance:1, payout:1, service:1, risk:1 };
     let activeStaffData = 1;
+    let activeStaffSystem = '居家';
+
+    function updateStaffSystemTabs() {
+      document.querySelectorAll('.staff-system-tab').forEach(btn=>btn.classList.toggle('active',btn.dataset.staffSystem===activeStaffSystem));
+    }
+
+    function setStaffSystemMode(mode) {
+      activeStaffSystem=mode;
+      updateStaffSystemTabs();
+      setWorkMode(mode);
+    }
 
     function openStaffMenu() {
       const group=document.getElementById('group-staff');
@@ -3860,8 +3879,9 @@
       document.getElementById(`sideStaff-${dataIndex}`)?.classList.add('active');
       document.querySelectorAll('.side-menu-btn').forEach(btn=>btn.classList.remove('active'));
       document.getElementById('btn-overview')?.classList.add('active');
-      if(dataIndex===1)setWorkMode('现场');
-      else if(dataIndex===2)setWorkMode('居家');
+      const tabs=document.getElementById('staffSystemTabs');
+      if(tabs)tabs.style.display=dataIndex===1?'inline-flex':'none';
+      if(dataIndex===1){updateStaffSystemTabs();setWorkMode(activeStaffSystem);}
       else setWorkMode('全部');
     }
 
@@ -4408,7 +4428,7 @@
     }
 
     function updateStaffPageSummary() {
-      const dataLabel=activeStaffData===1?'现场管理':activeStaffData===2?'居家管理':`数据${activeStaffData}`;
+      const dataLabel=activeStaffData===1?'员工信息':`数据${activeStaffData}`;
       const detail=activeWorkMode==='现场'?(activeOnsiteRole==='其他'?'行政 / 保姆 / 厨师':'现场员工'):activeWorkMode==='居家'?'居家员工':'全部工作模式';
       const title=document.getElementById('staffPageTitle');
       const description=document.getElementById('staffPageDescription');
