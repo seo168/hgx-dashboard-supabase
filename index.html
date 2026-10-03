@@ -6314,7 +6314,7 @@
       try {
         const {data,error}=await supabaseClient.from('staff_master').select('*').order('employee_id',{ascending:true});
         if(error)throw error;
-        if(data?.length)return data.map(staffObjectToRow);
+        if(data?.length)return data.filter(row=>String(row.status||'').trim()!=='离职').map(staffObjectToRow);
         throw new Error('staff_master is empty');
       } catch(error) {
         console.warn('Supabase 员工数据暂不可用，改用 Google Sheet',error.message||error);
