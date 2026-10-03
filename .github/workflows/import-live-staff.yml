@@ -1,0 +1,26 @@
+name: Import live staff workbook
+on: workflow_dispatch
+permissions: {contents: read}
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: 24}
+      - name: Apply database migration
+        env:
+          TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: |
+          node - <<'NODE'
+          const fs=require('fs');const query=fs.readFileSync('supabase/live_staff_editor.sql','utf8');
+          const r=await fetch('https://api.supabase.com/v1/projects/qsqnxmotgocesnmodmfz/database/query',{method:'POST',headers:{Authorization:`Bearer ${process.env.TOKEN}`,'Content-Type':'application/json'},body:JSON.stringify({query,read_only:false})});
+          if(!r.ok)throw new Error(`${r.status} ${await r.text()}`);
+          NODE
+      - name: Import workbook snapshot
+        env:
+          STAFF_IMPORT_DATA_B64: ${{ secrets.STAFF_IMPORT_DATA_B64 }}
+          SUPABASE_URL: https://qsqnxmotgocesnmodmfz.supabase.co
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: node scripts/import-live-staff-data.mjs
