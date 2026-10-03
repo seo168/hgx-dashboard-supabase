@@ -1965,13 +1965,15 @@
     #overview .chart-box{width:82px!important;height:82px!important;margin:10px auto!important}
     #overview .stat-list{margin-top:8px!important}
     #overview .stat-row{padding:8px 10px!important}
-    #overview .filter-grid{grid-template-columns:1.5fr repeat(3,minmax(120px,1fr))!important}
+    #overview .filter-grid{grid-template-columns:1.25fr repeat(4,minmax(135px,1fr))!important}
     #overview table th{position:sticky;top:0;z-index:2;background:#eef3f8!important;color:#111827!important}
     #overview table td{color:#111827!important}
     #overview table th:nth-child(-n+5),#overview table td:nth-child(-n+5){text-align:left!important}
     #overview table td:nth-child(4){color:#5b7fba!important;font-variant-numeric:tabular-nums}
-    #overview table td:nth-child(7){font-variant-numeric:tabular-nums}
+    #overview table td:nth-child(8){font-variant-numeric:tabular-nums}
     #overview tbody tr:hover td{background:#edf4fc!important}
+    @media(max-width:1400px){#overview .filter-grid{grid-template-columns:repeat(4,minmax(0,1fr))!important}}
+    @media(max-width:1050px){#overview .filter-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
     @media(max-width:900px){#overview .filter-grid{grid-template-columns:1fr!important}#overview .filter-group{grid-template-columns:92px minmax(0,1fr)}}
   </style>
 </head>
@@ -2211,7 +2213,9 @@
 
         <div class="filter-wrapper">
           <div class="filter-grid">
-            <div class="filter-group"><label>搜索姓名/ID</label><input type="text" id="searchName" placeholder="请输入姓名或 ID..."></div>
+            <div class="filter-group"><label>姓名</label><input type="text" id="searchName" placeholder="请输入姓名"></div>
+            <div class="filter-group"><label>ID</label><input type="text" id="searchId" placeholder="请输入员工 ID"></div>
+            <div class="filter-group"><label>职位</label><select id="fPosition"></select></div>
             <div class="filter-group"><label>班次</label><select id="fShift"></select></div>
             <div class="filter-group"><label>团队</label><select id="fTeam"></select></div>
             <div class="filter-group"><label>组别</label><select id="fGroup"></select></div>
@@ -2233,7 +2237,7 @@
           <table>
             <thead>
               <tr>
-                <th>平台</th><th>组别</th><th>团队</th><th>ID</th><th>姓名</th><th>班次</th><th>入职日期</th><th>国家</th>
+                <th>平台</th><th>组别</th><th>团队</th><th>ID</th><th>姓名</th><th>职位</th><th>班次</th><th>入职日期</th><th>国家</th>
               </tr>
             </thead>
             <tbody id="tbody"></tbody>
@@ -4330,13 +4334,14 @@
       fill('fPlatform', getU(0));
       fill('fGroup', getU(1));
       fill('fTeam', getU(9));
+      fill('fPosition', getU(4));
       fill('fShift', getU(5));
       fill('fCountry', getU(8));
       const joinTenure=document.getElementById('fJoinTenure');
       if(joinTenure){const selected=joinTenure.value;const homeStaff=dbMaster.filter(row=>detectWorkMode(row)==='居家');const options=[['1','入职 1 个月'],['2plus','入职 2 个月以上'],['3plus','入职 3 个月以上'],['6plus','入职 6 个月以上'],['12plus','入职 1 年以上']];joinTenure.innerHTML=`<option value="">全部</option>`+options.map(([key,label])=>`<option value="${key}">${label} (${homeStaff.filter(row=>matchesStaffJoinTenure(row[6],key)).length} 人)</option>`).join('');joinTenure.value=options.some(([key])=>key===selected)?selected:'';}
       updateJoinTenureSummary();
 
-      ['searchName','fShift','fTeam','fGroup','fCountry','fPlatform','fJoinTenure'].forEach(id => {
+      ['searchName','searchId','fPosition','fShift','fTeam','fGroup','fCountry','fPlatform','fJoinTenure'].forEach(id => {
         const el = document.getElementById(id);
         if (!el) return;
         el.addEventListener('input', () => {
@@ -4413,6 +4418,8 @@
 
     function runFilters() {
       const sn = document.getElementById('searchName')?.value.toLowerCase() || '';
+      const sid = document.getElementById('searchId')?.value.toLowerCase() || '';
+      const spos = document.getElementById('fPosition')?.value || '';
       const sf = document.getElementById('fShift')?.value || '';
       const st = document.getElementById('fTeam')?.value || '';
       const sg = document.getElementById('fGroup')?.value || '';
@@ -4433,7 +4440,9 @@
             : ['行政','保姆','厨师'].includes(role);
 
         const formOk =
-          r.join(' ').toLowerCase().includes(sn) &&
+          (!sn || String(r[3]||'').toLowerCase().includes(sn)) &&
+          (!sid || String(r[2]||'').toLowerCase().includes(sid)) &&
+          (!spos || r[4] === spos) &&
           (!sf || r[5] === sf) &&
           (!sg || r[1] === sg) &&
           (!st || r[9] === st) &&
@@ -4483,6 +4492,7 @@
             <td>${esc(r[9] || '-')}</td>
             <td><span class="id-link" onclick="openDetail(${dbMaster.indexOf(r)})">#${esc(r[2] || '-')}</span></td>
             <td style="font-weight:900;color:#fff;">${esc(r[3] || '-')}</td>
+            <td>${esc(r[4] || '-')}</td>
             <td>${esc(r[5] || '-')}</td>
             <td><span class="date-badge">${esc(r[6] || '-')}</span></td>
             <td>${esc(r[8] || '-')}</td>
