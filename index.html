@@ -4019,10 +4019,17 @@
     function exportStaffEditHistory(){
       if(!staffHistoryExportRows.length){alert('当前日期范围没有可导出的编辑记录');return;}
       const safe=value=>{let text=String(value??'').replace(/\r?\n/g,' ');if(/^[=+\-@]/.test(text))text=`'${text}`;return `"${text.replace(/"/g,'""')}"`;};
-      const rows=[['时间','员工ID','员工姓名','操作','变更内容','编辑人'],...staffHistoryExportRows.map(row=>[
-        new Date(row.created_at).toLocaleString('zh-CN',{hour12:false}),row.employee_id||'',row.staff_name||'',
-        row.info.action||row.event_type||'',auditChangeText(row.info.changes),row.info.actor||''
-      ])];
+      const detailRows=staffHistoryExportRows.flatMap(row=>{
+        const changes=row.info.changes&&typeof row.info.changes==='object'?Object.entries(row.info.changes):[['-',{}]];
+        return changes.map(([field,value])=>({
+          time:new Date(row.created_at).toLocaleString('zh-CN',{hour12:false}),id:row.employee_id||'',name:row.staff_name||'',
+          action:row.info.action||row.event_type||'',field,before:value?.dari??'',after:value?.menjadi??value??'',actor:row.info.actor||''
+        }));
+      });
+      const header=['时间','员工ID','员工姓名','操作','变更字段','数值','编辑人'];
+      const before=[['编辑前数据'],header,...detailRows.map(row=>[row.time,row.id,row.name,row.action,row.field,row.before,row.actor])];
+      const after=[['编辑后数据'],header,...detailRows.map(row=>[row.time,row.id,row.name,row.action,row.field,row.after,row.actor])];
+      const rows=[...before,[],[],...after];
       const csv='\uFEFF'+rows.map(row=>row.map(safe).join(',')).join('\r\n');
       const start=document.getElementById('staffHistoryStart')?.value||'全部',end=document.getElementById('staffHistoryEnd')?.value||'最新';
       const link=document.createElement('a');link.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));link.download=`员工编辑历史_${start}_${end}.csv`;document.body.appendChild(link);link.click();URL.revokeObjectURL(link.href);link.remove();
