@@ -2911,6 +2911,10 @@
     const cleanID = s => String(s || "").replace(/\D/g, '');
     const clean = s => String(s || "").trim().toUpperCase();
     const isResignedStaffRemark = value => /(?:resign(?:ed)?|辞职|离职|已离职)/i.test(String(value || '').trim());
+    const TRANSFERRED_ACTIVE_STAFF = [
+      '尤达','阿亚','小龙','小二','威利','安斯','爱林','小弟',
+      '发尼','阿里','星星','阿桑','小姗','雷沃','PUDGE','伟航'
+    ];
     const esc = s => String(s || "")
       .replace(/&/g, "&amp;")
       .replace(/</g, "&lt;")
@@ -6428,10 +6432,12 @@
         if(data?.length){
           const active=data.filter(row=>String(row.status||'').trim()!=='离职');
           const normalizeId=value=>String(value||'').trim().toUpperCase().replace(/\.0$/,'');
-          const modesById=new Map();
-          active.forEach(row=>{const id=normalizeId(row.employee_id);if(!id)return;if(!modesById.has(id))modesById.set(id,new Set());modesById.get(id).add(String(row.work_mode||'').trim());});
-          const transferredIds=new Set([...modesById].filter(([,modes])=>modes.has('现场')&&modes.has('居家')).map(([id])=>id));
-          return active.filter(row=>!(transferredIds.has(normalizeId(row.employee_id))&&String(row.work_mode||'').trim()==='居家')).map(row=>staffObjectToRow(transferredIds.has(normalizeId(row.employee_id))?{...row,work_mode:'现场转居家'}:row));
+          const uniqueRows=new Map();
+          active.forEach(row=>{
+            const key=normalizeId(row.employee_id)||`NAME:${String(row.employee_name||'').trim().toUpperCase()}`;
+            if(!uniqueRows.has(key))uniqueRows.set(key,row);
+          });
+          return [...uniqueRows.values()].map(staffObjectToRow);
         }
         throw new Error('staff_master is empty');
       } catch(error) {
@@ -6444,9 +6450,50 @@
       }
     }
 
+    async function syncVerifiedStaffCorrections() {
+      const {error:modeError}=await supabaseClient
+        .from('staff_master')
+        .update({work_mode:'现场转居家',updated_at:new Date().toISOString()})
+        .in('employee_name',TRANSFERRED_ACTIVE_STAFF)
+        .neq('work_mode','现场转居家');
+      if(modeError)throw modeError;
+
+      const {data:adeRows,error:adeReadError}=await supabaseClient
+        .from('staff_master')
+        .select('*')
+        .eq('employee_name','阿德');
+      if(adeReadError)throw adeReadError;
+      if((adeRows||[]).length>1){
+        const onsite=adeRows.find(row=>String(row.work_mode||'').trim()==='现场')||adeRows[0];
+        const home=adeRows.find(row=>row.id!==onsite.id)||{};
+        const merged={
+          employee_id:'355683',employee_name:'阿德',role:'财务',department:'财务',
+          shift:String(onsite.shift||home.shift||'夜班'),country:'印尼',work_mode:'现场',
+          join_date:'2025-11-17',account_name:String(onsite.account_name||home.account_name||''),
+          platform:String(onsite.platform||'印度'),group_name:'财务',status:'在职',platform_country:'印度',
+          resign_date:null,work_telegram:String(home.work_telegram||onsite.work_telegram||''),
+          backend_account:String(onsite.backend_account||home.backend_account||''),
+          bank_account:String(home.bank_account||onsite.bank_account||''),
+          bank_holder:String(home.bank_holder||onsite.bank_holder||''),
+          bank_name:String(home.bank_name||onsite.bank_name||''),updated_at:new Date().toISOString()
+        };
+        const {error:updateError}=await supabaseClient.from('staff_master').update(merged).eq('id',onsite.id);
+        if(updateError)throw updateError;
+        const duplicateIds=adeRows.filter(row=>row.id!==onsite.id).map(row=>row.id);
+        if(duplicateIds.length){
+          const {error:deleteError}=await supabaseClient.from('staff_master').delete().in('id',duplicateIds);
+          if(deleteError)throw deleteError;
+        }
+      }else if(adeRows?.length===1&&String(adeRows[0].work_mode||'').trim()!=='现场'){
+        const {error:updateError}=await supabaseClient.from('staff_master').update({work_mode:'现场',status:'在职',updated_at:new Date().toISOString()}).eq('id',adeRows[0].id);
+        if(updateError)throw updateError;
+      }
+    }
+
     async function loadData() {
       updateClock();
       if (!window.__hgxClockTimer) window.__hgxClockTimer = setInterval(updateClock, 1000);
+      await syncVerifiedStaffCorrections().catch(error=>console.warn('员工资料校正失败',error.message||error));
       const [staffRows] = await Promise.all([
         loadStaffMasterData().catch(error=>{console.error('员工数据读取失败',error.message||error);return[];}),
         loadFinanceData(false),
