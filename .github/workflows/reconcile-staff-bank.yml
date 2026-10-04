@@ -1,0 +1,23 @@
+name: Reconcile staff bank data
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  reconcile:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Apply verified bank data and normalize IDs
+        env:
+          SUPABASE_URL: https://qsqnxmotgocesnmodmfz.supabase.co
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          STAFF_BANK_FIX_B64: ${{ secrets.STAFF_BANK_FIX_B64 }}
+        run: node scripts/reconcile-staff-bank.mjs

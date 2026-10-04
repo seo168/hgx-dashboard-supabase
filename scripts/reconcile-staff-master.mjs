@@ -11,20 +11,22 @@ const request=async(path,init={})=>{
 };
 
 const transferred=new Map([
-  ['334220.0','爱林'],['354855.0','小二'],['355045.0','小弟'],['355054.0','小姗'],
-  ['355056.0','小龙'],['355058.0','星星'],['355060.0','阿里'],['355062.0','阿桑'],
-  ['355434.0','尤达'],['356026.0','安斯'],['356109.0','阿亚'],['356114.0','雷沃'],
-  ['356263.0','发尼'],['358485.0','威利'],['JA525081201','伟航'],['JA525092601','PUDGE']
+  ['334220','爱林'],['354855','小二'],['355045','小弟'],['355054','小姗'],
+  ['355056','小龙'],['355058','星星'],['355060','阿里'],['355062','阿桑'],
+  ['355434','尤达'],['356026','安斯'],['356109','阿亚'],['356114','雷沃'],
+  ['356263','发尼'],['358485','威利'],['JA525081201','伟航'],['JA525092601','PUDGE']
 ]);
 
 const all=await request('staff_master?select=*&limit=1000');
+const normalizeId=value=>String(value||'').replace(/\.0$/,'');
 for(const [employeeId,employeeName] of transferred){
-  const matches=all.filter(row=>row.employee_id===employeeId&&row.employee_name===employeeName);
+  const matches=all.filter(row=>normalizeId(row.employee_id)===employeeId&&row.employee_name===employeeName);
   if(matches.length!==1)throw new Error(`Expected one exact row for ${employeeId} ${employeeName}, found ${matches.length}`);
 }
 
-for(const [employeeId] of transferred){
-  await request(`staff_master?employee_id=eq.${encodeURIComponent(employeeId)}`,{
+for(const [employeeId,employeeName] of transferred){
+  const row=all.find(item=>normalizeId(item.employee_id)===employeeId&&item.employee_name===employeeName);
+  await request(`staff_master?id=eq.${row.id}`,{
     method:'PATCH',body:JSON.stringify({work_mode:'现场转居家',updated_at:new Date().toISOString()})
   });
 }
@@ -54,7 +56,7 @@ if(adeRows.length===2){
 
 const verified=await request('staff_master?select=id,employee_id,employee_name,work_mode,status&limit=1000');
 const transferredRows=verified.filter(row=>row.work_mode==='现场转居家');
-const invalidTransferred=[...transferred].filter(([employeeId,employeeName])=>!transferredRows.some(row=>row.employee_id===employeeId&&row.employee_name===employeeName));
+const invalidTransferred=[...transferred].filter(([employeeId,employeeName])=>!transferredRows.some(row=>normalizeId(row.employee_id)===employeeId&&row.employee_name===employeeName));
 const adeVerified=verified.filter(row=>row.employee_name==='阿德');
 if(verified.length!==222)throw new Error(`Expected 222 staff rows, found ${verified.length}`);
 if(transferredRows.length!==16||invalidTransferred.length)throw new Error(`Transfer verification failed: ${JSON.stringify(invalidTransferred)}`);
