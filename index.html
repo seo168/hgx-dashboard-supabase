@@ -2178,6 +2178,7 @@
         <button type="button" class="staff-system-tab active" data-staff-system="居家" onclick="setStaffSystemMode('居家')">居家</button>
         <button type="button" class="staff-system-tab" data-staff-system="现场居家" onclick="setStaffSystemMode('现场居家')">现场转居家</button>
         <button type="button" class="staff-system-tab" data-staff-system="现场" onclick="setStaffSystemMode('现场')">现场</button>
+        <button type="button" class="staff-system-tab" data-staff-system="全部" onclick="setStaffSystemMode('全部')">总汇</button>
       </div>
       <div class="staff-page-header">
         <div class="staff-page-heading"><i class="fas fa-users-gear"></i><div><h2 id="staffPageTitle">员工管理</h2><p id="staffPageDescription">Supabase 员工主数据 · 当前筛选结果</p></div></div>
@@ -2242,7 +2243,6 @@
         <div class="overview-head">
           <div class="section-title"><i class="fas fa-layer-group"></i> 汇总概览</div>
           <div class="join-tenure-summary" aria-label="入职时长分类">
-            <button type="button" class="join-tenure-chip" data-join-bucket="all" onclick="setJoinTenureFilter('')"><span>总汇</span><b id="joinSummaryAll">0</b></button>
             <button type="button" class="join-tenure-chip" data-join-bucket="1" onclick="setJoinTenureFilter('1')"><span>入职 1 个月</span><b id="joinSummary1">0</b></button>
             <button type="button" class="join-tenure-chip" data-join-bucket="2plus" onclick="setJoinTenureFilter('2plus')"><span>入职 2 个月以上</span><b id="joinSummary2plus">0</b></button>
             <button type="button" class="join-tenure-chip" data-join-bucket="3plus" onclick="setJoinTenureFilter('3plus')"><span>入职 3 个月以上</span><b id="joinSummary3plus">0</b></button>
