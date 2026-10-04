@@ -1941,6 +1941,8 @@
     #overview .join-tenure-chip{background:#f7f9fc!important;color:#64748b!important;border-color:#e1e7ee!important;border-radius:6px!important}
     #overview .join-tenure-chip:hover,#overview .join-tenure-chip.active{background:#eaf1fa!important;color:#405774!important;border-color:#b8c9e1!important}
     #overview .join-tenure-chip b{background:#e6eef8!important;color:#5b7fba!important}
+    #overview .join-tenure-summary,#overview #joinTenureFilterGroup{visibility:hidden;pointer-events:none}
+    #overview.tenure-filter-visible .join-tenure-summary,#overview.tenure-filter-visible #joinTenureFilterGroup{visibility:visible;pointer-events:auto}
     #overview .dept-card{background:#fff!important;border:1px solid #e1e7ee!important;border-radius:8px!important;box-shadow:none!important}
     #overview .dept-card:hover{border-color:#cbd8e8!important;box-shadow:0 4px 12px rgba(51,65,85,.055)!important;transform:none!important}
     #overview .chart-val{color:#435164!important;text-shadow:none!important}
@@ -4516,10 +4518,11 @@
     function toggleJoinTenureVisibility() {
       const visible=activeStaffData===1;
       const periodVisible=visible && activeWorkMode!=='现场居家' && activeWorkMode!=='现场';
+      document.getElementById('overview')?.classList.toggle('tenure-filter-visible',periodVisible);
       const summary=document.querySelector('.join-tenure-summary');
       const filter=document.getElementById('joinTenureFilterGroup');
-      if(summary){summary.style.display=visible?'flex':'none';summary.style.visibility=periodVisible?'visible':'hidden';summary.style.pointerEvents=periodVisible?'auto':'none';}
-      if(filter){filter.style.display=visible?'flex':'none';filter.style.visibility=periodVisible?'visible':'hidden';filter.style.pointerEvents=periodVisible?'auto':'none';}
+      if(summary)summary.style.display=visible?'flex':'none';
+      if(filter)filter.style.display=visible?'flex':'none';
     }
 
     function activeStaffTenureRows() {
@@ -6422,7 +6425,14 @@
       try {
         const {data,error}=await supabaseClient.from('staff_master').select('*').order('employee_id',{ascending:true});
         if(error)throw error;
-        if(data?.length)return data.filter(row=>String(row.status||'').trim()!=='离职').map(staffObjectToRow);
+        if(data?.length){
+          const active=data.filter(row=>String(row.status||'').trim()!=='离职');
+          const normalizeId=value=>String(value||'').trim().toUpperCase().replace(/\.0$/,'');
+          const modesById=new Map();
+          active.forEach(row=>{const id=normalizeId(row.employee_id);if(!id)return;if(!modesById.has(id))modesById.set(id,new Set());modesById.get(id).add(String(row.work_mode||'').trim());});
+          const transferredIds=new Set([...modesById].filter(([,modes])=>modes.has('现场')&&modes.has('居家')).map(([id])=>id));
+          return active.filter(row=>!(transferredIds.has(normalizeId(row.employee_id))&&String(row.work_mode||'').trim()==='居家')).map(row=>staffObjectToRow(transferredIds.has(normalizeId(row.employee_id))?{...row,work_mode:'现场转居家'}:row));
+        }
         throw new Error('staff_master is empty');
       } catch(error) {
         console.warn('Supabase 员工数据暂不可用，改用 Google Sheet',error.message||error);
