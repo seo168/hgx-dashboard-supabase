@@ -2226,6 +2226,7 @@
             <label>结束日期<input id="staffHistoryEnd" type="date"></label>
             <button type="button" class="menu-btn active" onclick="loadStaffEditHistory()"><i class="fas fa-filter"></i> 生成结果</button>
             <button type="button" class="menu-btn" onclick="resetStaffHistoryFilter()"><i class="fas fa-rotate-left"></i> 重置</button>
+            <button type="button" class="menu-btn" onclick="exportStaffEditHistory()"><i class="fas fa-file-csv"></i> 导出 CSV</button>
           </div>
           <table><thead><tr><th>时间</th><th>员工</th><th>操作</th><th>变更内容</th><th>编辑人</th></tr></thead><tbody id="staffHistoryBody"><tr><td colspan="5">正在读取…</td></tr></tbody></table>
         </div>
@@ -3916,6 +3917,7 @@
     let activeStaffSystem = '居家';
     let dbEditorStaff = [];
     let editingStaffId = '';
+    let staffHistoryExportRows = [];
 
     function updateStaffSystemTabs() {
       document.querySelectorAll('.staff-system-tab').forEach(btn=>btn.classList.toggle('active',btn.dataset.staffSystem===activeStaffSystem));
@@ -4008,11 +4010,23 @@
       let query=supabaseClient.from('staff_events').select('employee_id,staff_name,event_type,details,created_at').eq('status','audit').order('created_at',{ascending:false}).limit(500);
       if(start)query=query.gte('created_at',new Date(`${start}T00:00:00`).toISOString());
       if(end){const nextDay=new Date(`${end}T00:00:00`);nextDay.setDate(nextDay.getDate()+1);query=query.lt('created_at',nextDay.toISOString());}
-      const {data,error}=await query;if(error){if(body)body.innerHTML=`<tr><td colspan="5">读取失败：${esc(error.message)}</td></tr>`;return;}
+      const {data,error}=await query;if(error){staffHistoryExportRows=[];if(body)body.innerHTML=`<tr><td colspan="5">读取失败：${esc(error.message)}</td></tr>`;return;}
+      staffHistoryExportRows=(data||[]).map(row=>{let info={};try{info=JSON.parse(row.details||'{}')}catch{}return {...row,info};});
       if(count)count.textContent=`${data.length} 条记录${start||end?' · 已按日期筛选':''}`;
-      if(body)body.innerHTML=data.length?data.map(row=>{let info={};try{info=JSON.parse(row.details||'{}')}catch{}return `<tr><td>${esc(new Date(row.created_at).toLocaleString('zh-CN',{hour12:false}))}</td><td>${esc(row.staff_name||row.employee_id||'-')}</td><td>${esc(info.action||row.event_type)}</td><td class="staff-history-change">${esc(auditChangeText(info.changes))}</td><td>${esc(info.actor||'-')}</td></tr>`}).join(''):'<tr><td colspan="5">该日期范围没有编辑记录</td></tr>';
+      if(body)body.innerHTML=staffHistoryExportRows.length?staffHistoryExportRows.map(row=>`<tr><td>${esc(new Date(row.created_at).toLocaleString('zh-CN',{hour12:false}))}</td><td>${esc(row.staff_name||row.employee_id||'-')}</td><td>${esc(row.info.action||row.event_type)}</td><td class="staff-history-change">${esc(auditChangeText(row.info.changes))}</td><td>${esc(row.info.actor||'-')}</td></tr>`).join(''):'<tr><td colspan="5">该日期范围没有编辑记录</td></tr>';
     }
     function resetStaffHistoryFilter(){const start=document.getElementById('staffHistoryStart'),end=document.getElementById('staffHistoryEnd');if(start)start.value='';if(end)end.value='';loadStaffEditHistory();}
+    function exportStaffEditHistory(){
+      if(!staffHistoryExportRows.length){alert('当前日期范围没有可导出的编辑记录');return;}
+      const safe=value=>{let text=String(value??'').replace(/\r?\n/g,' ');if(/^[=+\-@]/.test(text))text=`'${text}`;return `"${text.replace(/"/g,'""')}"`;};
+      const rows=[['时间','员工ID','员工姓名','操作','变更内容','编辑人'],...staffHistoryExportRows.map(row=>[
+        new Date(row.created_at).toLocaleString('zh-CN',{hour12:false}),row.employee_id||'',row.staff_name||'',
+        row.info.action||row.event_type||'',auditChangeText(row.info.changes),row.info.actor||''
+      ])];
+      const csv='\uFEFF'+rows.map(row=>row.map(safe).join(',')).join('\r\n');
+      const start=document.getElementById('staffHistoryStart')?.value||'全部',end=document.getElementById('staffHistoryEnd')?.value||'最新';
+      const link=document.createElement('a');link.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));link.download=`员工编辑历史_${start}_${end}.csv`;document.body.appendChild(link);link.click();URL.revokeObjectURL(link.href);link.remove();
+    }
 
     function openDepartmentMenu(module) {
       const target = document.getElementById(`group-dept-${module}`);
