@@ -1975,6 +1975,7 @@
     #overview .dept-scroll{overflow:visible!important;margin-bottom:0!important;padding-bottom:0!important}
     #overview .dept-grid{grid-template-columns:repeat(auto-fit,minmax(210px,1fr))!important;min-width:0!important;gap:12px!important}
     #overview .dept-card{display:block!important;min-height:220px!important;padding:14px!important;border-top:2px solid #d8e4f3!important}
+    #overview .dept-card.hidden-mode-card{display:none!important}
     #overview .dept-title{padding-bottom:9px;border-bottom:1px solid #edf1f5!important;font-size:.72rem!important}
     #overview .chart-box{width:82px!important;height:82px!important;margin:10px auto!important}
     #overview .stat-list{margin-top:8px!important}
@@ -2276,7 +2277,7 @@
             <div class="chart-box"><canvas id="cGEO"></canvas><div class="chart-val" id="tGEO">0</div></div>
             <div class="stat-list" id="list_cGEO"></div>
           </div>
-          <div class="dept-card">
+          <div class="dept-card" id="staffShiftSummaryCard">
             <div style="color:var(--cyan)" class="dept-title">班次</div>
             <div class="chart-box"><canvas id="cSH"></canvas><div class="chart-val" id="tSH">0</div></div>
             <div class="stat-list" id="list_cSH"></div>
@@ -4692,6 +4693,7 @@
       if (cards[0]) cards[0].innerText = onsite ? '组长与培训' : '出款/风控';
       if (cards[1]) cards[1].innerText = onsite ? '财务 / 风控 / 客服 / 出款' : '客服';
       if (cards[2]) cards[2].innerText = onsite ? '行政 / 保姆 / 厨师' : '财务';
+      document.getElementById('staffShiftSummaryCard')?.classList.toggle('hidden-mode-card',onsite);
     }
 
     function syncCharts() {
