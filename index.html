@@ -2924,7 +2924,7 @@
 
     function detectWorkMode(row) {
       const text = row.join(' ').replace(/\s+/g, '');
-      if (text.includes('现场居家')) return '现场居家';
+      if (text.includes('现场转居家') || text.includes('现场居家')) return '现场居家';
       if (text.includes('居家')) return '居家';
       return '现场';
     }
@@ -3028,6 +3028,11 @@
     function setWorkMode(mode) {
       activeWorkMode = mode;
       mainPage = 1;
+
+      if (mode === '现场居家' || mode === '现场') {
+        const tenure = document.getElementById('fJoinTenure');
+        if (tenure) tenure.value = '';
+      }
 
       toggleJoinTenureVisibility();
       updateWorkModeButtons();
@@ -4510,10 +4515,11 @@
 
     function toggleJoinTenureVisibility() {
       const visible=activeStaffData===1;
+      const periodVisible=visible && activeWorkMode!=='现场居家' && activeWorkMode!=='现场';
       const summary=document.querySelector('.join-tenure-summary');
       const filter=document.getElementById('joinTenureFilterGroup');
-      if(summary)summary.style.display=visible?'flex':'none';
-      if(filter)filter.style.display=visible?'flex':'none';
+      if(summary){summary.style.display=visible?'flex':'none';summary.style.visibility=periodVisible?'visible':'hidden';summary.style.pointerEvents=periodVisible?'auto':'none';}
+      if(filter){filter.style.display=visible?'flex':'none';filter.style.visibility=periodVisible?'visible':'hidden';filter.style.pointerEvents=periodVisible?'auto':'none';}
     }
 
     function activeStaffTenureRows() {
