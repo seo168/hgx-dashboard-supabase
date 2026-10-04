@@ -30,23 +30,27 @@ for(const [employeeId] of transferred){
 }
 
 const adeRows=all.filter(row=>row.employee_name==='阿德'&&String(row.employee_id||'').replace(/\.0$/,'')==='355683');
-if(adeRows.length!==2)throw new Error(`Expected two 阿德 rows before reconciliation, found ${adeRows.length}`);
-const onsite=adeRows.find(row=>row.work_mode==='现场');
-const home=adeRows.find(row=>row.id!==onsite?.id);
-if(!onsite||!home)throw new Error('Cannot identify 阿德 onsite and home rows');
-const merged={
-  employee_id:'355683',employee_name:'阿德',role:'财务',department:'财务',
-  shift:onsite.shift||home.shift||'夜班',country:'印尼',work_mode:'现场',join_date:'2025-11-17',
-  account_name:onsite.account_name||home.account_name||'',platform:onsite.platform||'印度',
-  group_name:'财务',status:'在职',platform_country:'印度',resign_date:null,
-  work_telegram:home.work_telegram||onsite.work_telegram||'',
-  backend_account:onsite.backend_account||home.backend_account||'',
-  bank_account:home.bank_account||onsite.bank_account||'',
-  bank_holder:home.bank_holder||onsite.bank_holder||'',bank_name:home.bank_name||onsite.bank_name||'',
-  updated_at:new Date().toISOString()
-};
-await request(`staff_master?id=eq.${onsite.id}`,{method:'PATCH',body:JSON.stringify(merged)});
-await request(`staff_master?id=eq.${home.id}`,{method:'DELETE'});
+if(!adeRows.length||adeRows.length>2)throw new Error(`Expected one or two 阿德 rows, found ${adeRows.length}`);
+if(adeRows.length===2){
+  const onsite=adeRows.find(row=>row.work_mode==='现场');
+  const home=adeRows.find(row=>row.id!==onsite?.id);
+  if(!onsite||!home)throw new Error('Cannot identify 阿德 onsite and home rows');
+  const merged={
+    employee_id:'355683',employee_name:'阿德',role:'财务',department:'财务',
+    shift:onsite.shift||home.shift||'夜班',country:'印尼',work_mode:'现场',join_date:'2025-11-17',
+    account_name:onsite.account_name||home.account_name||'',platform:onsite.platform||'印度',
+    group_name:'财务',status:'在职',platform_country:'印度',resign_date:null,
+    work_telegram:home.work_telegram||onsite.work_telegram||'',
+    backend_account:onsite.backend_account||home.backend_account||'',
+    bank_account:home.bank_account||onsite.bank_account||'',
+    bank_holder:home.bank_holder||onsite.bank_holder||'',bank_name:home.bank_name||onsite.bank_name||'',
+    updated_at:new Date().toISOString()
+  };
+  await request(`staff_master?id=eq.${onsite.id}`,{method:'PATCH',body:JSON.stringify(merged)});
+  await request(`staff_master?id=eq.${home.id}`,{method:'DELETE'});
+}else{
+  await request(`staff_master?id=eq.${adeRows[0].id}`,{method:'PATCH',body:JSON.stringify({employee_id:'355683',work_mode:'现场',status:'在职',updated_at:new Date().toISOString()})});
+}
 
 const verified=await request('staff_master?select=id,employee_id,employee_name,work_mode,status&limit=1000');
 const transferredRows=verified.filter(row=>row.work_mode==='现场转居家');
