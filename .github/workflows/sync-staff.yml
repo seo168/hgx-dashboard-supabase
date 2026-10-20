@@ -2,6 +2,9 @@ name: Sync staff from Google Sheet
 
 on:
   workflow_dispatch:
+  schedule:
+    # GitHub Actions uses UTC. 17:00 UTC = 00:00 WIB (Asia/Jakarta).
+    - cron: '0 17 * * *'
 
 permissions:
   contents: read
