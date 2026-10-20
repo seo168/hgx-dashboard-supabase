@@ -2086,7 +2086,6 @@
             <button onclick="openStaffData(2)" id="sideStaff-2" class="side-nested-btn"><i class="fas fa-chart-simple"></i> 数据2</button>
             <button onclick="openStaffData(3)" id="sideStaff-3" class="side-nested-btn"><i class="fas fa-chart-simple"></i> 数据3</button>
             <button onclick="openStaffData(4)" id="sideStaff-4" class="side-nested-btn"><i class="fas fa-chart-simple"></i> 数据4</button>
-            <button onclick="openStaffData(5)" id="sideStaff-5" class="side-nested-btn"><i class="fas fa-pen-to-square"></i> 编辑中心</button>
           </div>
         </div>
         <div class="side-menu-group department-menu-group" id="group-dept-finance">
@@ -3938,6 +3937,8 @@
     }
 
     function openStaffData(dataIndex) {
+      // 编辑中心已停用；旧链接或缓存入口统一返回员工信息。
+      if(![1,2,3,4].includes(Number(dataIndex)))dataIndex=1;
       activeStaffData=dataIndex;
       showPage('overview');
       document.querySelectorAll('.side-menu-group').forEach(item=>item.classList.remove('open'));
@@ -3948,10 +3949,8 @@
       document.getElementById('btn-overview')?.classList.add('active');
       const tabs=document.getElementById('staffSystemTabs');
       if(tabs)tabs.style.display=dataIndex===1?'inline-flex':'none';
-      const editor=dataIndex===5;
-      document.getElementById('staffEditor').style.display=editor?'block':'none';
-      document.querySelectorAll('#overview > .overview-panel:not(#staffEditor),#overview > .staff-inner-nav,#staff-list-section,#shift-section').forEach(el=>el.style.display=editor?'none':'');
-      if(editor){populateStaffEditor();updateStaffPageSummary();return;}
+      document.getElementById('staffEditor').style.display='none';
+      document.querySelectorAll('#overview > .overview-panel:not(#staffEditor),#overview > .staff-inner-nav,#staff-list-section,#shift-section').forEach(el=>el.style.display='');
       if(dataIndex===1){updateStaffSystemTabs();setWorkMode(activeStaffSystem);}
       else setWorkMode('全部');
     }
@@ -4591,7 +4590,7 @@
     }
 
     function updateStaffPageSummary() {
-      const dataLabel=activeStaffData===1?'员工信息':activeStaffData===5?'编辑中心':`数据${activeStaffData}`;
+      const dataLabel=activeStaffData===1?'员工信息':`数据${activeStaffData}`;
       const detail=activeWorkMode==='现场'?'现场员工':activeWorkMode==='居家'?'居家员工':activeWorkMode==='现场居家'?'现场转居家员工':'全部工作模式';
       const title=document.getElementById('staffPageTitle');
       const description=document.getElementById('staffPageDescription');
