@@ -2083,7 +2083,7 @@
           <button onclick="openStaffMenu()" id="btn-overview" class="side-menu-btn side-menu-parent"><i class="fas fa-users-gear"></i><span>员工管理</span><i class="fas fa-chevron-down side-chevron"></i></button>
           <div class="side-nested-menu">
             <button onclick="openStaffData(1)" id="sideStaff-1" class="side-nested-btn"><i class="fas fa-address-card"></i> 员工信息</button>
-            <button onclick="openStaffData(2)" id="sideStaff-2" class="side-nested-btn"><i class="fas fa-chart-simple"></i> Exam</button>
+            <button onclick="openStaffData(2)" id="sideStaff-2" class="side-nested-btn"><i class="fas fa-chart-simple"></i> 考试</button>
             <button onclick="openStaffData(3)" id="sideStaff-3" class="side-nested-btn"><i class="fas fa-chart-simple"></i> 数据3</button>
             <button onclick="openStaffData(4)" id="sideStaff-4" class="side-nested-btn"><i class="fas fa-chart-simple"></i> 数据4</button>
           </div>
@@ -4590,7 +4590,7 @@
     }
 
     function updateStaffPageSummary() {
-      const dataLabel=activeStaffData===1?'员工信息':activeStaffData===2?'Exam':`数据${activeStaffData}`;
+      const dataLabel=activeStaffData===1?'员工信息':activeStaffData===2?'考试':`数据${activeStaffData}`;
       const detail=activeWorkMode==='现场'?'现场员工':activeWorkMode==='居家'?'居家员工':activeWorkMode==='现场居家'?'现场转居家员工':'全部工作模式';
       const title=document.getElementById('staffPageTitle');
       const description=document.getElementById('staffPageDescription');
