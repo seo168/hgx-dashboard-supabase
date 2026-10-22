@@ -4169,7 +4169,7 @@
       const systemTabs=document.getElementById('departmentFinanceSystemTabs');
       const dataLabel=module==='finance'&&dataIndex===3?'每个小时成功率':`数据${dataIndex}`;
       const isFinanceHourly=module==='finance'&&dataIndex===3;
-      if(systemTabs)systemTabs.style.display=module==='finance'?'inline-flex':'none';
+      if(systemTabs)systemTabs.style.display=module==='finance'&&dataIndex!==3?'inline-flex':'none';
       const placeholderCard=document.getElementById('departmentPlaceholderCard'),hourlyMatrix=document.getElementById('financeHourlyMatrix');
       if(placeholderCard)placeholderCard.style.display=isFinanceHourly?'none':'flex';
       if(hourlyMatrix)hourlyMatrix.style.display=isFinanceHourly?'block':'none';
