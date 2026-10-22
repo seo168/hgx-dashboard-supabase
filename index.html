@@ -1488,6 +1488,10 @@
     .department-placeholder-card strong{font-size:1.4rem;color:#fff;font-weight:900}
     .department-placeholder-card span{max-width:520px;line-height:1.8;font-size:.82rem}
     .department-placeholder-icon{width:68px;height:68px;border-radius:20px;display:grid;place-items:center;background:linear-gradient(135deg,#2563eb,#475569);color:#fff;font-size:1.55rem;box-shadow:0 18px 40px rgba(37,99,235,.22)}
+    .finance-hourly-panel{padding:18px;border:1px solid #dbe5f0;border-radius:14px;background:#fff;color:#334155;box-shadow:0 8px 24px rgba(15,23,42,.04)}
+    .finance-hourly-head{display:flex;align-items:flex-end;justify-content:space-between;gap:18px;margin-bottom:14px}.finance-hourly-title{display:grid;gap:5px}.finance-hourly-title strong{font-size:.88rem;font-weight:600;color:#1f2937}.finance-hourly-title span{font-size:.7rem;color:#718096}.finance-hourly-tools{display:flex;align-items:flex-end;gap:8px}.finance-hourly-tools label{display:grid;gap:5px;font-size:.65rem;color:#718096}.finance-hourly-tools input{height:34px;padding:0 10px;border:1px solid #d7e1ec;border-radius:6px;background:#fafcff;color:#334155}.finance-hourly-tools button{height:34px;padding:0 13px;border:1px solid #5e84be;border-radius:6px;background:#5e84be;color:#fff;cursor:pointer}
+    .finance-hourly-meta{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}.finance-hourly-meta span{padding:5px 9px;border:1px solid #e1e8f0;border-radius:6px;background:#f7f9fc;color:#64748b;font-size:.66rem}.finance-hourly-table-wrap{max-width:100%;overflow:auto;border:1px solid #dfe7f0;border-radius:9px}.finance-hourly-table{width:max-content;min-width:100%;border-collapse:separate;border-spacing:0}.finance-hourly-table th,.finance-hourly-table td{min-width:82px;height:38px;padding:7px 9px;border-right:1px solid #e7edf4;border-bottom:1px solid #e7edf4;text-align:center;font-size:.68rem;white-space:nowrap}.finance-hourly-table thead th{position:sticky;top:0;z-index:3;background:#edf3fa;color:#40536b;font-weight:600}.finance-hourly-table th:first-child,.finance-hourly-table td:first-child{position:sticky;left:0;z-index:2;min-width:125px;text-align:left;background:#f8fafc;color:#26364b;font-weight:600}.finance-hourly-table thead th:first-child{z-index:4;background:#e8f0f8}.finance-hourly-table td.rate-low{color:#ef4056}.finance-hourly-table td.rate-mid{color:#d97706}.finance-hourly-table td.rate-good{color:#334e68}.finance-hourly-table tbody tr:hover td{background:#f5f9ff}.finance-hourly-table tbody tr:hover td:first-child{background:#edf5ff}.finance-hourly-empty{padding:54px 20px!important;color:#8290a3!important;text-align:center!important;background:#fff!important}
+    @media(max-width:720px){.finance-hourly-head{align-items:stretch;flex-direction:column}.finance-hourly-tools{justify-content:flex-start}.finance-hourly-panel{padding:12px}}
     .side-nested-btn{width:100%;min-height:40px;padding:9px 12px;border-radius:11px;border:1px solid rgba(148,163,184,.13);background:rgba(8,17,31,.3);color:#9fb0c8;font-size:.72rem;font-weight:900;cursor:pointer;text-align:left;display:flex;align-items:center;gap:10px;transition:.2s ease}
     .side-nested-btn i{width:18px;color:#93c5fd;text-align:center}
     .side-nested-btn:hover{color:#fff;border-color:rgba(96,165,250,.32);background:rgba(30,41,59,.55);transform:translateX(2px)}
@@ -2363,10 +2367,18 @@
       <div id="departmentPlaceholder" class="page-content">
         <div class="finance-system-tabs" id="departmentFinanceSystemTabs" style="display:none"><button class="finance-system-tab active" data-finance-system="AA" onclick="setFinancePanelSystem('AA')">AA</button><button class="finance-system-tab" data-finance-system="AR" onclick="setFinancePanelSystem('AR')">AR</button><button class="finance-system-tab" data-finance-system="ALL" onclick="setFinancePanelSystem('ALL')">总汇</button></div>
         <div class="sub-page-title"><h3 id="departmentPlaceholderTitle"><i class="fas fa-layer-group"></i> 数据模块</h3></div>
-        <div class="department-placeholder-card">
+        <div class="department-placeholder-card" id="departmentPlaceholderCard">
           <div class="department-placeholder-icon"><i class="fas fa-chart-column"></i></div>
           <strong id="departmentPlaceholderName">数据</strong>
           <span>该数据页面正在准备中，后续将在这里连接对应的 Supabase 数据与图表。</span>
+        </div>
+        <div class="finance-hourly-panel" id="financeHourlyMatrix" style="display:none">
+          <div class="finance-hourly-head">
+            <div class="finance-hourly-title"><strong><i class="fas fa-clock"></i> 平台每小时成功率</strong><span>成功时间内成功笔数 ÷ 创建时间内全部笔数</span></div>
+            <div class="finance-hourly-tools"><label>数据日期<input type="date" id="financeHourlyDate" onchange="loadFinanceHourlyMatrix()"></label><button type="button" id="financeHourlyRefresh" onclick="loadFinanceHourlyMatrix(true)"><i class="fas fa-rotate"></i> 刷新</button></div>
+          </div>
+          <div class="finance-hourly-meta" id="financeHourlyMeta"></div>
+          <div class="finance-hourly-table-wrap"><table class="finance-hourly-table"><thead id="financeHourlyHead"></thead><tbody id="financeHourlyBody"></tbody></table></div>
         </div>
       </div>
 
@@ -4047,6 +4059,36 @@
       openDepartmentData(module, departmentLastData[module] || 1);
     }
 
+    async function loadFinanceHourlyMatrix() {
+      const dateInput=document.getElementById('financeHourlyDate');
+      if(dateInput&&!dateInput.value)dateInput.value=getRelativeISODate(activeGlobalDate,0);
+      const reportDate=dateInput?.value||getRelativeISODate(activeGlobalDate,0);
+      const head=document.getElementById('financeHourlyHead'),body=document.getElementById('financeHourlyBody'),meta=document.getElementById('financeHourlyMeta'),button=document.getElementById('financeHourlyRefresh');
+      if(!head||!body)return;
+      head.innerHTML=`<tr><th>平台</th>${Array.from({length:24},(_,hour)=>`<th>${String(hour).padStart(2,'0')}:00</th>`).join('')}</tr>`;
+      body.innerHTML='<tr><td class="finance-hourly-empty" colspan="25"><i class="fas fa-spinner fa-spin"></i> 正在读取每小时数据...</td></tr>';
+      if(button){button.disabled=true;button.innerHTML='<i class="fas fa-spinner fa-spin"></i> 读取中';}
+      try{
+        const {data,error}=await supabaseClient.from('finance_hourly').select('report_date,platform,hour,success_rate').eq('report_date',reportDate).order('platform',{ascending:true}).order('hour',{ascending:true}).limit(5000);
+        if(error)throw error;
+        const platforms=new Map();
+        (data||[]).forEach(item=>{
+          const platform=String(item.platform||'-').trim()||'-',hour=Number(item.hour),rate=Number(item.success_rate);
+          if(!platforms.has(platform))platforms.set(platform,Array(24).fill(null));
+          if(Number.isInteger(hour)&&hour>=0&&hour<24&&Number.isFinite(rate))platforms.get(platform)[hour]=rate;
+        });
+        const rows=[...platforms.entries()].sort((a,b)=>a[0].localeCompare(b[0],undefined,{numeric:true,sensitivity:'base'}));
+        const filled=(data||[]).filter(item=>Number.isFinite(Number(item.success_rate))).length;
+        if(meta)meta.innerHTML=`<span><i class="fas fa-calendar-day"></i> ${esc(reportDate)}</span><span><i class="fas fa-layer-group"></i> ${rows.length} 个平台</span><span><i class="fas fa-table-cells"></i> ${filled} 条小时数据</span>`;
+        body.innerHTML=rows.length?rows.map(([platform,rates])=>`<tr><td>${esc(platform)}</td>${rates.map(rate=>{if(rate===null)return '<td>—</td>';const cls=rate<40?'rate-low':rate<50?'rate-mid':'rate-good';return `<td class="${cls}">${rate.toFixed(2)}%</td>`;}).join('')}</tr>`).join(''):`<tr><td class="finance-hourly-empty" colspan="25"><i class="fas fa-circle-info"></i> ${esc(reportDate)} 暂无每小时成功率数据</td></tr>`;
+      }catch(error){
+        if(meta)meta.innerHTML='';
+        body.innerHTML=`<tr><td class="finance-hourly-empty" colspan="25"><i class="fas fa-triangle-exclamation"></i> 读取失败：${esc(error.message||error)}</td></tr>`;
+      }finally{
+        if(button){button.disabled=false;button.innerHTML='<i class="fas fa-rotate"></i> 刷新';}
+      }
+    }
+
     function openDepartmentData(module, dataIndex) {
       const meta = departmentMenuMeta[module];
       if (!meta) return;
@@ -4089,9 +4131,14 @@
       const name = document.getElementById('departmentPlaceholderName');
       const systemTabs=document.getElementById('departmentFinanceSystemTabs');
       const dataLabel=module==='finance'&&dataIndex===3?'每个小时成功率':`数据${dataIndex}`;
+      const isFinanceHourly=module==='finance'&&dataIndex===3;
       if(systemTabs)systemTabs.style.display=module==='finance'?'inline-flex':'none';
+      const placeholderCard=document.getElementById('departmentPlaceholderCard'),hourlyMatrix=document.getElementById('financeHourlyMatrix');
+      if(placeholderCard)placeholderCard.style.display=isFinanceHourly?'none':'flex';
+      if(hourlyMatrix)hourlyMatrix.style.display=isFinanceHourly?'block':'none';
       if (title) title.innerHTML = `<i class="fas ${meta.icon}"></i> ${meta.label} · ${dataLabel}`;
       if (name) name.innerText = `${meta.label} ${dataLabel}`;
+      if(isFinanceHourly)loadFinanceHourlyMatrix();
       if(module==='finance')syncFinancePanelSystem();
     }
 
