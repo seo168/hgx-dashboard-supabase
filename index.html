@@ -2093,7 +2093,7 @@
           <div class="side-nested-menu">
             <button onclick="openDepartmentData('finance',1)" id="sideDept-finance-1" class="side-nested-btn"><i class="fas fa-chart-simple"></i> 数据1</button>
             <button onclick="openDepartmentData('finance',2)" id="sideDept-finance-2" class="side-nested-btn"><i class="fas fa-chart-simple"></i> 数据2</button>
-            <button onclick="openDepartmentData('finance',3)" id="sideDept-finance-3" class="side-nested-btn"><i class="fas fa-chart-simple"></i> 数据3</button>
+            <button onclick="openDepartmentData('finance',3)" id="sideDept-finance-3" class="side-nested-btn"><i class="fas fa-chart-simple"></i> 每个小时成功率</button>
             <button onclick="openDepartmentData('finance',4)" id="sideDept-finance-4" class="side-nested-btn"><i class="fas fa-chart-simple"></i> 数据4</button>
             <button onclick="openDepartmentData('finance',5)" id="sideDept-finance-5" class="side-nested-btn"><i class="fas fa-chart-simple"></i> 数据5</button>
           </div>
@@ -4088,9 +4088,10 @@
       const title = document.getElementById('departmentPlaceholderTitle');
       const name = document.getElementById('departmentPlaceholderName');
       const systemTabs=document.getElementById('departmentFinanceSystemTabs');
+      const dataLabel=module==='finance'&&dataIndex===3?'每个小时成功率':`数据${dataIndex}`;
       if(systemTabs)systemTabs.style.display=module==='finance'?'inline-flex':'none';
-      if (title) title.innerHTML = `<i class="fas ${meta.icon}"></i> ${meta.label} · 数据${dataIndex}`;
-      if (name) name.innerText = `${meta.label} 数据${dataIndex}`;
+      if (title) title.innerHTML = `<i class="fas ${meta.icon}"></i> ${meta.label} · ${dataLabel}`;
+      if (name) name.innerText = `${meta.label} ${dataLabel}`;
       if(module==='finance')syncFinancePanelSystem();
     }
 
