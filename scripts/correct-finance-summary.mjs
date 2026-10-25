@@ -48,7 +48,7 @@ const withdrawQuery = new URLSearchParams({
   select: 'id,amount,total_orders,successful_orders',
   report_date: 'eq.2026-10-24',
   platform: 'eq.66GAME',
-  channel: 'eq.ALL',
+  channel: 'eq.SUMMARY|WITHDRAW|ALL',
   export_type: 'eq.withdraw',
 });
 const withdrawCurrentResponse = await fetch(`${url}/rest/v1/finance_daily?${withdrawQuery}`, { headers });
@@ -58,7 +58,7 @@ if (withdrawRows.length > 1) throw new Error(`Expected at most one withdraw summ
 const withdrawCorrected = {
   report_date: '2026-10-24',
   platform: '66GAME',
-  channel: 'ALL',
+  channel: 'SUMMARY|WITHDRAW|ALL',
   amount: 5281930,
   total_orders: 9128,
   successful_orders: 9128,
