@@ -49,7 +49,6 @@ const withdrawQuery = new URLSearchParams({
   report_date: 'eq.2026-10-24',
   platform: 'eq.66GAME',
   channel: 'eq.SUMMARY|WITHDRAW|ALL',
-  export_type: 'eq.withdraw',
 });
 const withdrawCurrentResponse = await fetch(`${url}/rest/v1/finance_daily?${withdrawQuery}`, { headers });
 if (!withdrawCurrentResponse.ok) throw new Error(await withdrawCurrentResponse.text());
@@ -62,7 +61,7 @@ const withdrawCorrected = {
   amount: 5281930,
   total_orders: 9128,
   successful_orders: 9128,
-  export_type: 'withdraw',
+  export_type: 'withdraw_summary',
   updated_at: new Date().toISOString(),
 };
 const withdrawResponse = await fetch(
