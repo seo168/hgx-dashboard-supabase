@@ -1,0 +1,46 @@
+const required = ['SUPABASE_URL', 'SUPABASE_SERVICE_ROLE_KEY'];
+for (const name of required) {
+  if (!process.env[name]) throw new Error(`Missing ${name}`);
+}
+
+const url = process.env.SUPABASE_URL.replace(/\/$/, '');
+const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const headers = {
+  apikey: key,
+  Authorization: `Bearer ${key}`,
+  'Content-Type': 'application/json',
+};
+
+const target = {
+  report_date: '2026-10-24',
+  platform: '66GAME',
+  channel: 'ALL',
+  export_type: 'recharge',
+};
+const query = new URLSearchParams({
+  select: 'id,amount,total_orders,successful_orders',
+  report_date: `eq.${target.report_date}`,
+  platform: `eq.${target.platform}`,
+  channel: `eq.${target.channel}`,
+  export_type: `eq.${target.export_type}`,
+});
+
+const currentResponse = await fetch(`${url}/rest/v1/finance_daily?${query}`, { headers });
+if (!currentResponse.ok) throw new Error(await currentResponse.text());
+const rows = await currentResponse.json();
+if (rows.length !== 1) throw new Error(`Expected exactly one summary row, found ${rows.length}`);
+
+const corrected = {
+  amount: 7000900,
+  total_orders: 23719,
+  successful_orders: 23719,
+  updated_at: new Date().toISOString(),
+};
+const updateResponse = await fetch(`${url}/rest/v1/finance_daily?id=eq.${rows[0].id}`, {
+  method: 'PATCH',
+  headers: { ...headers, Prefer: 'return=representation' },
+  body: JSON.stringify(corrected),
+});
+if (!updateResponse.ok) throw new Error(await updateResponse.text());
+const updated = await updateResponse.json();
+console.log(JSON.stringify({ before: rows[0], after: updated[0] }, null, 2));
