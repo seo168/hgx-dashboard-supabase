@@ -4152,7 +4152,7 @@
       body.innerHTML='<tr><td class="finance-hourly-empty"><i class="fas fa-spinner fa-spin"></i> 正在计算盈余率...</td></tr>';
       if(button){button.disabled=true;button.innerHTML='<i class="fas fa-spinner fa-spin"></i> 计算中';}
       try{
-        const data=await fetchFinanceDateRange(start,end),grouped=new Map(),platformSet=new Set();
+        const data=await fetchMarginDateRange(start,end),grouped=new Map(),platformSet=new Set();
         (data||[]).forEach(row=>{const date=String(row.report_date||''),platform=String(row.platform||'-').trim()||'-',kind=String(row.export_type||'').toLowerCase(),amount=Number(row.amount||0);if(!date||!Number.isFinite(amount)||!['margin_deposit','margin_withdraw'].includes(kind))return;const key=`${date}|${platform}`;if(!grouped.has(key))grouped.set(key,{deposit:0,withdraw:0});const item=grouped.get(key);if(kind==='margin_deposit')item.deposit=amount;else item.withdraw=amount;platformSet.add(platform);});
         const platforms=[...platformSet].sort((a,b)=>a.localeCompare(b,undefined,{numeric:true,sensitivity:'base'})),sort=document.getElementById('payoutSurplusSort')?.value||'desc',dates=[];for(let cursor=new Date(`${start}T00:00:00Z`),stop=new Date(`${end}T00:00:00Z`);cursor<=stop;cursor.setUTCDate(cursor.getUTCDate()+1))dates.push(cursor.toISOString().slice(0,10));if(sort==='desc')dates.reverse();
         const marginFor=(date,platform)=>{const item=grouped.get(`${date}|${platform}`),deposit=item?.deposit||0,withdraw=item?.withdraw||0;return !item||deposit<=0?null:{value:(deposit-withdraw)/deposit*100,deposit,withdraw};};
@@ -5524,6 +5524,19 @@
         if(error)throw error;rows.push(...(data||[]));if(!data||data.length<1000)break;
       }
       return rows;
+    }
+
+    async function fetchMarginDateRange(startDate,endDate) {
+      const {data,error}=await supabaseClient
+        .from('finance_daily')
+        .select('report_date,platform,amount,export_type,updated_at')
+        .gte('report_date',startDate)
+        .lte('report_date',endDate)
+        .in('export_type',['margin_deposit','margin_withdraw'])
+        .order('report_date',{ascending:false})
+        .limit(1000);
+      if(error)throw error;
+      return data||[];
     }
 
     async function searchFinanceReport(event) {
