@@ -4239,6 +4239,10 @@
     function setFinancePanelSystem(system) {
       activeFinancePanelSystem=['AA','AR','ALL'].includes(system)?system:'AA';
       syncFinancePanelSystem();
+      const platformFilter=document.getElementById('financePlatformFilter'),channelFilter=document.getElementById('financeChannelFilter'),feePlatform=document.getElementById('financeFeePlatform');
+      if(platformFilter)platformFilter.value='';
+      if(channelFilter)channelFilter.value='';
+      if(feePlatform)feePlatform.value='ALL';
       initFinanceFilters();
       renderFinanceAnalytics();
       if(activeRecordModule==='finance')renderFinanceReport();
@@ -7113,7 +7117,7 @@
       arupi:'ARUPI',
       ic2pay:'ICPay2',icpay2:'ICPay2',
       bibipay:'BibiPay',cbibipay:'BibiPay',
-      lkgopay:'LkgoPay',freepapay:'FreePay',free2pay:'FreePay',fastpay:'FastPay',jdpay2:'JDPay',umpay:'UmPay',umoneypay:'UmPay',newwinpay2:'Win2Pay'
+      lkgopay:'LkgoPay',freepapay:'FreePay',free2pay:'FreePay',fastpay:'FastPay',fast2pay:'FastPay',jdpay2:'JDPay',umpay:'UmPay',umoneypay:'UmPay',newwinpay2:'Win2Pay',rupay:'RRPay',arbpayout:'ARUPI',arbupi:'ARUPI'
     };
     function canonicalChannelName(value){
       const raw=String(value||'').trim();
