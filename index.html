@@ -2927,6 +2927,9 @@
     let activePayoutPlatformMetric = 0;
     let activeFinanceChartView = 'hourly';
     let activeFinancePanelSystem = 'AA';
+    const FINANCE_AR_PLATFORMS=new Set(['8IN','G8G','8HI','ET7','AW9','AW9ACE','AW9APP','AW9BET','AW9BIG','AW9BUZZ']);
+    function financeRowSystem(row){return FINANCE_AR_PLATFORMS.has(String(getFinancePlatform(row)||'').trim().toUpperCase())?'AR':'AA'}
+    function financeRowMatchesActiveSystem(row){return activeFinancePanelSystem==='ALL'||financeRowSystem(row)===activeFinancePanelSystem}
     let financeHourlyRawData = [];
     let activeServiceRegion = '全部';
     const INDONESIA_SERVICE_STAFF_IDS = new Set(['CS000177','CS00075','CS000437']);
@@ -4229,18 +4232,16 @@
 
     function syncFinancePanelSystem() {
       document.querySelectorAll('.finance-system-tab').forEach(button=>button.classList.toggle('active',button.dataset.financeSystem===activeFinancePanelSystem));
-      const isAr=activeFinancePanelSystem==='AR';
-      document.getElementById('financeAnalytics')?.classList.toggle('finance-panel-empty',isAr);
-      document.getElementById('finance')?.classList.toggle('finance-panel-empty',isAr);
+      document.getElementById('financeAnalytics')?.classList.remove('finance-panel-empty');
+      document.getElementById('finance')?.classList.remove('finance-panel-empty');
     }
 
     function setFinancePanelSystem(system) {
       activeFinancePanelSystem=['AA','AR','ALL'].includes(system)?system:'AA';
       syncFinancePanelSystem();
-      if(activeFinancePanelSystem!=='AR'){
-        renderFinanceAnalytics();
-        if(activeRecordModule==='finance')renderFinanceReport();
-      }
+      initFinanceFilters();
+      renderFinanceAnalytics();
+      if(activeRecordModule==='finance')renderFinanceReport();
     }
 
     function toggleSideGroup(group) {
@@ -5434,8 +5435,10 @@
     }
 
     function initFinanceFilters() {
-      const platforms = [...new Set([...dbFinance.map(r => getFinancePlatform(r)).filter(value=>value&&value!=='-'),'W5W','ZONO'])].sort();
-      const channels = [...new Set(dbFinance.map(r => String(getAny(r, ['通道','渠道','Channel'], '')).trim()).filter(Boolean))].sort();
+      const visibleRows=dbFinance.filter(financeRowMatchesActiveSystem);
+      const legacyDefaults=activeFinancePanelSystem==='AR'?[]:['W5W','ZONO'];
+      const platforms = [...new Set([...visibleRows.map(r => getFinancePlatform(r)).filter(value=>value&&value!=='-'),...legacyDefaults])].sort();
+      const channels = [...new Set(visibleRows.map(r => String(getAny(r, ['通道','渠道','Channel'], '')).trim()).filter(Boolean))].sort();
       setSoftMultiOptions('financePlatform',platforms,'全部平台');
       setSoftMultiOptions('financeChannel',channels,'全部类型');
     }
@@ -5738,6 +5741,7 @@
 
       return dbFinance.filter(r => {
         if (!isFinanceRowReliable(r)) return false;
+        if (!financeRowMatchesActiveSystem(r)) return false;
         const rowDate = getFinanceDate(r);
         const okDate = endDate ? (!startDate||rowDate>=startDate.replace(/-/g,'/'))&&rowDate<=endDate.replace(/-/g,'/') : autoDates.has(rowDate);
         const okPlatform = !platforms.length || platforms.includes(getFinancePlatform(r));
@@ -5774,7 +5778,7 @@
         });
         return result;
       };
-      const source=mapRows(dbFinanceAnalytics);
+      const source=mapRows(dbFinanceAnalytics.filter(financeRowMatchesActiveSystem));
       const latest=[...new Set(source.map(row=>row.date).filter(Boolean))].sort((a,b)=>(financeDateToObj(a)?.getTime()||0)-(financeDateToObj(b)?.getTime()||0)).pop()||'';
       const selector=document.getElementById('financeFeePlatform');
       const platformOptions=[...new Set(source.map(row=>row.platform).filter(value=>value&&value!=='-'))].sort();
@@ -5804,7 +5808,7 @@
       const base={responsive:true,maintainAspectRatio:false,animation:false,plugins:{legend:{labels:{color:'#526176',usePointStyle:true}}},scales:{x:{ticks:{color:'#718096'},grid:{color:'#edf1f5'}},y:{ticks:{color:'#718096'},grid:{color:'#edf1f5'}}}};
       const targetObj=financeDateToObj(targetDate),dates=targetObj?Array.from({length:7},(_,i)=>{const d=new Date(targetObj);d.setDate(d.getDate()+i-6);return canonicalPayoutDate(financeDateFromObj(d))}):[];
       const feeFor=row=>row.kind==='RECHARGE'?row.amount*row.depositRate/100:row.amount*row.withdrawRate/100+row.orders*row.fixedFee;
-      const trendSource=financeAnalyticsTrendDate===targetDate?mapRows(dbFinanceAnalyticsTrend):source;
+      const trendSource=financeAnalyticsTrendDate===targetDate?mapRows(dbFinanceAnalyticsTrend.filter(financeRowMatchesActiveSystem)):source;
       const weeklySource=trendSource.filter(row=>dates.includes(row.date)&&(selected==='ALL'||row.platform===selected));
       const daily=dates.map(date=>{const list=weeklySource.filter(row=>row.date===date);return{deposit:list.filter(row=>row.kind==='RECHARGE').reduce((sum,row)=>sum+feeFor(row),0),withdraw:list.filter(row=>row.kind==='WITHDRAW').reduce((sum,row)=>sum+feeFor(row),0)}});
       const weeklyDepositFee=weeklySource.filter(row=>row.kind==='RECHARGE').reduce((sum,row)=>sum+feeFor(row),0);
@@ -7134,7 +7138,7 @@
 
     function channelExportRows(){
       const grouped=new Map();
-      (dbFinance||[]).forEach(row=>{
+      (dbFinance||[]).filter(financeRowMatchesActiveSystem).forEach(row=>{
         const parts=String(row['渠道']||'').split('|');
         if(parts.length<3||!['RECHARGE','WITHDRAW'].includes(parts[0]))return;
         const date=String(row['日期']||'').replace(/\//g,'-'),platform=String(row['平台']||'-'),merchant=canonicalChannelName(parts[1]),type=parts[2]||'其他';
@@ -7190,7 +7194,7 @@
       const endDate=document.getElementById('financeDateFilter')?.value||startDate;
       const typeFilter=getSoftMultiValues('financeChannelFilter');
       const grouped=new Map();
-      (dbFinance||[]).forEach(row=>{
+      (dbFinance||[]).filter(financeRowMatchesActiveSystem).forEach(row=>{
         const parts=String(row['渠道']||'').split('|');
         if(parts.length<3||!['RECHARGE','WITHDRAW'].includes(parts[0]))return;
         const rowDate=String(row['日期']||'').replace(/\//g,'-');
