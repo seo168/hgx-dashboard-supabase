@@ -4111,7 +4111,9 @@
     function populateFinanceHourlyFilters(){
       const menu=document.getElementById('financeHourlyPlatformMenu');if(!menu)return;
       const selected=new Set([...menu.querySelectorAll('input[data-platform]:checked')].map(input=>input.value));
-      const platforms=[...new Set(financeHourlyRawData.map(item=>String(item.platform||'-').trim()||'-'))].sort((a,b)=>a.localeCompare(b,undefined,{numeric:true,sensitivity:'base'}));
+      const platformOrder=['66GAME','YYGAME','XX6','XX7','XX5','YY9','PE7','W5W','8IN','G8G','8HI','ET7','AW9','AW9ACE','AW9APP'];
+      const rank=platform=>{const index=platformOrder.indexOf(String(platform).toUpperCase());return index<0?platformOrder.length:index;};
+      const platforms=[...new Set(financeHourlyRawData.map(item=>String(item.platform||'-').trim()||'-'))].sort((a,b)=>rank(a)-rank(b)||a.localeCompare(b,undefined,{numeric:true,sensitivity:'base'}));
       const keepAll=!selected.size||menu.querySelector('input[data-all]')?.checked||!platforms.some(platform=>selected.has(platform));
       menu.innerHTML=`<label class="finance-hourly-platform-option"><input type="checkbox" data-all ${keepAll?'checked':''} onchange="toggleAllFinanceHourlyPlatforms(this)">全部</label>`+platforms.map(platform=>`<label class="finance-hourly-platform-option"><input type="checkbox" data-platform value="${esc(platform)}" ${!keepAll&&selected.has(platform)?'checked':''} onchange="syncFinanceHourlyPlatformSelection()">${esc(platform)}</label>`).join('');
       updateFinanceHourlyPlatformLabel();
@@ -4124,7 +4126,9 @@
       financeHourlyRawData.forEach(item=>{const platform=String(item.platform||'-').trim()||'-',hour=Number(item.hour),rate=Number(item.success_rate);if(!platforms.has(platform))platforms.set(platform,Array(24).fill(null));if(Number.isInteger(hour)&&hour>=0&&hour<24&&Number.isFinite(rate))platforms.get(platform)[hour]=rate;});
       let rows=[...platforms.entries()].filter(([platform,rates])=>{if(!allSelected&&!selectedPlatforms.has(platform))return false;const visible=hours.map(hour=>rates[hour]).filter(rate=>rate!==null);if(rateFilter==='low')return visible.some(rate=>rate<40);if(rateFilter==='mid')return visible.some(rate=>rate>=40&&rate<50);if(rateFilter==='good')return visible.some(rate=>rate>=50);return true;});
       const average=rates=>{const values=hours.map(hour=>rates[hour]).filter(rate=>rate!==null);return values.length?values.reduce((sum,value)=>sum+value,0)/values.length:-1;};
-      rows.sort((a,b)=>sort==='high'?average(b[1])-average(a[1]):sort==='low'?average(a[1])-average(b[1]):a[0].localeCompare(b[0],undefined,{numeric:true,sensitivity:'base'}));
+      const platformOrder=['66GAME','YYGAME','XX6','XX7','XX5','YY9','PE7','W5W','8IN','G8G','8HI','ET7','AW9','AW9ACE','AW9APP'];
+      const rank=platform=>{const index=platformOrder.indexOf(String(platform).toUpperCase());return index<0?platformOrder.length:index;};
+      rows.sort((a,b)=>sort==='high'?average(b[1])-average(a[1]):sort==='low'?average(a[1])-average(b[1]):rank(a[0])-rank(b[0])||a[0].localeCompare(b[0],undefined,{numeric:true,sensitivity:'base'}));
       head.innerHTML=`<tr><th>平台</th>${hours.map(hour=>`<th>${String(hour).padStart(2,'0')}:00</th>`).join('')}</tr>`;
       const filled=rows.reduce((total,[,rates])=>total+hours.filter(hour=>rates[hour]!==null).length,0);
       if(meta)meta.innerHTML=`<span><i class="fas fa-calendar-day"></i> ${esc(reportDate)}</span><span><i class="fas fa-layer-group"></i> ${rows.length} 个平台</span><span><i class="fas fa-clock"></i> 00:00–23:00</span><span><i class="fas fa-table-cells"></i> ${filled} 条小时数据</span>`;
