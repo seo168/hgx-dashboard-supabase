@@ -5772,9 +5772,9 @@
         if(parts.length<3||!['RECHARGE','WITHDRAW'].includes(parts[0]))return;
         const merchant=canonicalChannelName(parts[1]);
         if(merchant==='通道未填写'||merchant.includes('未分配通道'))return;
-        const fee=channelFeeRule(merchant);if(!fee)return;
+        const configuredFee=channelFeeRule(merchant),fee=configuredFee||[0,0,0];
         const date=canonicalPayoutDate(getFinanceDate(row)),platform=getFinancePlatform(row),orders=getFinanceOrders(row),success=getFinanceSuccess(row),amount=getFinanceAmount(row);
-          result.push({date,platform,merchant,kind:parts[0],orders,success,amount,depositRate:fee[0],withdrawRate:fee[1],fixedFee:fee[2]});
+          result.push({date,platform,merchant,kind:parts[0],orders,success,amount,depositRate:fee[0],withdrawRate:fee[1],fixedFee:fee[2],feeConfigured:Boolean(configuredFee)});
         });
         return result;
       };
@@ -5789,7 +5789,7 @@
       const selected=selector?.value||'ALL';
       const dateLabel=document.getElementById('financeFeeDateLabel');if(dateLabel)dateLabel.innerText=`当前结果：${targetDate||'-'} · ${selected==='ALL'?'全部平台':selected}`;
       const selectedRows=source.filter(row=>row.date===targetDate&&(selected==='ALL'||row.platform===selected));
-      const grouped=new Map();selectedRows.forEach(row=>{const key=`${row.platform}|${row.merchant}`;if(!grouped.has(key))grouped.set(key,{platform:row.platform,merchant:row.merchant,depositOrders:0,depositSuccess:0,depositAmount:0,depositFee:0,withdrawOrders:0,withdrawSuccess:0,withdrawAmount:0,withdrawFee:0,depositRate:row.depositRate,withdrawRate:row.withdrawRate,fixedFee:row.fixedFee});const item=grouped.get(key);if(row.kind==='RECHARGE'){item.depositOrders+=row.orders;item.depositSuccess+=row.success;item.depositAmount+=row.amount;item.depositFee+=row.amount*row.depositRate/100}else{item.withdrawOrders+=row.orders;item.withdrawSuccess+=row.success;item.withdrawAmount+=row.amount;item.withdrawFee+=row.amount*row.withdrawRate/100+row.orders*row.fixedFee}});
+      const grouped=new Map();selectedRows.forEach(row=>{const key=`${row.platform}|${row.merchant}`;if(!grouped.has(key))grouped.set(key,{platform:row.platform,merchant:row.merchant,depositOrders:0,depositSuccess:0,depositAmount:0,depositFee:0,withdrawOrders:0,withdrawSuccess:0,withdrawAmount:0,withdrawFee:0,depositRate:row.depositRate,withdrawRate:row.withdrawRate,fixedFee:row.fixedFee,feeConfigured:row.feeConfigured});const item=grouped.get(key);item.feeConfigured=item.feeConfigured||row.feeConfigured;if(row.kind==='RECHARGE'){item.depositOrders+=row.orders;item.depositSuccess+=row.success;item.depositAmount+=row.amount;item.depositFee+=row.amount*row.depositRate/100}else{item.withdrawOrders+=row.orders;item.withdrawSuccess+=row.success;item.withdrawAmount+=row.amount;item.withdrawFee+=row.amount*row.withdrawRate/100+row.orders*row.fixedFee}});
       const rows=[...grouped.values()].sort((a,b)=>(b.depositFee+b.withdrawFee)-(a.depositFee+a.withdrawFee));
       const totals=rows.reduce((sum,row)=>{Object.keys(sum).forEach(key=>sum[key]+=Number(row[key]||0));return sum},{depositOrders:0,depositSuccess:0,depositAmount:0,depositFee:0,withdrawOrders:0,withdrawSuccess:0,withdrawAmount:0,withdrawFee:0});
       totals.totalFee=totals.depositFee+totals.withdrawFee;
@@ -5797,7 +5797,7 @@
       empty?.classList.toggle('show',!hasData);loading?.classList.toggle('show',hasData&&!trendReady);if(grid)grid.style.display=hasData&&trendReady?'grid':'none';
       summary.innerHTML=[['数据日期',targetDate||'-'],['代收成功金额',fmtMoney(totals.depositAmount)],['代收费用',fmtMoney(totals.depositFee)],['代收费用比例',fmtRate(totals.depositAmount?totals.depositFee/totals.depositAmount*100:0)],['代付成功金额',fmtMoney(totals.withdrawAmount)],['代付费用',fmtMoney(totals.withdrawFee)],['代付费用比例',fmtRate(totals.withdrawAmount?totals.withdrawFee/totals.withdrawAmount*100:0)],['全部费用合计',fmtMoney(totals.totalFee)]].map(([k,v])=>`<div class="finance-analytics-stat"><span>${k}</span><strong>${v}</strong></div>`).join('');
       const body=document.getElementById('financeFeeTableBody'),foot=document.getElementById('financeFeeTableFoot');
-      if(body)body.innerHTML=rows.length?rows.map(row=>`<tr><td>${esc(row.platform)}</td><td>${esc(row.merchant)}</td><td>${fmtNumber(row.depositOrders)}</td><td>${fmtNumber(row.depositSuccess)}</td><td>${fmtMoney(row.depositAmount)}</td><td>${fmtRate(row.depositRate)}</td><td>${fmtMoney(row.depositFee)}</td><td>${fmtNumber(row.withdrawOrders)}</td><td>${fmtNumber(row.withdrawSuccess)}</td><td>${fmtMoney(row.withdrawAmount)}</td><td>${fmtRate(row.withdrawRate)} + ${fmtMoney(row.fixedFee)}/单</td><td>${fmtMoney(row.withdrawFee)}</td><td>${fmtMoney(row.depositFee+row.withdrawFee)}</td></tr>`).join(''):'<tr><td colspan="13">当前平台暂无已配置费率的三方数据</td></tr>';
+      if(body)body.innerHTML=rows.length?rows.map(row=>`<tr><td>${esc(row.platform)}</td><td>${esc(row.merchant)}</td><td>${fmtNumber(row.depositOrders)}</td><td>${fmtNumber(row.depositSuccess)}</td><td>${fmtMoney(row.depositAmount)}</td><td>${row.feeConfigured?fmtRate(row.depositRate):'未配置'}</td><td>${row.feeConfigured?fmtMoney(row.depositFee):'—'}</td><td>${fmtNumber(row.withdrawOrders)}</td><td>${fmtNumber(row.withdrawSuccess)}</td><td>${fmtMoney(row.withdrawAmount)}</td><td>${row.feeConfigured?`${fmtRate(row.withdrawRate)} + ${fmtMoney(row.fixedFee)}/单`:'未配置'}</td><td>${row.feeConfigured?fmtMoney(row.withdrawFee):'—'}</td><td>${row.feeConfigured?fmtMoney(row.depositFee+row.withdrawFee):'—'}</td></tr>`).join(''):'<tr><td colspan="13">当前平台暂无三方通道数据</td></tr>';
       if(foot)foot.innerHTML=`<tr><td colspan="2">全部合计</td><td>${fmtNumber(totals.depositOrders)}</td><td>${fmtNumber(totals.depositSuccess)}</td><td>${fmtMoney(totals.depositAmount)}</td><td>${fmtRate(totals.depositAmount?totals.depositFee/totals.depositAmount*100:0)}</td><td>${fmtMoney(totals.depositFee)}</td><td>${fmtNumber(totals.withdrawOrders)}</td><td>${fmtNumber(totals.withdrawSuccess)}</td><td>${fmtMoney(totals.withdrawAmount)}</td><td>${fmtRate(totals.withdrawAmount?totals.withdrawFee/totals.withdrawAmount*100:0)}</td><td>${fmtMoney(totals.withdrawFee)}</td><td>${fmtMoney(totals.totalFee)}</td></tr>`;
       financeAnalyticsCharts.forEach(chart=>chart?.destroy());financeAnalyticsCharts=[];if(!hasData||!trendReady)return;
       const colors=['#2563eb','#16a34a','#f59e0b','#7c3aed','#0891b2','#dc2626','#db2777','#0f766e'];
@@ -7105,7 +7105,7 @@
     const CHANNEL_FEE_RULES={
       swaypay:[4,3,6],busspay:[4,3,6],win2pay:[4,3,6],tukpay:[4,3,6],tigerpay:[4,3,6],rushpay:[4,3,6],rhinopay:[4,3,6],onepay:[4,3,6],masterpay:[3.9,3,6],lkgopay:[3.8,3,6],icpay2:[4,3,6],ic2pay:[4,3,6],hfpay:[4,3,6],freepapay:[4,3,6],freepay:[4,3,6],fastpay:[4,3,6],elepay:[4,3,6],chakrapay:[4,3,6],cedarpay:[4,3,6],bibipay:[4,3,6],apay:[4,3,6],"999pay":[3.8,3,6],"3tapay":[4,2.5,6],aelopay:[4,3,6],wzpay:[3.8,2.5,6],nova3pay:[3.7,3,6],maxpay:[4,3,6],movpay:[4,3,6],lovepay:[3.5,2,6],hengxpay:[3.8,2.7,6],cqgpay:[3.5,2.5,6],dypay:[4,2.8,6],rrpay:[4,3,6],t3pay:[3.8,3,6],atpay:[4,1,6],arupi:[4,0,6],ttpay:[4,3,6],smoopay:[3.8,3,6],deepay:[4.5,2.5,6],nekpay:[4.3,3,6],lsppay:[3.7,2.5,6],btpay:[3.5,2.5,6],umpay:[4,2.5,6],jdpay:[4,3,6],wypay:[4,2.6,6],ox2pay:[3.8,2.5,6],huixpay:[4.5,3,6]
     };
-    function channelFeeRule(merchant){return CHANNEL_FEE_RULES[String(merchant||'').toLowerCase().replace(/\s+/g,'')]||null}
+    function channelFeeRule(merchant){const key=String(merchant||'').toLowerCase().replace(/[^a-z0-9]/g,'').replace(/inrwake$/,'').replace(/inr$/,'');return CHANNEL_FEE_RULES[key]||null}
 
     let channelAggregateView='platform';
     const CHANNEL_NAME_ALIASES={
@@ -7113,13 +7113,13 @@
       arupi:'ARUPI',
       ic2pay:'ICPay2',icpay2:'ICPay2',
       bibipay:'BibiPay',cbibipay:'BibiPay',
-      lkgopay:'LkgoPay',freepapay:'FreePay',free2pay:'FreePay',fastpay:'FastPay',jdpay2:'JDPay',umpay:'UmPay'
+      lkgopay:'LkgoPay',freepapay:'FreePay',free2pay:'FreePay',fastpay:'FastPay',jdpay2:'JDPay',umpay:'UmPay',umoneypay:'UmPay',newwinpay2:'Win2Pay'
     };
     function canonicalChannelName(value){
       const raw=String(value||'').trim();
       if(!raw||raw==='未分配'||raw==='通道未填写')return '通道未填写';
-      const key=raw.toLowerCase().replace(/[^a-z0-9]/g,'');
-      return CHANNEL_NAME_ALIASES[key]||raw.replace(/\s+/g,'');
+      const key=raw.toLowerCase().replace(/[^a-z0-9]/g,'').replace(/inrwake$/,'').replace(/inr$/,'');
+      return CHANNEL_NAME_ALIASES[key]||raw.replace(/inr(?:-?wake)?$/i,'').replace(/\s+/g,'');
     }
     function setChannelAggregateView(view){
       channelAggregateView=view==='merchant'?'merchant':'platform';
