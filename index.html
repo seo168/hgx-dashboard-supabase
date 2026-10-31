@@ -5859,7 +5859,7 @@
       const status = document.getElementById('financePlatformStatus');
       if (!wrap) return;
       const map = {};
-      rows.forEach(r => {
+      getFinanceDepositSummaryRows(rows).forEach(r => {
         const name = getFinancePlatform(r);
         if (!map[name]) map[name] = { orders:0, success:0, failed:0, amount:0, channels:new Set() };
         map[name].orders += getFinanceOrders(r);
@@ -5932,7 +5932,7 @@
       const titleMap={daily:'7日订单趋势',rate:'7日成功率趋势',amount:'7日金额趋势',platform:'平台订单对比',platformAmount:'平台金额对比',channel:'渠道订单对比',channelAmount:'渠道金额对比'};
       const title=document.getElementById('recordTrendTitle');
       if (title) title.innerHTML=`<i class="fas fa-chart-area"></i> ${titleMap[activeFinanceChartView]||'财务统计'}`;
-      const activeRows=dbFinance.filter(row=>isFinanceRowReliable(row)&&(getFinanceOrders(row)>0||getFinanceAmount(row)>0||getFinanceRechargeSuccessAmount(row)>0));
+      const activeRows=getFinanceDepositSummaryRows(dbFinance.filter(row=>financeRowMatchesActiveSystem(row)&&isFinanceRowReliable(row)&&(getFinanceOrders(row)>0||getFinanceAmount(row)>0||getFinanceRechargeSuccessAmount(row)>0)));
       const reportDate=financeDateToObj(getRelativeISODate(activeGlobalDate,0));
       const allDates=[...new Set(activeRows.map(getFinanceDate).filter(date=>{
         const value=financeDateToObj(date);
@@ -6302,10 +6302,10 @@
 
       function buildGrouped(sourceRows) {
         const grouped = {};
-        sourceRows.forEach(r => {
+        const reliableRows=(sourceRows||[]).filter(isFinanceRowReliable);
+        getFinanceDepositSummaryRows(reliableRows).forEach(r => {
           const date = getFinanceDate(r) || '-';
           const platform = getFinancePlatform(r);
-          const ch = normalizeChannelName(getFinanceChannel(r));
           const key = `${date}__${platform}`;
 
           if (!grouped[key]) {
@@ -6332,12 +6332,15 @@
           grouped[key].success += success;
           grouped[key].amount += amount;
           grouped[key].rechargeSuccessAmount += getFinanceRechargeSuccessAmount(r);
-
-          if (grouped[key].channel[ch]) {
-            grouped[key].channel[ch].orders += orders;
-            grouped[key].channel[ch].success += success;
-            grouped[key].channel[ch].amount += amount;
-          }
+        });
+        reliableRows.filter(r=>String(getFinanceChannel(r)).toUpperCase().startsWith('RECHARGE|')).forEach(r=>{
+          const date=getFinanceDate(r)||'-',platform=getFinancePlatform(r),key=`${date}__${platform}`;
+          if(!grouped[key])return;
+          const ch=normalizeChannelName(getFinanceChannel(r));
+          if(!grouped[key].channel[ch])return;
+          grouped[key].channel[ch].orders+=getFinanceOrders(r);
+          grouped[key].channel[ch].success+=getFinanceSuccess(r);
+          grouped[key].channel[ch].amount+=getFinanceAmount(r);
         });
         return grouped;
       }
@@ -6364,6 +6367,7 @@
       const platformFilter = getSoftMultiValues('financePlatformFilter');
       const channelFilter = getSoftMultiValues('financeChannelFilter');
       const compareSourceRows = dbFinance.filter(r => {
+        if(!financeRowMatchesActiveSystem(r)||!isFinanceRowReliable(r))return false;
         const okPlatform = !platformFilter.length || platformFilter.includes(getFinancePlatform(r));
         const okChannel = !channelFilter.length || channelFilter.includes(getFinanceChannel(r));
         return okPlatform && okChannel;
