@@ -2928,7 +2928,7 @@
     let activePayoutPlatformMetric = 0;
     let activeFinanceChartView = 'hourly';
     let activeFinancePanelSystem = 'AA';
-    const FINANCE_AR_PLATFORMS=new Set(['8IN','G8G','8HI','ET7','AW9','AW9ACE','AW9APP','AU6','AW9BIG','AW9BUZZ']);
+    const FINANCE_AR_PLATFORMS=new Set(['8IN','G8G','8HI','ET7','AW9','AW9ACE','AW9APP','AU6','3T3','EK5']);
     function financeRowSystem(row){return FINANCE_AR_PLATFORMS.has(String(getFinancePlatform(row)||'').trim().toUpperCase())?'AR':'AA'}
     function financeRowMatchesActiveSystem(row){return activeFinancePanelSystem==='ALL'||financeRowSystem(row)===activeFinancePanelSystem}
     let financeHourlyRawData = [];
