@@ -4075,12 +4075,19 @@
       const row=document.querySelector(`[data-quick-row="${index}"]`);if(!row)return;
       const originalId=row.dataset.originalId||'',isNew=row.dataset.new==='1',fields=['platform','role','employee_id','employee_name','backend_account','shift','join_date','country','group_name','work_mode','bank_account'],payload={};
       fields.forEach(field=>payload[field]=row.querySelector(`[data-quick-field="${field}"]`)?.value?.trim()||'');
-      if(!payload.employee_id||!payload.employee_name){alert('ID 和 姓名不能为空');return;}
+      if(!payload.employee_id||!payload.employee_name||!payload.join_date){alert('ID、姓名和入职日期不能为空');return;}
+      if(isNew&&dbEditorStaff.some(item=>String(item.employee_id||'').toLowerCase()===payload.employee_id.toLowerCase())){alert('员工 ID 已存在，请使用其他 ID');return;}
       setStaffButtonLoading(button,true,isNew?'正在新增…':'正在保存…');
       try{
-        if(isNew){payload.department=payload.role;payload.account_name=payload.backend_account;payload.status='在职';payload.updated_at=new Date().toISOString();const {error}=await supabaseClient.from('staff_master').insert(payload);if(error)throw error;await logStaffAudit(payload.employee_id,payload.employee_name,'表格新增员工',{员工ID:{menjadi:payload.employee_id},姓名:{menjadi:payload.employee_name}});staffQuickDraftVisible=false;}
+        if(isNew){
+          payload.department=payload.role;payload.account_name=payload.backend_account;payload.status='在职';payload.updated_at=new Date().toISOString();
+          const {data:inserted,error}=await supabaseClient.from('staff_master').insert(payload).select('employee_id,employee_name').single();if(error)throw error;if(!inserted?.employee_id)throw new Error('Supabase 未返回新增员工，请重试');
+          staffQuickDraftVisible=false;
+          try{await logStaffAudit(payload.employee_id,payload.employee_name,'表格新增员工',{员工ID:{menjadi:payload.employee_id},姓名:{menjadi:payload.employee_name}});}catch(auditError){console.warn('员工已新增，但审计日志写入失败',auditError);}
+        }
         else{const old=dbEditorStaff.find(item=>item.employee_id===originalId)||{},changes={};fields.forEach(field=>{if(String(old[field]||'')!==payload[field])changes[field]={dari:old[field]||'',menjadi:payload[field]};});if(!Object.keys(changes).length)return;payload.department=payload.role;payload.account_name=payload.backend_account;payload.updated_at=new Date().toISOString();const {error}=await supabaseClient.from('staff_master').update(payload).eq('employee_id',originalId);if(error)throw error;await logStaffAudit(payload.employee_id,payload.employee_name,'表格编辑员工',changes);}
         await loadData();await populateStaffEditor();
+        if(isNew)alert(`新增成功：${payload.employee_name} (#${payload.employee_id})`);
       }catch(error){alert(`保存失败：${error.message||error}`);}finally{setStaffButtonLoading(button,false);}
     }
     function setStaffChoice(id,placeholder,items){const select=document.getElementById(id);if(!select)return;select.innerHTML=`<option value="">${placeholder}</option>`+items.map(item=>`<option value="${esc(item.value)}">${esc(item.label)}</option>`).join('');}
