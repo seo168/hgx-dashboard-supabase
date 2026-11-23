@@ -1970,6 +1970,8 @@
     .staff-system-tabs{display:inline-flex;align-items:center;gap:4px;margin:0 0 12px;padding:4px;border:1px solid #dce4ed;border-radius:8px;background:#f3f6fa}
     .staff-system-tab{min-width:82px;height:32px;padding:0 16px;border:0;border-radius:5px;background:transparent;color:#64748b;cursor:pointer;font-size:.72rem}
     .staff-system-tab:hover{background:#e9eff7;color:#405774}.staff-system-tab.active{background:#5b7fba;color:#fff;box-shadow:0 2px 7px rgba(59,92,145,.18)}
+    .staff-system-tab.staff-edit-tab{min-width:72px;border-left:1px solid #d7e0eb;color:#435f86}.staff-system-tab.staff-edit-tab.active{background:#4f6f9f;color:#fff}
+    .staff-quick-editor{margin-bottom:14px;padding:0!important;overflow:hidden}.staff-quick-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;border-bottom:1px solid #e4eaf1;background:#f8fafc}.staff-quick-title{display:flex;align-items:center;gap:8px;color:#334155;font-size:.82rem;font-weight:800}.staff-quick-actions{display:flex;align-items:center;gap:7px;flex-wrap:wrap}.staff-quick-actions input{width:220px;height:34px;padding:0 10px}.staff-quick-actions button{width:auto!important;min-width:auto!important;height:34px!important;padding:0 12px!important;font-size:.68rem!important}.staff-quick-table-wrap{max-height:66vh;overflow:auto}.staff-quick-table{min-width:1540px;border-collapse:separate;border-spacing:0}.staff-quick-table th{position:sticky;top:0;z-index:4;white-space:nowrap;text-align:center}.staff-quick-table td{padding:5px!important;min-width:112px}.staff-quick-table td:nth-child(3){min-width:125px}.staff-quick-table td:nth-child(4){min-width:150px}.staff-quick-table td:nth-child(7){min-width:132px}.staff-quick-table td:nth-child(8){min-width:110px}.staff-quick-table td:nth-child(12){min-width:190px}.staff-quick-table td:last-child{position:sticky;right:0;z-index:2;min-width:82px;background:#fff!important}.staff-quick-table th:last-child{position:sticky;right:0;z-index:5}.staff-quick-table input,.staff-quick-table select{width:100%;height:32px;padding:0 8px;font-size:.68rem;border:1px solid #dbe3ec;border-radius:5px;background:#fff;color:#27364a}.staff-quick-table input[readonly]{background:#f1f4f8;color:#6b7788;cursor:default}.staff-quick-save{width:100%!important;min-width:70px!important;padding:6px 8px!important;font-size:.66rem!important}.staff-quick-empty{text-align:center!important;padding:28px!important;color:#78869a!important}
     .staff-page-header{display:flex;align-items:center;margin-bottom:12px;padding:14px 16px;border:1px solid #e3e9f0;border-radius:8px;background:#fff;box-shadow:0 1px 5px rgba(51,65,85,.035)}
     .staff-page-heading{display:flex;align-items:center;gap:10px;min-width:0}.staff-page-heading>i{display:grid;place-items:center;width:34px;height:34px;flex:0 0 34px;border-radius:6px;background:#e7eef8;color:#5b7fba;font-size:.9rem}
     .staff-page-heading h2{margin:0;color:#111827;font-size:1.12rem}.staff-page-heading p{margin:5px 0 0;color:#64748b;font-size:.72rem}
@@ -2191,9 +2193,27 @@
         <button type="button" class="staff-system-tab" data-staff-system="现场居家" onclick="setStaffSystemMode('现场居家')">现场转居家</button>
         <button type="button" class="staff-system-tab" data-staff-system="现场" onclick="setStaffSystemMode('现场')">现场</button>
         <button type="button" class="staff-system-tab" data-staff-system="全部" onclick="setStaffSystemMode('全部')">总汇</button>
+        <button type="button" id="staffQuickEditTab" class="staff-system-tab staff-edit-tab" onclick="openStaffQuickEditor()"><i class="fas fa-pen-to-square"></i> 编辑</button>
       </div>
       <div class="staff-page-header">
         <div class="staff-page-heading"><i class="fas fa-users-gear"></i><div><h2 id="staffPageTitle">员工管理</h2><p id="staffPageDescription">Supabase 员工主数据 · 当前筛选结果</p></div></div>
+      </div>
+      <div id="staffQuickEditor" class="overview-panel staff-quick-editor" style="display:none">
+        <div class="staff-quick-head">
+          <div class="staff-quick-title"><i class="fas fa-table-cells"></i> 员工资料编辑表 <span id="staffQuickCount" style="color:#8190a3;font-weight:600">0 条数据</span></div>
+          <div class="staff-quick-actions">
+            <input id="staffQuickSearch" oninput="renderStaffQuickTable()" placeholder="搜索 ID、姓名、后台账号">
+            <button type="button" class="menu-btn" onclick="addStaffQuickRow()"><i class="fas fa-plus"></i> 新增一行</button>
+            <button type="button" class="menu-btn" onclick="populateStaffEditor()"><i class="fas fa-rotate"></i> 刷新</button>
+            <button type="button" class="menu-btn" onclick="closeStaffQuickEditor()"><i class="fas fa-arrow-left"></i> 返回</button>
+          </div>
+        </div>
+        <div class="staff-quick-table-wrap">
+          <table class="staff-quick-table">
+            <thead><tr><th>盘口</th><th>岗位</th><th>ID</th><th>姓名</th><th>后台账号</th><th>shift</th><th>入职日期</th><th>工作时间</th><th>国家</th><th>岗位</th><th>工作模式</th><th>银行账号</th><th>操作</th></tr></thead>
+            <tbody id="staffQuickBody"><tr><td colspan="13" class="staff-quick-empty">点击编辑后正在读取员工数据…</td></tr></tbody>
+          </table>
+        </div>
       </div>
       <div id="staffEditor" class="overview-panel" style="display:none">
         <div class="overview-head"><div class="section-title"><i class="fas fa-pen-to-square"></i> 员工资料编辑中心</div></div>
@@ -3957,12 +3977,16 @@
     let dbEditorStaff = [];
     let editingStaffId = '';
     let staffHistoryExportRows = [];
+    let staffQuickEditorOpen = false;
+    let staffQuickDraftVisible = false;
 
     function updateStaffSystemTabs() {
       document.querySelectorAll('.staff-system-tab').forEach(btn=>btn.classList.toggle('active',btn.dataset.staffSystem===activeStaffSystem));
+      document.getElementById('staffQuickEditTab')?.classList.toggle('active',staffQuickEditorOpen);
     }
 
     function setStaffSystemMode(mode) {
+      if(staffQuickEditorOpen)closeStaffQuickEditor(true);
       activeStaffSystem=mode;
       updateStaffSystemTabs();
       setWorkMode(mode);
@@ -3988,8 +4012,10 @@
       document.getElementById('btn-overview')?.classList.add('active');
       const tabs=document.getElementById('staffSystemTabs');
       if(tabs)tabs.style.display=dataIndex===1?'inline-flex':'none';
+      staffQuickEditorOpen=false;
+      document.getElementById('staffQuickEditor').style.display='none';
       document.getElementById('staffEditor').style.display='none';
-      document.querySelectorAll('#overview > .overview-panel:not(#staffEditor),#overview > .staff-inner-nav,#staff-list-section,#shift-section').forEach(el=>el.style.display='');
+      document.querySelectorAll('#overview > .overview-panel:not(#staffEditor):not(#staffQuickEditor),#overview > .staff-inner-nav,#staff-list-section,#shift-section').forEach(el=>el.style.display='');
       if(dataIndex===1){updateStaffSystemTabs();setWorkMode(activeStaffSystem);}
       else setWorkMode('全部');
     }
@@ -3998,7 +4024,62 @@
       const {data,error}=await supabaseClient.from('staff_master').select('employee_id,employee_name,join_date,resign_date,bank_account,bank_name,bank_holder,status,platform,group_name,role,shift,country,work_mode,work_telegram,backend_account').order('employee_name',{ascending:true});
       if(error){const body=document.getElementById('staffEditorBody');if(body)body.innerHTML=`<tr><td colspan="8">读取失败：${esc(error.message)}</td></tr>`;return;}
       dbEditorStaff=data||[];
-      populateNewStaffChoices();renderStaffEditorTable();loadStaffEditHistory();
+      populateNewStaffChoices();renderStaffEditorTable();renderStaffQuickTable();loadStaffEditHistory();
+    }
+    function openStaffQuickEditor(){
+      activeStaffData=1;staffQuickEditorOpen=true;staffQuickDraftVisible=false;
+      showPage('overview');
+      document.querySelectorAll('.side-menu-group').forEach(item=>item.classList.remove('open'));
+      document.getElementById('group-staff')?.classList.add('open');
+      document.querySelectorAll('[id^="sideStaff-"]').forEach(btn=>btn.classList.remove('active'));
+      document.getElementById('sideStaff-1')?.classList.add('active');
+      document.querySelectorAll('.side-menu-btn').forEach(btn=>btn.classList.remove('active'));
+      document.getElementById('btn-overview')?.classList.add('active');
+      document.getElementById('staffQuickEditor').style.display='';
+      document.getElementById('staffEditor').style.display='none';
+      document.querySelectorAll('#overview > .overview-panel:not(#staffEditor):not(#staffQuickEditor),#overview > .staff-inner-nav,#staff-list-section,#shift-section').forEach(el=>el.style.display='none');
+      updateStaffSystemTabs();populateStaffEditor();
+    }
+    function closeStaffQuickEditor(restore=true){
+      staffQuickEditorOpen=false;staffQuickDraftVisible=false;
+      document.getElementById('staffQuickEditor').style.display='none';
+      if(restore)openStaffData(1);else updateStaffSystemTabs();
+    }
+    function staffWorkTime(joinDate){
+      if(!joinDate)return '';
+      const start=new Date(`${joinDate}T00:00:00`),now=new Date();if(Number.isNaN(start.getTime())||start>now)return '';
+      let months=(now.getFullYear()-start.getFullYear())*12+(now.getMonth()-start.getMonth());if(now.getDate()<start.getDate())months=Math.max(0,months-1);
+      if(months>=12){const years=Math.floor(months/12),rest=months%12;return `${years}年${rest?`${rest}个月`:''}`;}
+      return months?`${months}个月`:'不足1个月';
+    }
+    function staffQuickControl(index,field,value,type='text',readonly=false){return `<input data-quick-field="${field}" data-quick-index="${index}" type="${type}" value="${esc(value||'')}"${readonly?' readonly':''}${field==='join_date'?` onchange="syncStaffQuickWorkTime(${index},this.value)"`:''}>`;}
+    function staffQuickSelect(index,field,value,options){return `<select data-quick-field="${field}" data-quick-index="${index}">${options.map(option=>`<option value="${esc(option)}"${option===value?' selected':''}>${esc(option||'请选择')}</option>`).join('')}</select>`;}
+    function staffQuickRow(row,index,isNew=false){
+      const mode=row.work_mode||'居家';
+      return `<tr data-quick-row="${index}" data-original-id="${esc(isNew?'':row.employee_id||'')}" data-new="${isNew?'1':'0'}"><td>${staffQuickControl(index,'platform',row.platform)}</td><td>${staffQuickControl(index,'role',row.role)}</td><td>${staffQuickControl(index,'employee_id',row.employee_id)}</td><td>${staffQuickControl(index,'employee_name',row.employee_name)}</td><td>${staffQuickControl(index,'backend_account',row.backend_account)}</td><td>${staffQuickControl(index,'shift',row.shift)}</td><td>${staffQuickControl(index,'join_date',row.join_date,'date')}</td><td>${staffQuickControl(index,'work_time',staffWorkTime(row.join_date),'text',true)}</td><td>${staffQuickControl(index,'country',row.country)}</td><td>${staffQuickControl(index,'group_name',row.group_name)}</td><td>${staffQuickSelect(index,'work_mode',mode,['居家','现场转居家','现场'])}</td><td>${staffQuickControl(index,'bank_account',row.bank_account)}</td><td><button type="button" class="menu-btn active staff-quick-save" onclick="saveStaffQuickRow(${index},this)"><i class="fas fa-floppy-disk"></i> 保存</button></td></tr>`;
+    }
+    function renderStaffQuickTable(){
+      const body=document.getElementById('staffQuickBody');if(!body)return;
+      const keyword=(document.getElementById('staffQuickSearch')?.value||'').trim().toLowerCase();
+      const rows=dbEditorStaff.filter(row=>!keyword||[row.employee_id,row.employee_name,row.backend_account].some(value=>String(value||'').toLowerCase().includes(keyword)));
+      const count=document.getElementById('staffQuickCount');if(count)count.textContent=`${rows.length} 条数据`;
+      let html=staffQuickDraftVisible?staffQuickRow({work_mode:activeStaffSystem==='全部'?'居家':activeStaffSystem},'new',true):'';
+      html+=rows.map((row,index)=>staffQuickRow(row,index,false)).join('');
+      body.innerHTML=html||'<tr><td colspan="13" class="staff-quick-empty">没有符合条件的员工数据</td></tr>';
+    }
+    function addStaffQuickRow(){staffQuickDraftVisible=true;const search=document.getElementById('staffQuickSearch');if(search)search.value='';renderStaffQuickTable();setTimeout(()=>document.querySelector('[data-quick-row="new"] input')?.focus(),20);}
+    function syncStaffQuickWorkTime(index,value){const row=document.querySelector(`[data-quick-row="${index}"]`);const field=row?.querySelector('[data-quick-field="work_time"]');if(field)field.value=staffWorkTime(value);}
+    async function saveStaffQuickRow(index,button){
+      const row=document.querySelector(`[data-quick-row="${index}"]`);if(!row)return;
+      const originalId=row.dataset.originalId||'',isNew=row.dataset.new==='1',fields=['platform','role','employee_id','employee_name','backend_account','shift','join_date','country','group_name','work_mode','bank_account'],payload={};
+      fields.forEach(field=>payload[field]=row.querySelector(`[data-quick-field="${field}"]`)?.value?.trim()||'');
+      if(!payload.employee_id||!payload.employee_name){alert('ID 和 姓名不能为空');return;}
+      setStaffButtonLoading(button,true,isNew?'正在新增…':'正在保存…');
+      try{
+        if(isNew){payload.department=payload.role;payload.account_name=payload.backend_account;payload.status='在职';payload.updated_at=new Date().toISOString();const {error}=await supabaseClient.from('staff_master').insert(payload);if(error)throw error;await logStaffAudit(payload.employee_id,payload.employee_name,'表格新增员工',{员工ID:{menjadi:payload.employee_id},姓名:{menjadi:payload.employee_name}});staffQuickDraftVisible=false;}
+        else{const old=dbEditorStaff.find(item=>item.employee_id===originalId)||{},changes={};fields.forEach(field=>{if(String(old[field]||'')!==payload[field])changes[field]={dari:old[field]||'',menjadi:payload[field]};});if(!Object.keys(changes).length)return;payload.department=payload.role;payload.account_name=payload.backend_account;payload.updated_at=new Date().toISOString();const {error}=await supabaseClient.from('staff_master').update(payload).eq('employee_id',originalId);if(error)throw error;await logStaffAudit(payload.employee_id,payload.employee_name,'表格编辑员工',changes);}
+        await loadData();await populateStaffEditor();
+      }catch(error){alert(`保存失败：${error.message||error}`);}finally{setStaffButtonLoading(button,false);}
     }
     function setStaffChoice(id,placeholder,items){const select=document.getElementById(id);if(!select)return;select.innerHTML=`<option value="">${placeholder}</option>`+items.map(item=>`<option value="${esc(item.value)}">${esc(item.label)}</option>`).join('');}
     function populateNewStaffChoices(){
