@@ -4047,12 +4047,13 @@
     }
     function staffWorkTime(joinDate){
       if(!joinDate)return '';
-      const start=new Date(`${joinDate}T00:00:00`),now=new Date();if(Number.isNaN(start.getTime())||start>now)return '';
+      const normalized=String(joinDate).slice(0,10).replaceAll('/','-');
+      const start=new Date(`${normalized}T00:00:00`),now=new Date();if(Number.isNaN(start.getTime())||start>now)return '';
       let months=(now.getFullYear()-start.getFullYear())*12+(now.getMonth()-start.getMonth());if(now.getDate()<start.getDate())months=Math.max(0,months-1);
       if(months>=12){const years=Math.floor(months/12),rest=months%12;return `${years}年${rest?`${rest}个月`:''}`;}
       return months?`${months}个月`:'不足1个月';
     }
-    function staffQuickControl(index,field,value,type='text',readonly=false){return `<input data-quick-field="${field}" data-quick-index="${index}" type="${type}" value="${esc(value||'')}"${readonly?' readonly':''}${field==='join_date'?` onchange="syncStaffQuickWorkTime(${index},this.value)"`:''}>`;}
+    function staffQuickControl(index,field,value,type='text',readonly=false){return `<input data-quick-field="${field}" data-quick-index="${index}" type="${type}" value="${esc(value||'')}"${readonly?' readonly':''}${field==='join_date'?` oninput="syncStaffQuickWorkTime(${index},this.value)" onchange="syncStaffQuickWorkTime(${index},this.value)"`:''}>`;}
     function staffQuickSelect(index,field,value,options){return `<select data-quick-field="${field}" data-quick-index="${index}">${options.map(option=>`<option value="${esc(option)}"${option===value?' selected':''}>${esc(option||'请选择')}</option>`).join('')}</select>`;}
     function staffQuickRow(row,index,isNew=false){
       const mode=row.work_mode||'居家';
