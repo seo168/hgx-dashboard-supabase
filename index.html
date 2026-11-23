@@ -1974,6 +1974,7 @@
     .operation-toast{position:fixed!important;top:76px!important;left:50%!important;z-index:2147483647!important;display:flex!important;visibility:hidden!important;align-items:center;gap:9px;min-width:240px;padding:12px 18px;border:2px solid rgba(255,255,255,.92);border-radius:9px;color:#fff!important;font-size:.78rem;font-weight:900;box-shadow:0 12px 34px rgba(15,23,42,.3);opacity:0!important;pointer-events:none;transform:translate(-50%,-14px);transition:opacity .2s ease,transform .2s ease}.operation-toast.show{visibility:visible!important;opacity:1!important;transform:translate(-50%,0)}.operation-toast.success{background:#16a34a!important}.operation-toast.failed{background:#dc2626!important}.operation-toast span{color:#fff!important}@media(max-width:640px){.operation-toast{top:70px!important;min-width:210px;max-width:calc(100vw - 28px)}}
     .staff-save-confirm{position:fixed;inset:0;z-index:10040;display:none;align-items:center;justify-content:center;padding:20px;background:rgba(15,23,42,.38);backdrop-filter:blur(2px)}.staff-save-confirm.show{display:flex}.staff-save-confirm-card{width:min(390px,94vw);padding:20px;border:1px solid #dbe3ec;border-radius:12px;background:#fff;box-shadow:0 24px 60px rgba(15,23,42,.24)}.staff-save-confirm-title{display:flex;align-items:center;gap:9px;margin-bottom:8px;color:#172033;font-size:1rem;font-weight:900}.staff-save-confirm-text{margin:0 0 18px;color:#66758a;font-size:.76rem;line-height:1.55}.staff-save-confirm-actions{display:flex;justify-content:flex-end;gap:8px}.staff-save-confirm-actions button{width:auto!important;min-width:86px!important}
     .staff-operation-banner{display:none;align-items:center;justify-content:center;gap:9px;margin:0;padding:12px 16px;color:#fff!important;font-size:.78rem;font-weight:900;letter-spacing:.02em}.staff-operation-banner.show{display:flex}.staff-operation-banner.success{background:#16a34a}.staff-operation-banner.failed{background:#dc2626}.staff-operation-banner span,.staff-operation-banner i{color:#fff!important}
+    .staff-status-tabs{display:inline-flex;align-items:center;gap:5px;margin-left:8px}.staff-status-tab{height:28px!important;width:auto!important;min-width:92px!important;padding:0 11px!important;border:1px solid #d8e1ec!important;border-radius:6px!important;background:#fff!important;color:#64748b!important;font-size:.66rem!important;font-weight:850!important;cursor:pointer}.staff-status-tab.active{border-color:#5b7fba!important;background:#5b7fba!important;color:#fff!important}.staff-status-tab b{display:inline-grid;place-items:center;min-width:20px;height:18px;margin-left:4px;padding:0 5px;border-radius:999px;background:#edf2f7;color:#526176;font-size:.6rem}.staff-status-tab.active b{background:rgba(255,255,255,.2);color:#fff}.staff-resigned-table td{padding:8px 9px!important;white-space:nowrap;color:#334155!important}.staff-resigned-table td:last-child{position:static!important;min-width:100px!important;background:#fff!important}.staff-resigned-status{display:inline-flex;align-items:center;padding:4px 9px;border-radius:999px;background:#fff1f2;color:#c2414d!important;font-weight:850}
     .staff-quick-editor{margin-bottom:14px;padding:0!important;overflow:hidden}.staff-quick-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;border-bottom:1px solid #e4eaf1;background:#f8fafc}.staff-quick-title{display:flex;align-items:center;gap:8px;color:#334155;font-size:.82rem;font-weight:800}.staff-quick-actions{display:flex;align-items:center;gap:7px;flex-wrap:wrap}.staff-quick-actions input{width:220px;height:34px;padding:0 10px}.staff-quick-actions button{width:auto!important;min-width:auto!important;height:34px!important;padding:0 12px!important;font-size:.68rem!important}.staff-quick-table-wrap{max-height:66vh;overflow:auto}.staff-quick-table{min-width:1540px;border-collapse:separate;border-spacing:0}.staff-quick-table th{position:sticky;top:0;z-index:4;white-space:nowrap;text-align:center}.staff-quick-table td{padding:5px!important;min-width:112px}.staff-quick-table td:nth-child(3){min-width:125px}.staff-quick-table td:nth-child(4){min-width:150px}.staff-quick-table td:nth-child(7){min-width:132px}.staff-quick-table td:nth-child(8){min-width:110px}.staff-quick-table td:nth-child(12){min-width:190px}.staff-quick-table td:last-child{position:sticky;right:0;z-index:2;min-width:150px;background:#fff!important}.staff-quick-table th:last-child{position:sticky;right:0;z-index:5}.staff-quick-table input,.staff-quick-table select{width:100%;height:32px;padding:0 8px;font-size:.68rem;border:1px solid #dbe3ec;border-radius:5px;background:#fff;color:#27364a}.staff-quick-table input[readonly]{background:#f1f4f8;color:#6b7788;cursor:default}.staff-quick-row-actions{display:flex;align-items:center;gap:5px}.staff-quick-save,.staff-quick-resign{width:auto!important;min-width:68px!important;padding:6px 8px!important;font-size:.66rem!important}.staff-quick-resign{color:#dc2626!important;border-color:#fecaca!important;background:#fff5f5!important}.staff-quick-empty{text-align:center!important;padding:28px!important;color:#78869a!important}
     .staff-page-header{display:flex;align-items:center;margin-bottom:12px;padding:14px 16px;border:1px solid #e3e9f0;border-radius:8px;background:#fff;box-shadow:0 1px 5px rgba(51,65,85,.035)}
     .staff-page-heading{display:flex;align-items:center;gap:10px;min-width:0}.staff-page-heading>i{display:grid;place-items:center;width:34px;height:34px;flex:0 0 34px;border-radius:6px;background:#e7eef8;color:#5b7fba;font-size:.9rem}
@@ -2203,10 +2204,10 @@
       </div>
       <div id="staffQuickEditor" class="overview-panel staff-quick-editor" style="display:none">
         <div class="staff-quick-head">
-          <div class="staff-quick-title"><i class="fas fa-table-cells"></i> 员工资料编辑表 <span id="staffQuickCount" style="color:#8190a3;font-weight:600">0 条数据</span></div>
+          <div class="staff-quick-title"><i class="fas fa-table-cells"></i> 员工资料编辑表 <span id="staffQuickCount" style="color:#8190a3;font-weight:600">0 条数据</span><div class="staff-status-tabs"><button id="staffStatusActive" type="button" class="staff-status-tab active" onclick="setStaffQuickStatus('active')">在职员工 <b id="staffActiveCount">0</b></button><button id="staffStatusResigned" type="button" class="staff-status-tab" onclick="setStaffQuickStatus('resigned')">离职员工 <b id="staffResignedCount">0</b></button></div></div>
           <div class="staff-quick-actions">
             <input id="staffQuickSearch" oninput="renderStaffQuickTable()" placeholder="搜索 ID、姓名、后台账号">
-            <button type="button" class="menu-btn" onclick="addStaffQuickRow()"><i class="fas fa-plus"></i> 新增一行</button>
+            <button id="staffQuickAddButton" type="button" class="menu-btn" onclick="addStaffQuickRow()"><i class="fas fa-plus"></i> 新增一行</button>
             <button type="button" class="menu-btn" onclick="populateStaffEditor()"><i class="fas fa-rotate"></i> 刷新</button>
             <button type="button" class="menu-btn" onclick="closeStaffQuickEditor()"><i class="fas fa-arrow-left"></i> 返回</button>
           </div>
@@ -2214,7 +2215,7 @@
         <div id="staffOperationBanner" class="staff-operation-banner" role="status" aria-live="assertive"><i class="fas fa-circle-check"></i><span>SUCCESS OPERATION</span></div>
         <div class="staff-quick-table-wrap">
           <table class="staff-quick-table">
-            <thead><tr><th>盘口</th><th>岗位</th><th>ID</th><th>姓名</th><th>后台账号</th><th>shift</th><th>入职日期</th><th>工作时间</th><th>国家</th><th>岗位</th><th>工作模式</th><th>银行账号</th><th>操作</th></tr></thead>
+            <thead id="staffQuickTableHead"><tr><th>盘口</th><th>岗位</th><th>ID</th><th>姓名</th><th>后台账号</th><th>shift</th><th>入职日期</th><th>工作时间</th><th>国家</th><th>岗位</th><th>工作模式</th><th>银行账号</th><th>操作</th></tr></thead>
             <tbody id="staffQuickBody"><tr><td colspan="13" class="staff-quick-empty">点击编辑后正在读取员工数据…</td></tr></tbody>
           </table>
         </div>
@@ -3991,6 +3992,7 @@
     let staffHistoryExportRows = [];
     let staffQuickEditorOpen = false;
     let staffQuickDraftVisible = false;
+    let staffQuickStatusMode = 'active';
     let staffSaveConfirmResolver = null;
     let operationToastTimer = null;
 
@@ -4054,13 +4056,15 @@
     }
 
     async function populateStaffEditor(){
-      const {data,error}=await supabaseClient.from('staff_master').select('employee_id,employee_name,join_date,resign_date,bank_account,bank_name,bank_holder,status,platform,group_name,role,shift,country,work_mode,work_telegram,backend_account').order('employee_name',{ascending:true});
+      const {data,error}=await supabaseClient.from('staff_master').select('employee_id,employee_name,join_date,resign_date,bank_account,bank_name,bank_holder,status,platform,group_name,role,shift,country,work_mode,work_telegram,backend_account,updated_at').order('employee_name',{ascending:true});
       if(error){const body=document.getElementById('staffEditorBody');if(body)body.innerHTML=`<tr><td colspan="8">读取失败：${esc(error.message)}</td></tr>`;return;}
-      dbEditorStaff=data||[];
+      const resignedIds=(data||[]).filter(row=>String(row.status||'').trim()==='离职').map(row=>row.employee_id),resignInfo=new Map();
+      if(resignedIds.length){const {data:events}=await supabaseClient.from('staff_events').select('employee_id,event_date,details,created_at').eq('event_type','resign').in('employee_id',resignedIds).order('created_at',{ascending:false}).limit(1000);(events||[]).forEach(event=>{if(resignInfo.has(event.employee_id))return;let details={};try{details=JSON.parse(event.details||'{}')}catch{}resignInfo.set(event.employee_id,{resign_reason:details?.changes?.原因?.menjadi||'',event_date:event.event_date||''});});}
+      dbEditorStaff=(data||[]).map(row=>({...row,...(resignInfo.get(row.employee_id)||{})}));
       populateNewStaffChoices();renderStaffEditorTable();renderStaffQuickTable();loadStaffEditHistory();
     }
     function openStaffQuickEditor(){
-      activeStaffData=1;staffQuickEditorOpen=true;staffQuickDraftVisible=false;
+      activeStaffData=1;staffQuickEditorOpen=true;staffQuickDraftVisible=false;staffQuickStatusMode='active';
       showPage('overview');
       document.querySelectorAll('.side-menu-group').forEach(item=>item.classList.remove('open'));
       document.getElementById('group-staff')?.classList.add('open');
@@ -4078,10 +4082,11 @@
       document.getElementById('staffQuickEditor').style.display='none';
       if(restore)openStaffData(1);else updateStaffSystemTabs();
     }
-    function staffWorkTime(joinDate){
+    function staffWorkTime(joinDate,endDate=''){
       if(!joinDate)return '';
       const normalized=String(joinDate).slice(0,10).replaceAll('/','-');
-      const start=new Date(`${normalized}T00:00:00`),now=new Date();if(Number.isNaN(start.getTime())||start>now)return '';
+      const endNormalized=String(endDate||'').slice(0,10).replaceAll('/','-');
+      const start=new Date(`${normalized}T00:00:00`),now=endNormalized?new Date(`${endNormalized}T00:00:00`):new Date();if(Number.isNaN(start.getTime())||Number.isNaN(now.getTime())||start>now)return '';
       let months=(now.getFullYear()-start.getFullYear())*12+(now.getMonth()-start.getMonth());if(now.getDate()<start.getDate())months=Math.max(0,months-1);
       if(months>=12){const years=Math.floor(months/12),rest=months%12;return `${years}年${rest?`${rest}个月`:''}`;}
       return months?`${months}个月`:'不足1个月';
@@ -4093,14 +4098,21 @@
       const resignButton=isNew?'':`<button type="button" class="menu-btn staff-quick-resign" onclick="openStaffResign('${esc(row.employee_id||'')}')"><i class="fas fa-user-minus"></i> 离职</button>`;
       return `<tr data-quick-row="${index}" data-original-id="${esc(isNew?'':row.employee_id||'')}" data-new="${isNew?'1':'0'}"><td>${staffQuickControl(index,'platform',row.platform)}</td><td>${staffQuickControl(index,'role',row.role)}</td><td>${staffQuickControl(index,'employee_id',row.employee_id)}</td><td>${staffQuickControl(index,'employee_name',row.employee_name)}</td><td>${staffQuickControl(index,'backend_account',row.backend_account)}</td><td>${staffQuickControl(index,'shift',row.shift)}</td><td>${staffQuickControl(index,'join_date',row.join_date,'date')}</td><td>${staffQuickControl(index,'work_time',staffWorkTime(row.join_date),'text',true)}</td><td>${staffQuickControl(index,'country',row.country)}</td><td>${staffQuickControl(index,'group_name',row.group_name)}</td><td>${staffQuickSelect(index,'work_mode',mode,['居家','现场转居家','现场'])}</td><td>${staffQuickControl(index,'bank_account',row.bank_account)}</td><td><div class="staff-quick-row-actions"><button type="button" class="menu-btn active staff-quick-save" onclick="saveStaffQuickRow('${index}',this)"><i class="fas fa-floppy-disk"></i> 保存</button>${resignButton}</div></td></tr>`;
     }
+    function setStaffQuickStatus(mode){staffQuickStatusMode=mode==='resigned'?'resigned':'active';staffQuickDraftVisible=false;renderStaffQuickTable();}
+    function staffQuickResignedRow(row){return `<tr><td>${esc(row.platform||'-')}</td><td>${esc(row.role||'-')}</td><td>${esc(row.employee_id||'-')}</td><td>${esc(row.employee_name||'-')}</td><td>${esc(row.backend_account||'-')}</td><td>${esc(row.shift||'-')}</td><td>${esc(row.join_date||'-')}</td><td>${esc(staffWorkTime(row.join_date,row.resign_date)||'-')}</td><td>${esc(row.country||'-')}</td><td>${esc(row.group_name||'-')}</td><td>${esc(row.work_mode||'-')}</td><td>${esc(row.bank_account||'-')}</td><td>${esc(row.resign_date||row.event_date||'-')}</td><td>${esc(row.resign_reason||'-')}</td><td><span class="staff-resigned-status">离职</span></td></tr>`;}
     function renderStaffQuickTable(){
       const body=document.getElementById('staffQuickBody');if(!body)return;
       const keyword=(document.getElementById('staffQuickSearch')?.value||'').trim().toLowerCase();
-      const rows=dbEditorStaff.filter(row=>String(row.status||'').trim()!=='离职').filter(row=>!keyword||[row.employee_id,row.employee_name,row.backend_account].some(value=>String(value||'').toLowerCase().includes(keyword)));
+      const activeRows=dbEditorStaff.filter(row=>String(row.status||'').trim()!=='离职'),resignedRows=dbEditorStaff.filter(row=>String(row.status||'').trim()==='离职').sort((a,b)=>String(b.resign_date||'').localeCompare(String(a.resign_date||''))||String(b.updated_at||'').localeCompare(String(a.updated_at||'')));
+      const activeCount=document.getElementById('staffActiveCount'),resignedCount=document.getElementById('staffResignedCount');if(activeCount)activeCount.textContent=activeRows.length;if(resignedCount)resignedCount.textContent=resignedRows.length;
+      document.getElementById('staffStatusActive')?.classList.toggle('active',staffQuickStatusMode==='active');document.getElementById('staffStatusResigned')?.classList.toggle('active',staffQuickStatusMode==='resigned');
+      const addButton=document.getElementById('staffQuickAddButton');if(addButton)addButton.style.display=staffQuickStatusMode==='active'?'':'none';
+      const head=document.getElementById('staffQuickTableHead');if(head){head.innerHTML=staffQuickStatusMode==='active'?'<tr><th>盘口</th><th>岗位</th><th>ID</th><th>姓名</th><th>后台账号</th><th>SHIFT</th><th>入职日期</th><th>工作时间</th><th>国家</th><th>岗位</th><th>工作模式</th><th>银行账号</th><th>操作</th></tr>':'<tr><th>盘口</th><th>岗位</th><th>ID</th><th>姓名</th><th>后台账号</th><th>SHIFT</th><th>入职日期</th><th>工作时间</th><th>国家</th><th>岗位</th><th>工作模式</th><th>银行账号</th><th>离职日期</th><th>离职原因</th><th>状态</th></tr>';}
+      const source=staffQuickStatusMode==='active'?activeRows:resignedRows,rows=source.filter(row=>!keyword||[row.employee_id,row.employee_name,row.backend_account].some(value=>String(value||'').toLowerCase().includes(keyword)));
       const count=document.getElementById('staffQuickCount');if(count)count.textContent=`${rows.length} 条数据`;
-      let html=staffQuickDraftVisible?staffQuickRow({work_mode:activeStaffSystem==='全部'?'居家':activeStaffSystem},'new',true):'';
-      html+=rows.map((row,index)=>staffQuickRow(row,index,false)).join('');
-      body.innerHTML=html||'<tr><td colspan="13" class="staff-quick-empty">没有符合条件的员工数据</td></tr>';
+      let html=staffQuickStatusMode==='active'&&staffQuickDraftVisible?staffQuickRow({work_mode:activeStaffSystem==='全部'?'居家':activeStaffSystem},'new',true):'';
+      html+=staffQuickStatusMode==='active'?rows.map((row,index)=>staffQuickRow(row,index,false)).join(''):rows.map(staffQuickResignedRow).join('');
+      body.parentElement?.classList.toggle('staff-resigned-table',staffQuickStatusMode==='resigned');body.innerHTML=html||`<tr><td colspan="${staffQuickStatusMode==='active'?13:15}" class="staff-quick-empty">没有符合条件的员工数据</td></tr>`;
     }
     function addStaffQuickRow(){staffQuickDraftVisible=true;const search=document.getElementById('staffQuickSearch');if(search)search.value='';renderStaffQuickTable();setTimeout(()=>document.querySelector('[data-quick-row="new"] input')?.focus(),20);}
     function syncStaffQuickWorkTime(index,value){const row=document.querySelector(`[data-quick-row="${index}"]`);const field=row?.querySelector('[data-quick-field="work_time"]');if(field)field.value=staffWorkTime(value);}
