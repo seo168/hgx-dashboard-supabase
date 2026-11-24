@@ -1968,7 +1968,7 @@
     body.staff-page-active .stat-modal-top{background:#f7f9fc!important;color:#111827!important;border-color:#e5eaf0!important}
     body.staff-page-active .stat-modal-close{background:#edf1f5!important;color:#111827!important}
     .staff-system-tabs{display:inline-flex;align-items:center;gap:4px;margin:0 0 12px;padding:4px;border:1px solid #dce4ed;border-radius:8px;background:#f3f6fa}
-    .staff-system-tab{min-width:82px;height:32px;padding:0 16px;border:0;border-radius:5px;background:transparent;color:#64748b;cursor:pointer;font-size:.72rem}
+    .staff-system-tab{min-width:82px;height:32px;padding:0 12px;border:0;border-radius:5px;background:transparent;color:#64748b;cursor:pointer;font-size:.72rem}.staff-system-tab b{display:inline-grid;place-items:center;min-width:20px;height:18px;margin-left:5px;padding:0 5px;border-radius:999px;background:#e2e8f0;color:#526176;font-size:.6rem}.staff-system-tab.active b{background:rgba(255,255,255,.2);color:#fff}
     .staff-system-tab:hover{background:#e9eff7;color:#405774}.staff-system-tab.active{background:#5b7fba;color:#fff;box-shadow:0 2px 7px rgba(59,92,145,.18)}
     .staff-system-tab.staff-edit-tab{min-width:72px;border-left:1px solid #d7e0eb;color:#435f86}.staff-system-tab.staff-edit-tab.active{background:#4f6f9f;color:#fff}
     .operation-toast{position:fixed!important;top:76px!important;left:50%!important;z-index:2147483647!important;display:flex!important;visibility:hidden!important;align-items:center;gap:9px;min-width:240px;padding:12px 18px;border:2px solid rgba(255,255,255,.92);border-radius:9px;color:#fff!important;font-size:.78rem;font-weight:900;box-shadow:0 12px 34px rgba(15,23,42,.3);opacity:0!important;pointer-events:none;transform:translate(-50%,-14px);transition:opacity .2s ease,transform .2s ease}.operation-toast.show{visibility:visible!important;opacity:1!important;transform:translate(-50%,0)}.operation-toast.success{background:#16a34a!important}.operation-toast.failed{background:#dc2626!important}.operation-toast span{color:#fff!important}@media(max-width:640px){.operation-toast{top:70px!important;min-width:210px;max-width:calc(100vw - 28px)}}
@@ -2193,10 +2193,10 @@
         </div>
         <div id="overview" class="page-content">
       <div class="staff-system-tabs" id="staffSystemTabs">
-        <button type="button" class="staff-system-tab active" data-staff-system="居家" onclick="setStaffSystemMode('居家')">居家</button>
-        <button type="button" class="staff-system-tab" data-staff-system="现场居家" onclick="setStaffSystemMode('现场居家')">现场转居家</button>
-        <button type="button" class="staff-system-tab" data-staff-system="现场" onclick="setStaffSystemMode('现场')">现场</button>
-        <button type="button" class="staff-system-tab" data-staff-system="全部" onclick="setStaffSystemMode('全部')">总汇</button>
+        <button type="button" class="staff-system-tab active" data-staff-system="居家" onclick="setStaffSystemMode('居家')">居家 <b id="staffSystemHomeCount">0</b></button>
+        <button type="button" class="staff-system-tab" data-staff-system="现场居家" onclick="setStaffSystemMode('现场居家')">现场转居家 <b id="staffSystemTransferCount">0</b></button>
+        <button type="button" class="staff-system-tab" data-staff-system="现场" onclick="setStaffSystemMode('现场')">现场 <b id="staffSystemOnsiteCount">0</b></button>
+        <button type="button" class="staff-system-tab" data-staff-system="全部" onclick="setStaffSystemMode('全部')">总汇 <b id="staffSystemAllCount">0</b></button>
         <button type="button" id="staffQuickEditTab" class="staff-system-tab staff-edit-tab" onclick="openStaffQuickEditor()"><i class="fas fa-pen-to-square"></i> 编辑</button>
       </div>
       <div class="staff-page-header">
@@ -4026,6 +4026,10 @@
     function updateStaffSystemTabs() {
       document.querySelectorAll('.staff-system-tab').forEach(btn=>btn.classList.toggle('active',btn.dataset.staffSystem===activeStaffSystem));
       document.getElementById('staffQuickEditTab')?.classList.toggle('active',staffQuickEditorOpen);
+      const counts={'居家':0,'现场居家':0,'现场':0,'全部':0},seen=new Set();
+      if(dbEditorStaff.length){dbEditorStaff.filter(row=>String(row.status||'').trim()!=='离职').forEach(row=>{const key=String(row.employee_id||row.employee_name||'').trim().toUpperCase();if(key&&seen.has(key))return;if(key)seen.add(key);const raw=String(row.work_mode||'').replace(/\s+/g,'');const mode=raw.includes('现场转居家')||raw.includes('现场居家')?'现场居家':raw.includes('居家')?'居家':'现场';counts[mode]++;counts['全部']++;});}
+      else dbMaster.forEach(row=>{const mode=detectWorkMode(row);counts[mode]=(counts[mode]||0)+1;counts['全部']++;});
+      const ids={'居家':'staffSystemHomeCount','现场居家':'staffSystemTransferCount','现场':'staffSystemOnsiteCount','全部':'staffSystemAllCount'};Object.entries(ids).forEach(([mode,id])=>{const el=document.getElementById(id);if(el)el.textContent=counts[mode]||0;});
     }
 
     function setStaffSystemMode(mode) {
@@ -4069,7 +4073,7 @@
       const resignedIds=(data||[]).filter(row=>String(row.status||'').trim()==='离职').map(row=>row.employee_id),resignInfo=new Map();
       if(resignedIds.length){const {data:events}=await supabaseClient.from('staff_events').select('employee_id,event_date,details,created_at').eq('event_type','resign').in('employee_id',resignedIds).order('created_at',{ascending:false}).limit(1000);(events||[]).forEach(event=>{if(resignInfo.has(event.employee_id))return;let details={};try{details=JSON.parse(event.details||'{}')}catch{}resignInfo.set(event.employee_id,{resign_reason:details?.changes?.原因?.menjadi||'',event_date:event.event_date||''});});}
       dbEditorStaff=(data||[]).map(row=>({...row,...(resignInfo.get(row.employee_id)||{})}));
-      populateNewStaffChoices();renderStaffEditorTable();renderStaffQuickTable();loadStaffEditHistory();
+      updateStaffSystemTabs();populateNewStaffChoices();renderStaffEditorTable();renderStaffQuickTable();loadStaffEditHistory();
     }
     function openStaffQuickEditor(){
       activeStaffData=1;staffQuickEditorOpen=true;staffQuickDraftVisible=false;staffQuickStatusMode='active';
@@ -6846,6 +6850,7 @@
       initFilters();
       updateWorkModeCounts();
       updateWorkModeButtons();
+      updateStaffSystemTabs();
       runFilters();
       renderHomeDashboard();
     }
