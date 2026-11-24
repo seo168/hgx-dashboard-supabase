@@ -4891,11 +4891,11 @@
 
     function updateStaffPageSummary() {
       const dataLabel=activeStaffData===1?'员工信息':activeStaffData===2?'考试':`数据${activeStaffData}`;
-      const detail=activeWorkMode==='现场'?'现场员工':activeWorkMode==='居家'?'居家员工':activeWorkMode==='现场居家'?'现场转居家员工':'全部工作模式';
+      const detail=activeWorkMode==='现场'?'现场员工':activeWorkMode==='居家'?'居家员工':activeWorkMode==='现场居家'?'现场转居家员工':'全部';
       const title=document.getElementById('staffPageTitle');
       const description=document.getElementById('staffPageDescription');
       if(title)title.textContent=`员工管理 · ${dataLabel}`;
-      if(description)description.textContent=`Supabase 员工主数据 · ${detail} · 当前筛选结果`;
+      if(description)description.textContent=detail;
     }
 
     function runFilters() {
