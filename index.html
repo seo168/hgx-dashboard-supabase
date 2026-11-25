@@ -2018,7 +2018,7 @@
     html body #overview #staffResignForm{display:flex!important;flex-direction:column!important;gap:11px!important}html body #overview #staffResignForm>.filter-group{display:grid!important;grid-template-columns:112px minmax(0,1fr)!important;align-items:center!important;gap:12px!important}html body #overview #staffResignForm label{text-align:right!important;color:#687789!important;font-size:.72rem!important}html body #overview #staffResignForm input{width:100%!important;height:36px!important;box-sizing:border-box!important;background:#fafbfd!important}html body #overview #staffResignForm>.filter-group:last-of-type button{grid-column:2!important;justify-self:end!important;background:#dc5b64!important;border-color:#dc5b64!important;color:#fff!important}
     .staff-file-control{display:flex;align-items:center;gap:9px;min-width:0}.staff-file-control button{height:34px;padding:0 12px;border:1px solid #d9e1ea;border-radius:6px;background:#f7f9fc;color:#536377;cursor:pointer}.staff-file-control span{overflow:hidden;color:#8a96a6;font-size:.68rem;text-overflow:ellipsis;white-space:nowrap}
     .exam-upload-caption{margin-bottom:5px;color:#64748b;font-size:.64rem;font-weight:800}
-    #staffExamPanel .exam-main-grid{grid-template-columns:minmax(0,1fr)}
+    #staffExamPanel .exam-main-grid.exam-upload-hidden{grid-template-columns:minmax(0,1fr)}
     #staffExamPanel .exam-upload-card[hidden]{display:none!important}
     #staffExamAttention th,#staffExamAttention td{text-align:left;vertical-align:middle}
     #staffExamAttention th:nth-child(n+4),#staffExamAttention td:nth-child(n+4){white-space:nowrap;font-variant-numeric:tabular-nums}
@@ -4120,13 +4120,29 @@
       document.querySelectorAll('#overview > .overview-panel:not(#staffEditor):not(#staffQuickEditor):not(#staffExamPanel),#overview > .staff-inner-nav,#staff-list-section,#shift-section').forEach(el=>el.style.display=dataIndex===1?'':'none');
       if(examPanel)examPanel.style.display=dataIndex===2?'block':'none';
       if(dataIndex===1){updateStaffSystemTabs();setWorkMode(activeStaffSystem);}
-      else if(dataIndex===2){const title=document.getElementById('staffPageTitle'),description=document.getElementById('staffPageDescription');if(title)title.textContent='运营员工考试中心';if(description)description.textContent='客服运营 · 风控运营';loadStaffExamData();}
+      else if(dataIndex===2){const title=document.getElementById('staffPageTitle'),description=document.getElementById('staffPageDescription');if(title)title.textContent='运营员工考试中心';if(description)description.textContent='客服运营 · 风控运营';syncStaffExamUploadPanel();loadStaffExamData();}
       else setWorkMode('全部');
     }
 
     function parseExamDetails(value){try{return typeof value==='object'&&value?value:JSON.parse(value||'{}')}catch{return{}}}
     function normalizeExamCategory(value){const category=String(value||'').trim();return category==='出款/风控'||category==='客服/风控'?'风控':category||'未分类';}
-    function setStaffExamCategory(category){staffExamCategory=category;document.querySelectorAll('[data-exam-category]').forEach(button=>button.classList.toggle('active',button.dataset.examCategory===category));renderStaffExamDashboard();}
+    function setStaffExamCategory(category) {
+      staffExamCategory=category;
+      document.querySelectorAll('[data-exam-category]').forEach(button=>button.classList.toggle('active',button.dataset.examCategory===category));
+      const attentionButton=document.getElementById('staffExamAttentionButton');
+      if(attentionButton.getAttribute('aria-expanded')==='true')toggleStaffExamAttention(attentionButton);
+      syncStaffExamUploadPanel();
+      renderStaffExamDashboard();
+    }
+    function syncStaffExamUploadPanel() {
+      const panel=document.getElementById('staffExamAttention');
+      const card=document.querySelector('#staffExamPanel .exam-upload-card');
+      const category=document.getElementById('examUploadCategory');
+      const show=panel.hidden && ['客服','风控'].includes(staffExamCategory);
+      card.hidden=!show;
+      card.parentElement.classList.toggle('exam-upload-hidden',!show);
+      if(show)category.value=staffExamCategory;
+    }
     const staffExamSlots = [['Exam I','05'],['Exam II','12'],['Exam III','19'],['Exam IV','26']];
     function toggleStaffExamAttention(button) {
       const panel=document.getElementById('staffExamAttention');
@@ -4134,6 +4150,7 @@
       sessionStorage.setItem('hgx-dashboard-menu',panel.hidden?'sideStaff-2':button.id);
       button.setAttribute('aria-expanded',String(!panel.hidden));
       button.classList.toggle('active',!panel.hidden);
+      syncStaffExamUploadPanel();
       if(!panel.hidden)renderStaffExamAttention();
     }
     function summarizeStaffExamAttention(rows) {
