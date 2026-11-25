@@ -2018,7 +2018,12 @@
     html body #overview #staffResignForm{display:flex!important;flex-direction:column!important;gap:11px!important}html body #overview #staffResignForm>.filter-group{display:grid!important;grid-template-columns:112px minmax(0,1fr)!important;align-items:center!important;gap:12px!important}html body #overview #staffResignForm label{text-align:right!important;color:#687789!important;font-size:.72rem!important}html body #overview #staffResignForm input{width:100%!important;height:36px!important;box-sizing:border-box!important;background:#fafbfd!important}html body #overview #staffResignForm>.filter-group:last-of-type button{grid-column:2!important;justify-self:end!important;background:#dc5b64!important;border-color:#dc5b64!important;color:#fff!important}
     .staff-file-control{display:flex;align-items:center;gap:9px;min-width:0}.staff-file-control button{height:34px;padding:0 12px;border:1px solid #d9e1ea;border-radius:6px;background:#f7f9fc;color:#536377;cursor:pointer}.staff-file-control span{overflow:hidden;color:#8a96a6;font-size:.68rem;text-overflow:ellipsis;white-space:nowrap}
     .exam-upload-caption{margin-bottom:5px;color:#64748b;font-size:.64rem;font-weight:800}
-    .exam-attention-bars{display:inline-flex;align-items:flex-end;gap:3px;margin-right:5px;vertical-align:middle}
+    #staffExamPanel .exam-main-grid{grid-template-columns:minmax(0,1fr)}
+    #staffExamPanel .exam-upload-card[hidden]{display:none!important}
+    #staffExamAttention th,#staffExamAttention td{text-align:left;vertical-align:middle}
+    #staffExamAttention th:nth-child(n+4),#staffExamAttention td:nth-child(n+4){white-space:nowrap;font-variant-numeric:tabular-nums}
+    .exam-attention-status{display:grid;grid-template-columns:22px max-content;align-items:center;gap:8px;min-height:20px}
+    .exam-attention-bars{display:flex;align-items:flex-end;gap:3px;height:17px}
     .exam-attention-bars span{width:4px;border-radius:2px}
     #overview .staff-add-search-action{align-self:end!important}#overview .staff-add-compact{width:auto!important;min-width:112px!important;height:34px!important;padding:0 13px!important;justify-self:start!important;font-size:.68rem!important;white-space:nowrap!important}
     .staff-row-actions{display:flex;gap:6px;white-space:nowrap}.staff-resign-btn{min-width:auto!important;padding:6px 10px!important;background:#fff5f5!important;border-color:#fecdd3!important;color:#c2414d!important}.staff-inline-row td{padding:0!important;background:#f8fbff!important}.staff-inline-editor{display:grid;grid-template-columns:repeat(4,minmax(135px,1fr));gap:10px;padding:14px;border-top:1px solid #dbe6f2}.staff-inline-field{display:grid;gap:5px}.staff-inline-field label{font-size:.62rem!important;color:#7b8898!important}.staff-inline-field input,.staff-inline-field select{width:100%;height:34px;padding:0 9px;border:1px solid #dce4ed;border-radius:5px;background:#fff;color:#334155}.staff-inline-actions{grid-column:1/-1;display:flex;justify-content:flex-end;gap:8px}.staff-inline-actions button{min-width:auto!important;padding:7px 14px!important}.staff-history-wrap{margin-top:18px;max-height:420px;overflow:auto}.staff-history-filter{position:sticky;top:0;z-index:3;display:flex;flex-wrap:wrap;align-items:end;gap:10px;padding:11px 14px;border-bottom:1px solid #e5eaf0;background:#fff}.staff-history-filter label{display:grid;gap:5px;color:#718096!important;font-size:.64rem!important}.staff-history-filter input{height:34px;padding:0 10px;border:1px solid #dce4ed;border-radius:6px;background:#fafbfd;color:#435164}.staff-history-filter button{width:auto!important;min-width:auto!important;height:34px!important;padding:0 13px!important;font-size:.67rem!important}.staff-history-wrap td{font-size:.68rem!important}.staff-history-change{max-width:520px;white-space:normal;line-height:1.45}
@@ -2233,13 +2238,13 @@
             <button type="button" class="menu-btn active" data-exam-category="客服" onclick="setStaffExamCategory('客服')"><i class="fas fa-headset"></i> 客服</button>
             <button type="button" class="menu-btn" data-exam-category="风控" onclick="setStaffExamCategory('风控')"><i class="fas fa-shield-halved"></i> 风控</button>
             <button type="button" class="menu-btn" data-exam-category="全部" onclick="setStaffExamCategory('全部')">全部</button>
-            <button type="button" class="menu-btn" aria-controls="staffExamAttention" aria-expanded="false" onclick="toggleStaffExamAttention(this)">Butuh Perhatian</button>
+            <button type="button" class="menu-btn" aria-controls="staffExamAttention" aria-expanded="false" onclick="toggleStaffExamAttention(this)">需要帮助</button>
           </div>
           <div class="exam-actions"><select id="staffExamFilterYear" aria-label="年份" onchange="loadStaffExamData()"></select><select id="staffExamFilterMonth" aria-label="月份" onchange="loadStaffExamData()"></select><button type="button" class="menu-btn" onclick="resetStaffExamFilters()"><i class="fas fa-rotate-left"></i> 重置</button><button type="button" class="menu-btn" onclick="loadStaffExamData()"><i class="fas fa-rotate"></i> 刷新</button></div>
         </div>
         <section id="staffExamAttention" class="exam-result-wrap" hidden>
-          <div class="table-head-bar"><span>Butuh Perhatian</span><span>Nilai &lt; 80 · periode terpilih</span></div>
-          <table><thead><tr><th>Departemen</th><th>ID</th><th>Nama</th><th>Lulus / Total Exam</th><th>Di bawah 80</th><th>Di bawah 80 berturut-turut</th></tr></thead>
+          <div class="table-head-bar"><span>需要帮助</span><span>所选月份 · 低于 80 分</span></div>
+          <table><thead><tr><th>部门</th><th>员工 ID</th><th>姓名</th><th>通过次数 / 考试总次数</th><th>低于 80 分次数</th><th>连续低于 80 分</th></tr></thead>
           <tbody id="staffExamAttentionBody"></tbody></table>
         </section>
         <div class="exam-kpis">
@@ -2251,7 +2256,7 @@
         </div>
         <div class="exam-main-grid">
           <div class="exam-card"><div class="exam-card-title"><span><i class="fas fa-chart-line"></i> 运营能力成绩趋势</span><small>按考试场次统计平均成绩</small></div><div class="exam-chart"><canvas id="staffExamTrendChart"></canvas></div></div>
-          <div class="exam-card"><div class="exam-card-title"><span><i class="fas fa-cloud-arrow-up"></i> 上传运营考试成绩</span></div>
+          <div class="exam-card exam-upload-card" hidden><div class="exam-card-title"><span><i class="fas fa-cloud-arrow-up"></i> 上传运营考试成绩</span></div>
             <div class="exam-upload-grid">
               <label>部门<select id="examUploadCategory"><option value="客服">客服</option><option value="风控">风控</option></select></label>
               <label>考试场次<select id="examUploadSlot"><option value="05">Exam I · 5日</option><option value="12">Exam II · 12日</option><option value="19">Exam III · 19日</option><option value="26">Exam IV · 26日</option></select></label>
@@ -4153,8 +4158,8 @@
       body.innerHTML=staff.map(({department,id,name,total,failed,streak})=>{
         const color=streak===1?'#ca8a04':'#dc2626';
         const bars=[7,12,17].map((height,i)=>`<span style="height:${height}px;background:${i<streak?color:'#dbe3ec'}"></span>`).join('');
-        return `<tr><td>${esc(department)}</td><td>${esc(id)}</td><td>${esc(name||'-')}</td><td><b>${total-failed}/${total}</b></td><td>${failed}</td><td><span class="exam-attention-bars" aria-hidden="true">${bars}</span> ${streak ? `${streak} kali berturut-turut (${streak===1?'kuning':'merah'})` : '0 kali'}</td></tr>`;
-      }).join('')||'<tr><td colspan="6">Tidak ada nilai di bawah 80 pada periode ini.</td></tr>';
+        return `<tr><td>${esc(department)}</td><td>${esc(id)}</td><td>${esc(name||'-')}</td><td><b>${total-failed}/${total}</b></td><td>${failed}</td><td><div class="exam-attention-status"><span class="exam-attention-bars" aria-hidden="true">${bars}</span><span>${streak ? `连续 ${streak} 次（${streak===1?'黄色':'红色'}）` : '当前无连续低分'}</span></div></td></tr>`;
+      }).join('')||'<tr><td colspan="6">所选月份暂无低于 80 分的记录。</td></tr>';
     }
     let staffExamRequest = 0;
     function initializeStaffExamPeriods(resetFilter = false) {
